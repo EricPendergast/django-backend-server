@@ -33,6 +33,7 @@ Inspired by researches and studies for an automatic solver platform, i tried to 
 - [Django](https://github.com/django/django), because for flask we have [eve](https://github.com/pyeve/eve) already.
 - [MongoEngine](https://github.com/MongoEngine/mongoengine)
 - [Django-rest-framework](https://github.com/encode/django-rest-framework/tree/master)
+- [Django Rest Framework Mongoengine](https://github.com/umutbozkurt/django-rest-framework-mongoengine), Serializer is so important
 - [Facebook Python SDK](https://github.com/mobolic/facebook-sdk)
 - [facepy](https://github.com/jgorset/facepy)
 - [google-api-python-client](https://github.com/google/google-api-python-client)

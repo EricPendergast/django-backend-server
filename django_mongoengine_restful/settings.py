@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'rest_framework_mongoengine',
 ]
 
 MIDDLEWARE = [
@@ -82,7 +84,26 @@ DATABASES = {
     }
 }
 
+
+# MongoEngine
+# https://github.com/MongoEngine/mongoengine
+
+_MONGODB_USER = 'admin'
+_MONGODB_PASSWD = 'password'
+_MONGODB_HOST = 'localhost:27017'
+_MONGODB_NAME = 'django'
+_MONGODB_DATABASE_HOST = \
+    'mongodb://%s:%s@%s/%s' \
+    % (_MONGODB_USER, _MONGODB_PASSWD, _MONGODB_HOST, _MONGODB_NAME)
+
+mongoengine.connect(_MONGODB_NAME, host=_MONGODB_DATABASE_HOST)
+
+AUTHENTICATION_BACKENDS = (
+    'mongoengine.django.auth.MongoEngineBackend',
+)
+
 # SESSION_ENGINE = 'mongoengine.django.sessions'
+
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
 
