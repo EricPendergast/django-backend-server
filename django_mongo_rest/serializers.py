@@ -6,4 +6,4 @@ class EntitySerializer(DocumentSerializer):
     class Meta:
         model = Entity
         depth = 2
-        fields = '__all__'
+        fields = ('type', 'source_type', 'data_summary')

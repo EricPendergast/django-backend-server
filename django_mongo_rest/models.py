@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from mongoengine import *
-import bcrypt
 import datetime
+from django.contrib.auth.hashers import check_password, make_password
+
+
 # Create your models here.
 
 # example entity document
@@ -23,21 +25,26 @@ class DataSummary(EmbeddedDocument):
 class DataSource(EmbeddedDocument):
     link = StringField()
     account = StringField()
-    _password = StringField(max_length=255)
+    password = StringField(max_length=255)
 
-    def __init__(self, *args, **kwargs):
-        EmbeddedDocument.__init__(self, *args, **kwargs)
+    def check_password(self, raw_password):
+        """
+        Checks the user's password against a provided password - always use
+        this rather than directly comparing to
+        :attr:`~mongoengine.django.auth.User.password` as the password is
+        hashed before storage.
+        """
+        return check_password(raw_password, self.password)
 
-        if 'password' in kwargs:
-                self.password = kwargs[str('password')]
-
-    @property
-    def password(self):
-        return self._password
-
-    @password.setter
-    def password(self, password):
-        self._password = bcrypt.hashpw(password, bcrypt.gensalt())
+    def set_password(self, raw_password):
+        """
+        Sets the user's password - always use this rather than directly
+        assigning to :attr:`~mongoengine.django.auth.User.password` as the
+        password is hashed before storage.
+        """
+        self.password = make_password(raw_password)
+        self.save()
+        return self
 
 
 class Entity(Document):
@@ -51,4 +58,3 @@ class Entity(Document):
     allowed_user = ListField()
     created_at = DateTimeField(default=datetime.datetime.now)
     updated_at = DateTimeField(default=datetime.datetime.now)
-
