@@ -38,8 +38,9 @@
 #     # print(entity_serializer)
 #     return response.Response(entity_serializer.data, status=200)
 #     # return response.Response({"source_type": entity.source_type}, status=200)
-from rest_framework import mixins
-from rest_framework_mongoengine import viewsets
+
+from rest_framework import viewsets
+from rest_framework.response import Response
 
 from django.template.response import TemplateResponse
 
@@ -52,13 +53,19 @@ def index_view(request):
     return TemplateResponse(request, 'index.html', context)
 
 
-class EntityViewSet(mixins.ListModelMixin,
-                    mixins.RetrieveModelMixin,
-                    viewsets.GenericViewSet):
+class EntityViewSet(viewsets.ViewSet):
     """
     Read-only User endpoint
     """
-    serializer_class = EntitySerializer
 
-    def get_queryset(self):
-        return Entity.objects.all()
+    def get_all_entity(self, request):
+        query_set = Entity.objects()
+        serializer = EntitySerializer(query_set, many=True, required=True)
+        return Response(serializer.data)
+
+    def select_entity(self, request, entity_type=None):
+        query_set = Entity.objects(type=entity_type).first()
+        if query_set is None:
+            return Response()
+        serializer = EntitySerializer(query_set)
+        return Response(serializer.data)
