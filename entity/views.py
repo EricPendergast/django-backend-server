@@ -39,3 +39,29 @@ class EntityViewSet(viewsets.ViewSet):
         serializer = EntityDetailedSerializer(query_set)
         return Response(serializer.data)
 
+    """
+    Creating entity (without mapping information)
+    @param: entity_type
+    """
+    @list_route(methods=['post'])
+    def create_entity(self, request):
+        # 0. checking (to be developed afterwards)
+        # 1. getting csv/tsv information, header information, uploaded data
+        # 2. save file to temp dir
+        # 3. save basic entity information, temp dir folder "progressing" state in mongo
+        # 4. return 100 rows of data
+        return Response(status=200)
+
+    """
+    Creating entity (without mapping information)
+    @param: entity_type
+    """
+    @detail_route(methods=['post'])
+    def create_entity_mapped(self, request, pk=None):
+        # 0. checking (to be developed afterwards)
+        # 1. getting targeted entity from data
+        # 2. getting header_name/ column_type mapping information from data
+        # 3. validating mapping (to be developed afterwards)
+        # 4. return 100 rows of data
+        return Response(status=200)
+
