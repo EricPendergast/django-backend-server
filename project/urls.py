@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.conf.urls import include, url
 from django.contrib import admin
-from django_mongo_rest.views import *
+from entity.views import *
 # from rest_framework import routers
 
 
@@ -26,18 +26,13 @@ from django_mongo_rest.views import *
 # router.register(r'entity', EntityViewSet, r'entity')
 
 
-get_all_entity = EntityViewSet.as_view({'get': 'get_all_entity'})
-select_entity = EntityViewSet.as_view({'get': 'select_entity'})
-
-
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
 
     # index page should be served by django to set cookies, headers etc.
     url(r'^$', index_view, {}, name='index'),
 
-    url(r'^entity/$', get_all_entity, name='get-all-entity'),
-    url(r'^entity/(?P<entity_type>[a-z]+)/$', select_entity, name='select-entity')
+    url(r'^entity/', include('entity.urls')),
 ]
 
 # urlpatterns += router.urls

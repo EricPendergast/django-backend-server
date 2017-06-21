@@ -5,4 +5,4 @@ from django.apps import AppConfig
 
 
 class DjangoMongoRestConfig(AppConfig):
-    name = 'django_mongo_rest'
+    name = 'entity'
