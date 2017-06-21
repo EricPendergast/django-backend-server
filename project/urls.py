@@ -13,26 +13,19 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
-from django.conf.urls import include, url
+from django.conf.urls import url
 from django.contrib import admin
 from entity.views import *
-# from rest_framework import routers
+from rest_framework.routers import DefaultRouter
 
-
-# We use a single global DRF Router that routes views from all apps in project
-# router = routers.SimpleRouter()
-
-# app views and viewsets
-# router.register(r'entity', EntityViewSet, r'entity')
-
+router = DefaultRouter()
+router.register(r'entity', EntityViewSet, r'entity')
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
 
     # index page should be served by django to set cookies, headers etc.
     url(r'^$', index_view, {}, name='index'),
-
-    url(r'^entity/', include('entity.urls')),
 ]
 
-# urlpatterns += router.urls
+urlpatterns += router.urls
