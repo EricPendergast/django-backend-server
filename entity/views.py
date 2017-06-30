@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import detail_route, list_route
 
 from django.template.response import TemplateResponse
+from django.http import HttpResponse
 
 from serializers import *
 from models import *
@@ -10,7 +11,9 @@ from models import *
 
 def index_view(request):
     context = {}
-    return TemplateResponse(request, 'index.html', context)
+    return HttpResponse("index stub page")
+    # return TemplateResponse(request, 'index.html', context)
+    
 
 
 class EntityViewSet(viewsets.ViewSet):

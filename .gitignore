@@ -2,3 +2,6 @@
 *.db
 venv
 .idea
+*.swp
+tags
+*.pyc
