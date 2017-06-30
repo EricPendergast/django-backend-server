@@ -86,6 +86,7 @@ DATABASES = {
 }
 
 
+
 # MongoEngine
 # https://github.com/MongoEngine/mongoengine
 
@@ -97,11 +98,14 @@ _MONGODB_DATABASE_HOST = \
     'mongodb://%s:%s@%s/%s' \
     % (_MONGODB_USER, _MONGODB_PASSWD, _MONGODB_HOST, _MONGODB_NAME)
 
-mongoengine.connect(_MONGODB_NAME, host=_MONGODB_DATABASE_HOST)
+mongoengine.connect(db=_MONGODB_NAME, host=_MONGODB_DATABASE_HOST)
 
+# This doesn't seem to work with the current version of mongoengine. Just using
+# the default authentication for now
 AUTHENTICATION_BACKENDS = (
-    'mongoengine.django.auth.MongoEngineBackend',
+     'mongoengine.django.auth.MongoEngineBackend',
 )
+
 
 # SESSION_ENGINE = 'mongoengine.django.sessions'
 

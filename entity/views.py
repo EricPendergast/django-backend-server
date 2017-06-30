@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, permissions
 from rest_framework.response import Response
 from rest_framework.decorators import detail_route, list_route
 
@@ -15,6 +15,10 @@ def index_view(request):
     # return TemplateResponse(request, 'index.html', context)
     
 
+class EntityViewSet2(viewsets.ModelViewSet):
+    queryset = Entity.objects.all()
+    serializer_class = EntityDetailedSerializer
+    permission_classes = [permissions.AllowAny,]
 
 class EntityViewSet(viewsets.ViewSet):
     """
@@ -53,6 +57,13 @@ class EntityViewSet(viewsets.ViewSet):
         # 2. save file to temp dir
         # 3. save basic entity information, temp dir folder "progressing" state in mongo
         # 4. return 100 rows of data
+        
+        serializer = EntityDetailedSerializer(data=request.POST)
+        if serializer.is_valid():
+            print "HERE"
+            serializer.save()
+            print "HERE2"
+            
         return Response(status=200)
 
     """

@@ -14,12 +14,17 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
 from django.conf.urls import url, include
-from django.contrib import admin
+from django.contrib import admin, auth
+admin.autodiscover()
+
 from entity.views import *
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
 router.register(r'entity', EntityViewSet, r'entity')
+
+router2 = DefaultRouter()
+router2.register(r'entity2', EntityViewSet2, r'entity2')
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
@@ -29,5 +34,6 @@ urlpatterns = [
 ]
 
 urlpatterns += router.urls
+urlpatterns += router2.urls
 
-print router.urls
+print router2.urls
