@@ -1,0 +1,125 @@
+{
+        "id": "59560d779a4c0e4abaa1b6a8",
+        "type": "transaction",
+        "source_type": "local",
+        "data_summary": [
+            {
+                "key": "Conversion Records",
+                "value": "1",
+                "order": 1
+            },
+            {
+                "key": "Customer Records",
+                "value": "20",
+                "order": 2
+            },
+            {
+                "key": "First Conversion Start Date",
+                "value": "2017-06-20 11:02:41.843000",
+                "order": 7
+            }
+        ],
+        "data": [
+            {
+                "transaction_quantity": 8,
+                "transaction_date": "09/01/2017",
+                "user_id": "751-23-2405",
+                "transaction_id": "228-08-3254",
+                "transaction_value": 86.17
+            },
+            {
+                "transaction_quantity": 3,
+                "transaction_date": "03/05/2017",
+                "user_id": "821-55-2723",
+                "transaction_id": "556-57-5839",
+                "transaction_value": 197.27
+            },
+            {
+                "transaction_quantity": 6,
+                "transaction_date": "24/03/2017",
+                "user_id": "461-63-0012",
+                "transaction_id": "405-41-7645",
+                "transaction_value": 325.89
+            },
+            {
+                "transaction_quantity": 2,
+                "transaction_date": "12/04/2017",
+                "user_id": "732-68-8140",
+                "transaction_id": "293-18-6521",
+                "transaction_value": 89.26
+            },
+            {
+                "transaction_quantity": 14,
+                "transaction_date": "09/11/2016",
+                "user_id": "445-01-1147",
+                "transaction_id": "268-10-6789",
+                "transaction_value": 340.77
+            },
+            {
+                "transaction_quantity": 9,
+                "transaction_date": "16/12/2016",
+                "user_id": "363-92-5456",
+                "transaction_id": "572-04-8462",
+                "transaction_value": 111.76
+            },
+            {
+                "transaction_quantity": 14,
+                "transaction_date": "14/03/2017",
+                "user_id": "973-40-5271",
+                "transaction_id": "309-88-0111",
+                "transaction_value": 187.68
+            },
+            {
+                "transaction_quantity": 12,
+                "transaction_date": "15/01/2017",
+                "user_id": "443-51-0606",
+                "transaction_id": "894-21-8643",
+                "transaction_value": 141.36
+            },
+            {
+                "transaction_quantity": 18,
+                "transaction_date": "04/09/2016",
+                "user_id": "322-94-7646",
+                "transaction_id": "654-03-8058",
+                "transaction_value": 384.72
+            },
+            {
+                "transaction_quantity": 14,
+                "transaction_date": "25/04/2017",
+                "user_id": "988-90-7620",
+                "transaction_id": "293-64-2300",
+                "transaction_value": 320.89
+            }
+        ],
+        "data_header": [
+            {
+                "source": "transaction_quantity",
+                "mapped": "Transaction_Quantity",
+                "data_type": "number"
+            },
+            {
+                "source": "transaction_date",
+                "mapped": "Transaction_Date"
+
+            },
+            {
+                "source": "transaction_id",
+                "mapped": "Transaction_ID",
+                "data_type": "string"
+            },
+            {
+                "source": "user_id",
+                "mapped": "User_ID",
+                "data_type": "string"
+            },
+            {
+                "source": "transaction_value",
+                "mapped": "Transaction_Value",
+                "data_type": "number"
+            }
+        ],
+        "allowed_user": [],
+        "created_at": "2017-06-28T14:08:10.276000",
+        "updated_at": "2017-06-28T14:08:10.276000"
+
+    }

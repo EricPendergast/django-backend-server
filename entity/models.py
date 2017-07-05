@@ -23,6 +23,7 @@ class DataSummary(EmbeddedDocument):
 
 
 class DataSource(EmbeddedDocument):
+    file = StringField()
     link = StringField()
     account = StringField()
     password = StringField(max_length=255)

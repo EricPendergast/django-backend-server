@@ -23,9 +23,6 @@ from rest_framework.routers import DefaultRouter
 router = DefaultRouter()
 router.register(r'entity', EntityViewSet, r'entity')
 
-router2 = DefaultRouter()
-router2.register(r'entity2', EntityViewSet2, r'entity2')
-
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
 
@@ -34,6 +31,3 @@ urlpatterns = [
 ]
 
 urlpatterns += router.urls
-urlpatterns += router2.urls
-
-print router2.urls
