@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import detail_route, list_route
 
 from rest_framework.parsers import JSONParser
+from rest_framework.renderers import JSONRenderer
 from django.utils.six import BytesIO
 
 from django.template.response import TemplateResponse
@@ -36,6 +37,7 @@ class EntityViewSet(viewsets.ViewSet):
         serializer = EntitySummarySerializer(query_set, many=True, required=True)
         return Response(serializer.data)
 
+
     """
     Select Entity in-details
     @param: entity_type
@@ -48,6 +50,7 @@ class EntityViewSet(viewsets.ViewSet):
         serializer = EntityDetailedSerializer(query_set)
         return Response(serializer.data)
 
+
     """
     Creating entity (without mapping information)
     @param: entity_type
@@ -56,8 +59,10 @@ class EntityViewSet(viewsets.ViewSet):
     def create_entity(self, request):
         # 0. checking (to be developed afterwards)
         # 1. getting csv/tsv information, header information, uploaded data
+        # TODO: Make sure that each file saved has a unique name
         # 2. save file to temp dir
         # 3. save basic entity information, temp dir folder "progressing" state in mongo
+        # TODO: Is the header row counted as one of the 100 rows?
         # 4. return 100 rows of data
         
         # The dir that the uploaded data file will be saved to
@@ -76,10 +81,14 @@ class EntityViewSet(viewsets.ViewSet):
                         
         if serializer.is_valid():
             serializer.save()
-            return Response(status=200)
         else:
             return Response("Invalid serializer", status=400)
             
+        
+        retData = util.csv_to_list_of_dictionaries(open(entityDict["source"]["file"]), numLines=100)
+        
+        return Response(JSONRenderer().render(retData), status=200)
+        
 
     """
     Creating entity (without mapping information)
@@ -102,10 +111,10 @@ class EntityViewSet(viewsets.ViewSet):
         # self, and then becomes an Entity
         dummy = {}
         dummy['data_header'] = request.data['data_header']
-        dummy['data'] = util.csv_to_list_of_dictionaries(
+        data = util.csv_to_list_of_dictionaries(
                 open(entity.source.file, 'r'))
+        dummy['data'] = data
         
-        assert type(dummy) is dict
         dummy = EntityDetailedSerializer(data=dummy)
         assert type(dummy) is EntityDetailedSerializer
         
@@ -116,12 +125,14 @@ class EntityViewSet(viewsets.ViewSet):
             entity.data_header = dummy.data_header
             entity.data = dummy.data
             entity.save()
+            return Response(JSONRenderer().render(data[:100]), status=200)
         else:
             print "Invalid serializer"
+            return Response(status=400)
         
-        return Response(status=200)
     
-    # TODO: Don't leave this in
+    
+    # TODO: Security hole; Don't leave this in
     """
     
     """
