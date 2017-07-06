@@ -15,6 +15,7 @@ from models import *
 
 import csv
 import util
+import datetime
 
 
 def index_view(request):
@@ -62,7 +63,6 @@ class EntityViewSet(viewsets.ViewSet):
         # TODO: Make sure that each file saved has a unique name
         # 2. save file to temp dir
         # 3. save basic entity information, temp dir folder "progressing" state in mongo
-        # TODO: Is the header row counted as one of the 100 rows?
         # 4. return 100 rows of data
         
         # The dir that the uploaded data file will be saved to
@@ -75,7 +75,6 @@ class EntityViewSet(viewsets.ViewSet):
         entityDict = JSONParser().parse(BytesIO(request.data["entity"]))
         entityDict["source"] = {"file":filename}
         
-            
 
         serializer = EntityDetailedSerializer(data=entityDict)
                         
@@ -102,17 +101,28 @@ class EntityViewSet(viewsets.ViewSet):
         # 3. validating mapping (to be developed afterwards)
         # 4. return 100 rows of data
         
+        # TODO: remove entity source when load from file
+        
         entity = Entity.objects.filter(pk=pk).first()
-        assert(entity is not None), "Can't find the entity with the given id: %s" % pk
+        if entity is None:
+            return Response("Can't find the entity with the given id: %s" % pk, status=400)
+        
         
         # We will create a dummy entity whose only purpose is to serialize the
         # two fields we give it, so we can add them to the actual entity. The
-        # dummy starts as a dictionary, then as a serializer of its previous
-        # self, and then becomes an Entity
+        # dummy starts as a dictionary, then becomes a serializer of its
+        # previous self, and then becomes an Entity
         dummy = {}
         dummy['data_header'] = request.data['data_header']
-        data = util.csv_to_list_of_dictionaries(
-                open(entity.source.file, 'r'))
+        data = util.csv_to_list_of_dictionaries(open(entity.source.file, 'r'))
+        
+        # Casting everything in data from strings to their proper data type
+        # according to request.data['data_header']
+        for item in data:
+            for mapping in dummy['data_header']:
+                item[mapping["source"]] = \
+                    StringCaster[mapping["data_type"]](item[mapping["source"]])
+        
         dummy['data'] = data
         
         dummy = EntityDetailedSerializer(data=dummy)
@@ -142,3 +152,34 @@ class EntityViewSet(viewsets.ViewSet):
         return Response("All entities deleted", status=200)
 
 
+
+
+        
+# Takes a string representation of a type and returns a function that casts
+# strings to that type
+class StringCaster:
+    
+    # I implement the meta class so that I can use the static [] operator on
+    # StringCaster.
+    # Explanation: when you call object[something], it looks at the class of
+    # 'object' to find the code for __getitem__. So when you call
+    # StringCaster[something], it looks to the class of StringCaster, which we
+    # defined as StringCaster.Meta, and executes its __getitem__ method.
+    class Meta(type):
+        def __getitem__(cls, key):
+            return StringCaster._objects[key]
+        
+    __metaclass__= Meta
+    
+    # Contains the user-defined casting methods
+    class Casters:
+        @staticmethod
+        def _string_to_date(str):
+            return datetime.datetime.strptime(str, '%d/%m/%Y')
+        
+    _objects = {
+        "string":str,
+        "date":Casters._string_to_date,
+        "number":float
+    }
+    

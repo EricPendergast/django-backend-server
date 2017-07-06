@@ -1,7 +1,10 @@
 import csv
+import os
 def csv_to_list_of_dictionaries(file, numLines=float("inf"), list=None):
     """
-    Takes a csv file stores its contents into the given list, creating a new one if no list is given. The csv file is expected to be stored in the format:
+    Takes a csv file stores its contents into the given list, replacing the old
+    content, or creating a new list if no list is given. The csv file is
+    expected to be stored in the format:
     
     header 1,header 2,header 3, . . .
     11,12,13
@@ -14,17 +17,24 @@ def csv_to_list_of_dictionaries(file, numLines=float("inf"), list=None):
     The list returned will be in the format:
     
     [{header1:11,header2:12,header3:13, ...},
-     {header1:21,header2:22,header3:33, ...},
+     {header1:21,header2:22,header3:23, ...},
      .
      .
      .
     ]
     """
-    # assert request.list["file_format"] == "csv",\
-    # "TODO: allow use of tsv file format"
+    # TODO: allow use of tsv file format
+    # TODO: don't use asserts to validate user input
+    
+    delimiter = ","
+    _, extension = os.path.splitext(file.name)
+    
+    if extension.lower() == ".tsv":
+        delimiter = "\t"
     
     list = [] if list is None else list
-    reader = csv.reader(file)
+    del list[:]
+    reader = csv.reader(file, delimiter=delimiter)
     
     firstRow = None
     rowCount = 0

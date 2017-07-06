@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
 import os
+import sys
 import mongoengine
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -81,24 +82,46 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        # 'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
         # 'ENGINE': '',
     }
 }
 
 
+def is_test():
+    """
+    Checks, if we're running the server for real or in unit-test.
+
+    We might need a better implementation of this function.
+    """
+    if 'test' in sys.argv or 'testserver' in sys.argv:
+        return True
+    else:
+        return False
 
 # MongoEngine
 # https://github.com/MongoEngine/mongoengine
+if not is_test():
+    _MONGODB_USER = 'admin'
+    _MONGODB_PASSWD = 'password'
+    _MONGODB_HOST = 'localhost:27017'
+    _MONGODB_NAME = 'django'
+    _MONGODB_DATABASE_HOST = \
+        'mongodb://%s:%s@%s/%s' \
+        % (_MONGODB_USER, _MONGODB_PASSWD, _MONGODB_HOST, _MONGODB_NAME)
 
-_MONGODB_USER = 'admin'
-_MONGODB_PASSWD = 'password'
-_MONGODB_HOST = 'localhost:27017'
-_MONGODB_NAME = 'django'
-_MONGODB_DATABASE_HOST = \
-    'mongodb://%s:%s@%s/%s' \
-    % (_MONGODB_USER, _MONGODB_PASSWD, _MONGODB_HOST, _MONGODB_NAME)
+    mongoengine.connect(db=_MONGODB_NAME, host=_MONGODB_DATABASE_HOST)
+else:
+    _MONGODB_USER = 'admin'
+    _MONGODB_PASSWD = 'password'
+    _MONGODB_HOST = 'localhost:27017'
+    _MONGODB_NAME = 'django_test'
+    _MONGODB_DATABASE_HOST = \
+        'mongodb://%s:%s@%s/%s' \
+        % (_MONGODB_USER, _MONGODB_PASSWD, _MONGODB_HOST, _MONGODB_NAME)
 
-mongoengine.connect(db=_MONGODB_NAME, host=_MONGODB_DATABASE_HOST)
+    mongoengine.connect(db=_MONGODB_NAME, host=_MONGODB_DATABASE_HOST)
+    
 
 # This doesn't seem to work with the current version of mongoengine. Just using
 # the default authentication for now
@@ -146,3 +169,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+
+
+# So that you can see stdout while testing
+NOSE_ARGS = ['--nocapture',
+             '--nologcapture',]
