@@ -1,6 +1,9 @@
 import csv
 import os
-def csv_to_list_of_dictionaries(file, numLines=float("inf"), list=None):
+import xlrd
+import re
+
+def parser_to_list_of_dictionaries(parser, numLines=float("inf"), list=None):
     """
     Takes a csv file stores its contents into the given list, replacing the old
     content, or creating a new list if no list is given. The csv file is
@@ -23,22 +26,13 @@ def csv_to_list_of_dictionaries(file, numLines=float("inf"), list=None):
      .
     ]
     """
-    # TODO: allow use of tsv file format
-    # TODO: don't use asserts to validate user input
-    
-    delimiter = ","
-    _, extension = os.path.splitext(file.name)
-    
-    if extension.lower() == ".tsv":
-        delimiter = "\t"
     
     list = [] if list is None else list
     del list[:]
-    reader = csv.reader(file, delimiter=delimiter)
     
     firstRow = None
     rowCount = 0
-    for row in reader:
+    for row in parser:
         if numLines <= 0:
             return list
         numLines -= 1
@@ -47,16 +41,45 @@ def csv_to_list_of_dictionaries(file, numLines=float("inf"), list=None):
             firstRow = row
             numLines += 1
         else:
-            assert len(row) == len(firstRow),\
-            "Header row and subsequent row(s) are not the same length"
+            # "Header row and subsequent row(s) are not the same length"
+            if len(row) != len(firstRow):
+                raise InvalidInputError("Header row and subsequent row(s) are not the same length")
                 
-            # each item in the list list is refered to as a "data
+            def to_string(obj):
+                if type(obj) is xlrd.sheet.Cell:
+                    return str(obj.value)
+                else:
+                    return str(obj)
+            # Each item in the list is refered to as a "data
             # point"
             dataPointDict = {}
             for i in range(0, len(row)):
-                dataPointDict[firstRow[i]] = row[i]
+                dataPointDict[to_string(firstRow[i])] = to_string(row[i])
             
             list += (dataPointDict,)
             
-            
     return list
+
+
+
+def file_to_list_of_dictionaries(file, numLines=float("inf"), list=None):
+    parser = None
+    _, extension = os.path.splitext(file.name)
+    
+    if extension.lower() == ".tsv":
+        parser = csv.reader(file, delimiter='\t')
+    elif extension.lower() == ".csv":
+        parser = csv.reader(file, delimiter=',')
+    elif extension.lower() in [".xls",".xlsx"]:
+        ws = xlrd.open_workbook(file.name).sheet_by_index(0)
+        parser = [ws.row(i) for i in range(ws.nrows)]
+        
+    
+    return parser_to_list_of_dictionaries(parser, numLines=numLines, list=list)
+    
+
+class InvalidInputError(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+    def __str__(self):
+        return repr(msg)

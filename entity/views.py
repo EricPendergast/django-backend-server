@@ -65,6 +65,12 @@ class EntityViewSet(viewsets.ViewSet):
         # 3. save basic entity information, temp dir folder "progressing" state in mongo
         # 4. return 100 rows of data
         
+        # TODO: catch invalid request
+        
+        if not ('type' in request.data['entity'] 
+                and 'fileUpload' in request.FILES):
+            return Response({"error":"Missing field(s)"}, status=400)
+        
         # The dir that the uploaded data file will be saved to
         filename = "temp/" + str(request.FILES["fileUpload"])
         
@@ -72,21 +78,24 @@ class EntityViewSet(viewsets.ViewSet):
             file.write(request.FILES["fileUpload"].read())
         
         # Parsing the entity JSON passed in into a dictionary
-        entityDict = JSONParser().parse(BytesIO(request.data["entity"]))
-        entityDict["source"] = {"file":filename}
+        entity_dict = JSONParser().parse(BytesIO(request.data["entity"]))
+        entity_dict["source"] = {"file":filename}
         
-
-        serializer = EntityDetailedSerializer(data=entityDict)
+        response_data = {}
+        
+        serializer = EntityDetailedSerializer(data=entity_dict)
                         
         if serializer.is_valid():
-            serializer.save()
+            response_data['entity_id'] = str(serializer.save().id)
         else:
             return Response("Invalid serializer", status=400)
             
-        
-        retData = util.csv_to_list_of_dictionaries(open(entityDict["source"]["file"]), numLines=100)
-        
-        return Response(JSONRenderer().render(retData), status=200)
+        try:
+            response_data['data'] = util.file_to_list_of_dictionaries(
+                    open(entity_dict["source"]["file"]), numLines=100)
+            return Response(response_data, status=200)
+        except util.InvalidInputError as e:
+            return Response({"error":e}, status=400)
         
 
     """
@@ -105,7 +114,12 @@ class EntityViewSet(viewsets.ViewSet):
         
         entity = Entity.objects.filter(pk=pk).first()
         if entity is None:
-            return Response("Can't find the entity with the given id: %s" % pk, status=400)
+            return Response({"error":"Can't find the entity with the given id: %s" % pk}, status=400)
+        if not ('data_header' in request.data):
+            return Response({"error":"No data header."}, status=400)
+        if entity.source.file == None:
+            return Response({"error":"Can't find the entity source file."}, status=400)
+            
         
         
         # We will create a dummy entity whose only purpose is to serialize the
@@ -114,10 +128,11 @@ class EntityViewSet(viewsets.ViewSet):
         # previous self, and then becomes an Entity
         dummy = {}
         dummy['data_header'] = request.data['data_header']
-        data = util.csv_to_list_of_dictionaries(open(entity.source.file, 'r'))
+        data = util.file_to_list_of_dictionaries(open(entity.source.file, 'r'))
         
         # Casting everything in data from strings to their proper data type
         # according to request.data['data_header']
+        #TODO: Verify that mapping types are valid
         for item in data:
             for mapping in dummy['data_header']:
                 item[mapping["source"]] = \
@@ -137,8 +152,7 @@ class EntityViewSet(viewsets.ViewSet):
             entity.save()
             return Response(JSONRenderer().render(data[:100]), status=200)
         else:
-            print "Invalid serializer"
-            return Response(status=400)
+            return Response("Invalid serializer", status=400)
         
     
     

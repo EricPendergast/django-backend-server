@@ -8,3 +8,4 @@ pymongo==2.8.1
 pytz==2017.2
 six==1.10.0
 blinker==1.*
+xlrd
