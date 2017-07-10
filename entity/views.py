@@ -17,6 +17,8 @@ import csv
 import util
 import datetime
 import os.path
+import uuid
+import re
 
 
 def index_view(request):
@@ -85,8 +87,12 @@ class EntityViewSet(viewsets.ViewSet):
         try:
             self._verify_create_entity(request)
             
-            # The dir that the uploaded data file will be saved to
-            filename = "temp/" + str(request.FILES["file_upload"])
+            # The dir that the uploaded data file will be saved to.
+            # Appending the original filename to the end so that the new
+            # filename has the same extension, and also makes the filename more
+            # recognizable.
+            filename = "temp/" + str(uuid.uuid4()) \
+                    + "." + str(request.FILES["file_upload"])
             
             with open(filename, "w") as file:
                 file.write(request.FILES["file_upload"].read())
@@ -181,6 +187,11 @@ class EntityViewSet(viewsets.ViewSet):
                 # Adding the dummy's fields to the actual entity
                 entity.data_header = dummy.data_header
                 entity.data = dummy.data
+                # print entity.source.file
+                # assert(re.match(entity.source.file,
+                        # r"^temp\/[0-9a-fA-F-]{36}.*$") is not None)
+                os.remove(entity.source.file)
+                entity.source.file = None
                 entity.save()
                 return Response(data[:100], status=200)
             else:

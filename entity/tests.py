@@ -158,9 +158,24 @@ class EntityTestCase(TestCase):
             self.assertTrue("error" in self._from_json(c.post('/entity/create_entity/', {'file_upload': fp}).content))
             self.assertTrue("error" in self._from_json(c.post('/entity/create_entity/', {'entity':'{"source_type":"local", "type":"transaction"}'}).content))
         
+    
+    def test_create_multiple_entity(self):
+        c = Client()
+        responses = []
         
+        num = 20
         
+        for i in range(num):
+            responses += (self._create_entity_init(c, 
+                    self.defaultFilename, self.entityJSON1),)
         
+        for i in range(num):
+            self._create_entity_final(c, 
+                    responses[i]["entity_id"], self.entityDataHeaderJSON1)
+            
+        for i in range(num):
+            self.assertTrue(Entity.objects.filter(
+                pk=responses[i]["entity_id"]))
     # def test_create_entity_invalid_xlsx(self):
     #     c = Client()
     #
