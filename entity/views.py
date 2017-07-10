@@ -16,6 +16,7 @@ from models import *
 import csv
 import util
 import datetime
+import os.path
 
 
 def index_view(request):
@@ -52,6 +53,22 @@ class EntityViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
 
+    def _verify_create_entity(self, request):
+        # TODO: add more elements to the valid types tuples
+        if not ('entity' in request.data):
+            raise util.InvalidInputError("No entity data in request")
+        
+        entity_dict = JSONParser().parse(BytesIO(request.data["entity"]))
+        if not ('type' in entity_dict and 
+                entity_dict['type'] in ("transaction", "Something else...")):
+            raise util.InvalidInputError("Invalid or missing entity 'type' field")
+        if not ('source_type' in entity_dict and 
+                entity_dict['source_type'] in ("local", "something else...")):
+            raise util.InvalidInputError("Invalid or missing entity 'source_type' field")
+        if 'file_upload' not in request.FILES:
+            raise util.InvalidInputError("No request 'file_upload' field")
+        
+        
     """
     Creating entity (without mapping information)
     @param: entity_type
@@ -65,38 +82,58 @@ class EntityViewSet(viewsets.ViewSet):
         # 3. save basic entity information, temp dir folder "progressing" state in mongo
         # 4. return 100 rows of data
         
-        # TODO: catch invalid request
-        
-        if not ('type' in request.data['entity'] 
-                and 'fileUpload' in request.FILES):
-            return Response({"error":"Missing field(s)"}, status=400)
-        
-        # The dir that the uploaded data file will be saved to
-        filename = "temp/" + str(request.FILES["fileUpload"])
-        
-        with open(filename, "w") as file:
-            file.write(request.FILES["fileUpload"].read())
-        
-        # Parsing the entity JSON passed in into a dictionary
-        entity_dict = JSONParser().parse(BytesIO(request.data["entity"]))
-        entity_dict["source"] = {"file":filename}
-        
-        response_data = {}
-        
-        serializer = EntityDetailedSerializer(data=entity_dict)
-                        
-        if serializer.is_valid():
-            response_data['entity_id'] = str(serializer.save().id)
-        else:
-            return Response("Invalid serializer", status=400)
-            
         try:
+            self._verify_create_entity(request)
+            
+            # The dir that the uploaded data file will be saved to
+            filename = "temp/" + str(request.FILES["file_upload"])
+            
+            with open(filename, "w") as file:
+                file.write(request.FILES["file_upload"].read())
+            
+            # Parsing the entity JSON passed in into a dictionary
+            entity_dict = JSONParser().parse(BytesIO(request.data["entity"]))
+            entity_dict["source"] = {"file":filename}
+            
+            response_data = {}
+            
+            serializer = EntityDetailedSerializer(data=entity_dict)
+                            
+            if serializer.is_valid():
+                response_data['entity_id'] = str(serializer.save().id)
+            else:
+                raise util.InvalidInputError("Invalid serializer")
+            
             response_data['data'] = util.file_to_list_of_dictionaries(
                     open(entity_dict["source"]["file"]), numLines=100)
+            
             return Response(response_data, status=200)
         except util.InvalidInputError as e:
-            return Response({"error":e}, status=400)
+            return Response({"error":str(e)}, status=400)
         
+    '''
+    Checks that the user input is of the correct format. Throws an
+    InvalidInputError exception if in the wrong format
+    Ensures the following:
+        - 'entity' exists
+        - request.data has a 'data_header' element
+        - 'entity' has a source file field
+        - the data header has all the valid fields, and valid types
+    '''
+    
+    def _verify_create_entity_mapped(self, request, entity):
+        if entity is None:
+            raise util.InvalidInputError("Can't find the entity with the given id: %s" % pk)
+        if not ('data_header' in request.data):
+            raise util.InvalidInputError("No data header.")
+        if entity.source.file == None:
+            raise util.InvalidInputError("Can't find the entity source file.")
+        
+        for mapping in request.data['data_header']:
+            if not ({"source","mapped","data_type"} <= set(mapping) and
+                    StringCaster.contains(mapping["data_type"])):
+                raise InvalidInputError("Invalid data header")
+            
 
     """
     Creating entity (without mapping information)
@@ -112,47 +149,45 @@ class EntityViewSet(viewsets.ViewSet):
         
         # TODO: remove entity source when load from file
         
-        entity = Entity.objects.filter(pk=pk).first()
-        if entity is None:
-            return Response({"error":"Can't find the entity with the given id: %s" % pk}, status=400)
-        if not ('data_header' in request.data):
-            return Response({"error":"No data header."}, status=400)
-        if entity.source.file == None:
-            return Response({"error":"Can't find the entity source file."}, status=400)
+        try:
+            entity = Entity.objects.get(pk=pk)
+            self._verify_create_entity_mapped(request, entity)
             
+            
+            # We will create a dummy entity whose only purpose is to serialize the
+            # two fields we give it, so we can add them to the actual entity. The
+            # dummy starts as a dictionary, then becomes a serializer of its
+            # previous self, and then becomes an Entity
+            dummy = {}
+            dummy['data_header'] = request.data['data_header']
+            
+            assert os.path.isfile(entity.source.file)
+            data = util.file_to_list_of_dictionaries(open(entity.source.file, 'r'))
+            # Casting everything in data from strings to their proper data type
+            # according to request.data['data_header']
+            for item in data:
+                for mapping in dummy['data_header']:
+                    item[mapping["source"]] = \
+                        StringCaster[mapping["data_type"]](item[mapping["source"]])
+            
+            dummy['data'] = data
+            
+            dummy = EntityDetailedSerializer(data=dummy)
+            assert type(dummy) is EntityDetailedSerializer
+            
+            if dummy.is_valid():
+                dummy = Entity(**dummy.validated_data)
+                assert type(dummy) is Entity
+                # Adding the dummy's fields to the actual entity
+                entity.data_header = dummy.data_header
+                entity.data = dummy.data
+                entity.save()
+                return Response(data[:100], status=200)
+            else:
+                raise util.InvalidInputError("Invalid serializer")
         
-        
-        # We will create a dummy entity whose only purpose is to serialize the
-        # two fields we give it, so we can add them to the actual entity. The
-        # dummy starts as a dictionary, then becomes a serializer of its
-        # previous self, and then becomes an Entity
-        dummy = {}
-        dummy['data_header'] = request.data['data_header']
-        data = util.file_to_list_of_dictionaries(open(entity.source.file, 'r'))
-        
-        # Casting everything in data from strings to their proper data type
-        # according to request.data['data_header']
-        #TODO: Verify that mapping types are valid
-        for item in data:
-            for mapping in dummy['data_header']:
-                item[mapping["source"]] = \
-                    StringCaster[mapping["data_type"]](item[mapping["source"]])
-        
-        dummy['data'] = data
-        
-        dummy = EntityDetailedSerializer(data=dummy)
-        assert type(dummy) is EntityDetailedSerializer
-        
-        if dummy.is_valid():
-            dummy = Entity(**dummy.validated_data)
-            assert type(dummy) is Entity
-            # Adding the dummy's fields to the actual entity
-            entity.data_header = dummy.data_header
-            entity.data = dummy.data
-            entity.save()
-            return Response(JSONRenderer().render(data[:100]), status=200)
-        else:
-            return Response("Invalid serializer", status=400)
+        except util.InvalidInputError as e:
+            return Response({"error":str(e)}, status=400)
         
     
     
@@ -183,6 +218,11 @@ class StringCaster:
         def __getitem__(cls, key):
             return StringCaster._objects[key]
         
+    @staticmethod
+    def contains(key):
+        return key in StringCaster._objects
+    
+    
     __metaclass__= Meta
     
     # Contains the user-defined casting methods

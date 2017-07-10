@@ -78,8 +78,9 @@ def file_to_list_of_dictionaries(file, numLines=float("inf"), list=None):
     return parser_to_list_of_dictionaries(parser, numLines=numLines, list=list)
     
 
+
 class InvalidInputError(Exception):
     def __init__(self, msg):
         self.msg = msg
     def __str__(self):
-        return repr(msg)
+        return self.msg

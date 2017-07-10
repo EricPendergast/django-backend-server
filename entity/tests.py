@@ -17,6 +17,9 @@ class EntityTestCase(TestCase):
     
     entityDataHeaderJSON1 = '''{"data_header":[{"source":"transaction_quantity","mapped":"Transaction_Quantity","data_type":"number"},{"source":"transaction_date","mapped":"Transaction_Date","data_type":"date"},{"source":"transaction_id","mapped":"Transaction_ID","data_type":"string"},{"source":"user_id","mapped":"User_ID","data_type":"string"},{"source":"transaction_value","mapped":"Transaction_Value","data_type":"number"}]}'''
 
+    defaultFilename =  'misc/test_files/entity_data_1.csv'
+    
+    # '''
     def test_get_all_entity(self):
         Entity.objects.delete()
         c = Client()
@@ -44,7 +47,7 @@ class EntityTestCase(TestCase):
         c = Client()
 
         Entity.objects.delete()
-        response = self._create_entity_init(c, 'misc/test_files/entity_data_1.csv')
+        response = self._create_entity_init_raw_response(c, 'misc/test_files/entity_data_1.csv')
 
         id = self._from_json(response.content)['entity_id']
         self.assertEquals(response.status_code, 200)
@@ -73,7 +76,6 @@ class EntityTestCase(TestCase):
             u'transaction_date': datetime.datetime(2017, 4, 25, 0, 0),
             u'transaction_quantity': 14.0, u'transaction_id': u'293-64-2300',
             u'transaction_value': 320.89})
-
 
 
     def test_create_entity_second_stage_csv(self):
@@ -108,8 +110,7 @@ class EntityTestCase(TestCase):
             u'transaction_value': 320.89})
 
 
-
-    def test_create_entity_second_stage_xls(self):
+    def test_create_entity_xls(self):
         c = Client()
 
         entity = self._create_mapped_entity(c, self.entityDataHeaderJSON1, 'misc/test_files/entity_data_5_large.xls')['entity']
@@ -124,59 +125,74 @@ class EntityTestCase(TestCase):
             u'transaction_quantity': 104.0, u'transaction_id': u'293-64-2300',
             u'transaction_value': 320.89})
 
-        
-    def test_create_entity_second_stage_xlsx(self):
+
+    def test_create_entity_xlsx(self):
         c = Client()
-        
+
         entity = self._create_mapped_entity(c, self.entityDataHeaderJSON1, 'misc/test_files/entity_data_6_large.xlsx')['entity']
-        
+
         self.assertEquals(entity.data[0], {u'user_id': u'988-90-7620',
             u'transaction_date': datetime.datetime(2017, 4, 25, 0, 0),
             u'transaction_quantity': 1.0, u'transaction_id': u'293-64-2300',
             u'transaction_value': 320.89})
-        
+
         self.assertEquals(entity.data[-1], {u'user_id': u'988-90-7620',
             u'transaction_date': datetime.datetime(2017, 4, 25, 0, 0),
             u'transaction_quantity': 104.0, u'transaction_id': u'293-64-2300',
             u'transaction_value': 320.89})
+
+    # '''
+        
+    def test_create_entity_invalid_response(self):
+        c = Client()
+        invalid_json = ['{}',
+                '{"type":"transaction"}',
+                '{"source_type":"local", "type":"unicorn"}',
+                '{"source_type":"not a real source type", "type":"transaction"}',
+                '{"source_type":"local"}',]
+        for json in invalid_json:
+            print self._create_entity_init(c, filename=None, json=json)
+            self.assertTrue("error" in self._create_entity_init(c, filename=None, json=json))
+            
+        with open(self.defaultFilename) as fp:
+            self.assertTrue("error" in self._from_json(c.post('/entity/create_entity/', {'file_upload': fp}).content))
+            self.assertTrue("error" in self._from_json(c.post('/entity/create_entity/', {'entity':'{"source_type":"local", "type":"transaction"}'}).content))
         
         
+        
+        
+    # def test_create_entity_invalid_xlsx(self):
+    #     c = Client()
+    #
+    #     response = self._create_entity_init(c, json=self.entityDataHeaderJSON1, filename= 'misc/test_files/entity_data_7_invalid.xlsx')
+
+        # print response
+        # print response['data'][0]['transaction_date']
+        # self.assertTrue('error' in response)
+
+
     # def test_create_entity_invalid_csv(self):
     #     client = Client()
     #
     #     response = self._create_entity_init(client, 'misc/test_files/entity_data_invalid_3.csv')
     #
-    #     self.assertTrue('error' in self._from_json(response.content))
-        
-        
+    #     self.assertTrue('error' in response)
+
+    '''
     # Uploading a csv where the error is after line 100
-    # def test_create_entity_invalid_csv_after_100(self):
-    #     client = Client()
-    #
-    #     response = self._create_entity_init(client, 'misc/test_files/entity_data_invalid_long_4.csv')
-    #
-    #     self.assertFalse('error' in self._from_json(response.content))
-    #
-    #     id = _from_json(response.content)['entity_id']
-    #     response = _create_entity_final(client, response, id,
-    #             entityDataHeaderJSON1)
-    #
+    def test_create_entity_invalid_csv_after_100(self):
+        client = Client()
+
+        response = self._create_entity_init(client, 'misc/test_files/entity_data_invalid_long_4.csv')
+
+        self.assertFalse('error' in response)
+
+        id = response.content)['entity_id']
+        response = _create_entity_final(client, response, id,
+                entityDataHeaderJSON1)
+    '''
     
     
-    
-    # Performs the two stages to create an entity. Returns a dictionary with
-    # the created entity in the "entity" index, and the initial and final
-    # responses in indexes "init_response" and "final_response", respectively
-    def  _create_mapped_entity(self, client, data_header, filename):
-        init_response = self._create_entity_init(client, filename)
-        
-        id = self._from_json(init_response.content)['entity_id']
-        
-        final_response = self._create_entity_final(client, id, data_header)
-        
-        return {'entity':Entity.objects.get(pk=id), 'init_response':init_response, 'final_response':final_response}
-        
-            
     
     def _to_json(self, data):
         return JSONRenderer().render(data)
@@ -185,14 +201,17 @@ class EntityTestCase(TestCase):
         ret = JSONParser().parse(BytesIO(str(json_string)))
         return ret
     
-    def _create_entity_init(self, client,
+    def _create_entity_init_raw_response(self, client,
             filename, json=entityJSON1):
-        filename = 'misc/test_files/entity_data_1.csv' if filename is None else filename
+        filename = self.defaultFilename if filename is None else filename
         
         with open(filename) as fp:
             ret = client.post('/entity/create_entity/',
-                {'fileUpload': fp, 'entity': json})
+                {'file_upload': fp, 'entity': json})
             return ret
+        
+    def _create_entity_init(self, *args, **kwargs):
+        return self._from_json(self._create_entity_init_raw_response(*args, **kwargs).content)
         
     def _create_entity_final(self, client, id, data_header):
         final_response = client.post('/entity/%s/create_entity_mapped/' % id,
@@ -200,3 +219,15 @@ class EntityTestCase(TestCase):
                 HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         
         return final_response
+    
+    # Performs the two stages to create an entity. Returns a dictionary with
+    # the created entity in the "entity" index, and the initial and final
+    # responses in indexes "init_response" and "final_response", respectively
+    def _create_mapped_entity(self, client, data_header, filename):
+        init_response = self._create_entity_init(client, filename)
+        
+        id = init_response['entity_id']
+        
+        final_response = self._create_entity_final(client, id, data_header)
+        
+        return {'entity':Entity.objects.get(pk=id), 'init_response':init_response, 'final_response':final_response}

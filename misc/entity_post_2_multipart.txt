@@ -1,5 +1,5 @@
 --AaZz
-Content-Disposition: form-data; name="fileUpload"; filename="test_data_upload_2.csv"
+Content-Disposition: form-data; name="file_upload"; filename="test_data_upload_2.csv"
 Content-Type: text/plain
 
 transaction_quantity,transaction_date,user_id,transaction_id,transaction_value
