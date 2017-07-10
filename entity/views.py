@@ -56,7 +56,8 @@ class EntityViewSet(viewsets.ViewSet):
 
 
     def _verify_create_entity(self, request):
-        # TODO: add more elements to the valid types tuples
+        # TODO: Replace valid types tuples with enums/lists/dictionaries to
+        # decouple them from this specific method
         if not ('entity' in request.data):
             raise util.InvalidInputError("No entity data in request")
         
@@ -79,7 +80,6 @@ class EntityViewSet(viewsets.ViewSet):
     def create_entity(self, request):
         # 0. checking (to be developed afterwards)
         # 1. getting csv/tsv information, header information, uploaded data
-        # TODO: Make sure that each file saved has a unique name
         # 2. save file to temp dir
         # 3. save basic entity information, temp dir folder "progressing" state in mongo
         # 4. return 100 rows of data
@@ -153,8 +153,6 @@ class EntityViewSet(viewsets.ViewSet):
         # 3. validating mapping (to be developed afterwards)
         # 4. return 100 rows of data
         
-        # TODO: remove entity source when load from file
-        
         try:
             entity = Entity.objects.get(pk=pk)
             self._verify_create_entity_mapped(request, entity)
@@ -187,7 +185,6 @@ class EntityViewSet(viewsets.ViewSet):
                 # Adding the dummy's fields to the actual entity
                 entity.data_header = dummy.data_header
                 entity.data = dummy.data
-                # print entity.source.file
                 # assert(re.match(entity.source.file,
                         # r"^temp\/[0-9a-fA-F-]{36}.*$") is not None)
                 os.remove(entity.source.file)

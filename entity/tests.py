@@ -109,6 +109,14 @@ class EntityTestCase(TestCase):
             u'transaction_quantity': 14.0, u'transaction_id': u'294-64-2300',
             u'transaction_value': 320.89})
 
+        
+    def test_create_entity_invalid_csv(self):
+        client = Client()
+
+        response = self._create_entity_init(client, 'misc/test_files/entity_data_invalid_3.csv')
+
+        self.assertTrue('error' in response)
+        
 
     def test_create_entity_xls(self):
         c = Client()
@@ -151,7 +159,6 @@ class EntityTestCase(TestCase):
                 '{"source_type":"not a real source type", "type":"transaction"}',
                 '{"source_type":"local"}',]
         for json in invalid_json:
-            print self._create_entity_init(c, filename=None, json=json)
             self.assertTrue("error" in self._create_entity_init(c, filename=None, json=json))
             
         with open(self.defaultFilename) as fp:
@@ -176,22 +183,16 @@ class EntityTestCase(TestCase):
         for i in range(num):
             self.assertTrue(Entity.objects.filter(
                 pk=responses[i]["entity_id"]))
+            
+            
+    # Doesn't work yet because of the way excel files measure line width
     # def test_create_entity_invalid_xlsx(self):
     #     c = Client()
     #
     #     response = self._create_entity_init(c, json=self.entityDataHeaderJSON1, filename= 'misc/test_files/entity_data_7_invalid.xlsx')
-
-        # print response
-        # print response['data'][0]['transaction_date']
-        # self.assertTrue('error' in response)
+    #      self.assertTrue('error' in response)
 
 
-    # def test_create_entity_invalid_csv(self):
-    #     client = Client()
-    #
-    #     response = self._create_entity_init(client, 'misc/test_files/entity_data_invalid_3.csv')
-    #
-    #     self.assertTrue('error' in response)
 
     '''
     # Uploading a csv where the error is after line 100
