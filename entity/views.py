@@ -15,7 +15,7 @@ from models import *
 
 import csv
 import util
-import datetime
+from util import InvalidInputError, string_caster
 import os.path
 import uuid
 import re
@@ -56,20 +56,18 @@ class EntityViewSet(viewsets.ViewSet):
 
 
     def _verify_create_entity(self, request):
-        # TODO: Replace valid types tuples with enums/lists/dictionaries to
-        # decouple them from this specific method
         if not ('entity' in request.data):
-            raise util.InvalidInputError("No entity data in request")
+            raise InvalidInputError("No entity data in request")
         
         entity_dict = JSONParser().parse(BytesIO(request.data["entity"]))
         if not ('type' in entity_dict and 
-                entity_dict['type'] in ("transaction", "Something else...")):
-            raise util.InvalidInputError("Invalid or missing entity 'type' field")
+                EntityVerifier.ver_field('type', entity_dict['type'])):
+            raise InvalidInputError("Invalid or missing entity 'type' field")
         if not ('source_type' in entity_dict and 
-                entity_dict['source_type'] in ("local", "something else...")):
-            raise util.InvalidInputError("Invalid or missing entity 'source_type' field")
+                EntityVerifier.ver_field('source_type', entity_dict['source_type'])):
+            raise InvalidInputError("Invalid or missing entity 'source_type' field")
         if 'file_upload' not in request.FILES:
-            raise util.InvalidInputError("No request 'file_upload' field")
+            raise InvalidInputError("No request 'file_upload' field")
         
         
     """
@@ -89,8 +87,8 @@ class EntityViewSet(viewsets.ViewSet):
             
             # The dir that the uploaded data file will be saved to.
             # Appending the original filename to the end so that the new
-            # filename has the same extension, and also makes the filename more
-            # recognizable.
+            # filename has the same extension, while also making the filename
+            # more recognizable.
             filename = "temp/" + str(uuid.uuid4()) \
                     + "." + str(request.FILES["file_upload"])
             
@@ -104,17 +102,17 @@ class EntityViewSet(viewsets.ViewSet):
             response_data = {}
             
             serializer = EntityDetailedSerializer(data=entity_dict)
-                            
+            
             if serializer.is_valid():
                 response_data['entity_id'] = str(serializer.save().id)
             else:
-                raise util.InvalidInputError("Invalid serializer")
+                raise InvalidInputError("Invalid serializer")
             
             response_data['data'] = util.file_to_list_of_dictionaries(
                     open(entity_dict["source"]["file"]), numLines=100)
             
             return Response(response_data, status=200)
-        except util.InvalidInputError as e:
+        except InvalidInputError as e:
             return Response({"error":str(e)}, status=400)
         
     '''
@@ -127,17 +125,16 @@ class EntityViewSet(viewsets.ViewSet):
         - the data header has all the valid fields, and valid types
     '''
     
-    def _verify_create_entity_mapped(self, request, entity):
-        if entity is None:
-            raise util.InvalidInputError("Can't find the entity with the given id: %s" % pk)
+    def _verify_create_entity_mapped(self, request, entity, pk):
+        if entity is None: #TODO: not covered by tests
+            raise InvalidInputError("Can't find the entity with the given id: %s" % pk)
         if not ('data_header' in request.data):
-            raise util.InvalidInputError("No data header.")
+            raise InvalidInputError("No data header.")
         if entity.source.file == None:
-            raise util.InvalidInputError("Can't find the entity source file.")
+            raise InvalidInputError("Can't find the entity source file.")
         
-        for mapping in request.data['data_header']:
-            if not ({"source","mapped","data_type"} <= set(mapping) and
-                    StringCaster.contains(mapping["data_type"])):
+        for header in request.data['data_header']:
+            if not (DataHeaderVerifier.ver_all(header)):
                 raise InvalidInputError("Invalid data header")
             
 
@@ -155,8 +152,7 @@ class EntityViewSet(viewsets.ViewSet):
         
         try:
             entity = Entity.objects.get(pk=pk)
-            self._verify_create_entity_mapped(request, entity)
-            
+            self._verify_create_entity_mapped(request, entity, pk)
             
             # We will create a dummy entity whose only purpose is to serialize the
             # two fields we give it, so we can add them to the actual entity. The
@@ -172,7 +168,7 @@ class EntityViewSet(viewsets.ViewSet):
             for item in data:
                 for mapping in dummy['data_header']:
                     item[mapping["source"]] = \
-                        StringCaster[mapping["data_type"]](item[mapping["source"]])
+                        string_caster[mapping["data_type"]](item[mapping["source"]])
             
             dummy['data'] = data
             
@@ -192,9 +188,9 @@ class EntityViewSet(viewsets.ViewSet):
                 entity.save()
                 return Response(data[:100], status=200)
             else:
-                raise util.InvalidInputError("Invalid serializer")
+                raise InvalidInputError("Invalid serializer")
         
-        except util.InvalidInputError as e:
+        except InvalidInputError as e:
             return Response({"error":str(e)}, status=400)
         
     
@@ -209,39 +205,3 @@ class EntityViewSet(viewsets.ViewSet):
         return Response("All entities deleted", status=200)
 
 
-
-
-        
-# Takes a string representation of a type and returns a function that casts
-# strings to that type
-class StringCaster:
-    
-    # I implement the meta class so that I can use the static [] operator on
-    # StringCaster.
-    # Explanation: when you call object[something], it looks at the class of
-    # 'object' to find the code for __getitem__. So when you call
-    # StringCaster[something], it looks to the class of StringCaster, which we
-    # defined as StringCaster.Meta, and executes its __getitem__ method.
-    class Meta(type):
-        def __getitem__(cls, key):
-            return StringCaster._objects[key]
-        
-    @staticmethod
-    def contains(key):
-        return key in StringCaster._objects
-    
-    
-    __metaclass__= Meta
-    
-    # Contains the user-defined casting methods
-    class Casters:
-        @staticmethod
-        def _string_to_date(str):
-            return datetime.datetime.strptime(str, '%d/%m/%Y')
-        
-    _objects = {
-        "string":str,
-        "date":Casters._string_to_date,
-        "number":float
-    }
-    

@@ -3,6 +3,7 @@ import codecs
 import os
 import xlrd
 import re
+import datetime
 
 def parser_to_list_of_dictionaries(parser, numLines=float("inf"), list=None):
     """
@@ -93,3 +94,12 @@ class InvalidInputError(Exception):
         self.msg = msg
     def __str__(self):
         return self.msg
+    
+    
+# Takes a string representation of a type and returns a function that casts
+# strings to that type
+string_caster = {
+        "string":str,
+        "date":lambda str: datetime.datetime.strptime(str, '%d/%m/%Y'),
+        "number":float
+    }

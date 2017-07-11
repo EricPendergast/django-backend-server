@@ -16,6 +16,8 @@ class EntityTestCase(TestCase):
     entityJSON1 = '''{ "id": "59560d779a4c0e4abaa1b6a8", "type": "transaction", "source_type": "local", "allowed_user": [], "created_at": "2017-06-28T14:08:10.276000", "updated_at": "2017-06-28T14:08:10.276000"}'''
     
     entityDataHeaderJSON1 = '''{"data_header":[{"source":"transaction_quantity","mapped":"Transaction_Quantity","data_type":"number"},{"source":"transaction_date","mapped":"Transaction_Date","data_type":"date"},{"source":"transaction_id","mapped":"Transaction_ID","data_type":"string"},{"source":"user_id","mapped":"User_ID","data_type":"string"},{"source":"transaction_value","mapped":"Transaction_Value","data_type":"number"}]}'''
+    # Contains an invalid type
+    entityDataHeaderJSON2 = '''{"data_header":[{"source":"transaction_quantity","mapped":"Transaction_Quantity","data_type":"asdfasdf"},{"source":"transaction_date","mapped":"Transaction_Date","data_type":"date"},{"source":"transaction_id","mapped":"Transaction_ID","data_type":"string"},{"source":"user_id","mapped":"User_ID","data_type":"string"},{"source":"transaction_value","mapped":"Transaction_Value","data_type":"number"}]}'''
 
     defaultFilename =  'misc/test_files/entity_data_1.csv'
     
@@ -148,10 +150,10 @@ class EntityTestCase(TestCase):
             u'transaction_date': datetime.datetime(2017, 4, 25, 0, 0),
             u'transaction_quantity': 104.0, u'transaction_id': u'293-64-2300',
             u'transaction_value': 320.89})
-
     # '''
         
-    def test_create_entity_invalid_response(self):
+        
+    def test_create_entity_invalid_init_request(self):
         c = Client()
         invalid_json = ['{}',
                 '{"type":"transaction"}',
@@ -164,6 +166,16 @@ class EntityTestCase(TestCase):
         with open(self.defaultFilename) as fp:
             self.assertTrue("error" in self._from_json(c.post('/entity/create_entity/', {'file_upload': fp}).content))
             self.assertTrue("error" in self._from_json(c.post('/entity/create_entity/', {'entity':'{"source_type":"local", "type":"transaction"}'}).content))
+        
+    def test_create_entity_invalid_final_request(self):
+        c = Client()
+        # response = self._create_entity_init(c, filename=self.defaultFilename, json=self.entityJSON1)
+        
+        # self.assertTrue("error" in self._from_json(self._create_entity_final(c, response['entity_id'], self.entityDataHeaderJSON1)))
+        
+        resp = self._create_mapped_entity(c, self.entityDataHeaderJSON2, self.defaultFilename)
+        print resp['final_response']
+        self.assertTrue("error" in self._from_json(resp['final_response'].content))
         
     
     def test_create_multiple_entity(self):
@@ -195,7 +207,8 @@ class EntityTestCase(TestCase):
 
 
     '''
-    # TODO: Figure out how to handle this case
+    # TODO: Figure out how to handle this case: remove the entity from the
+    # database
     # Uploading a csv where the error is after line 100
     def test_create_entity_invalid_csv_after_100(self):
         client = Client()

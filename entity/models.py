@@ -4,6 +4,7 @@ from mongoengine import *
 import datetime
 from django.contrib.auth.hashers import check_password, make_password
 
+import util
 
 # Create your models here.
 
@@ -48,6 +49,10 @@ class DataSource(EmbeddedDocument):
         return self
 
 
+    
+    
+    
+
 class Entity(Document):
     type = StringField(max_length=20)
     source_type = StringField(max_length=15)
@@ -59,3 +64,37 @@ class Entity(Document):
     allowed_user = ListField()
     created_at = DateTimeField(default=datetime.datetime.now)
     updated_at = DateTimeField(default=datetime.datetime.now)
+    
+    
+    
+class Verifier(object):
+    @classmethod
+    def ver_field(cls, field_name, field_content):
+        assert cls is not Verifier, "class 'Verifier' is abstract"
+        return not (field_name in cls.fields_options) or (field_content in cls.fields_options[field_name])
+    
+    @classmethod
+    def ver_all(cls, all_data):
+        # Verify 'all_data' has all the required fields
+        for field in cls.required_fields:
+            if not field in all_data:
+                return False
+        # Verify that every field in 'all_data' follows the correct format
+        for field in all_data:
+            if not cls.ver_field(field, all_data[field]):
+                return False
+        
+        return True
+    
+    
+class EntityVerifier(Verifier):
+    fields_options = {"type":{"transaction", "something else",},
+            "source_type": {"local",}}
+    
+    required_fields = {"type", "source_type"}
+    
+    
+class DataHeaderVerifier(Verifier):
+    fields_options = {"data_type":util.string_caster}
+    
+    required_fields = {"source","mapped","data_type"}
