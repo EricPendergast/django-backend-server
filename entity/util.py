@@ -1,4 +1,5 @@
 import csv
+import codecs
 import os
 import xlrd
 import re
@@ -9,6 +10,7 @@ def parser_to_list_of_dictionaries(parser, numLines=float("inf"), list=None):
     content, or creating a new list if no list is given. The csv file is
     expected to be stored in the format:
     
+    <csv header line, optional>
     header 1,header 2,header 3, . . .
     11,12,13
     21,22,23
@@ -66,13 +68,20 @@ def file_to_list_of_dictionaries(file, numLines=float("inf"), list=None):
     parser = None
     _, extension = os.path.splitext(file.name)
     
-    if extension.lower() == ".tsv":
-        parser = csv.reader(file, delimiter='\t')
-    elif extension.lower() == ".csv":
-        parser = csv.reader(file, delimiter=',')
+    if extension.lower() in [".csv", ".tsv"]:
+        # Reading the dialect from the file.
+        dialect = csv.Sniffer().sniff(
+                codecs.EncodedFile(file, "utf-8").read(1024), delimiters=",\t")
+        # Since we read some stuff from the file, we must reset the point being
+        # read from
+        file.seek(0)
+        parser = csv.reader(codecs.EncodedFile(file, "utf-8"), dialect=dialect)
+        
     elif extension.lower() in [".xls",".xlsx"]:
         ws = xlrd.open_workbook(file.name).sheet_by_index(0)
         parser = [ws.row(i) for i in range(ws.nrows)]
+    else:
+        raise InvalidInputError("Unknown filetype: " + file.name)
         
     
     return parser_to_list_of_dictionaries(parser, numLines=numLines, list=list)
