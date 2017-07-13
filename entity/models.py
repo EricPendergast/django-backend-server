@@ -22,9 +22,12 @@ class DataSummary(EmbeddedDocument):
     value = StringField()
     order = IntField(unique=True)
 
+class File(EmbeddedDocument):
+    filename = StringField()
+    isHeaderIncluded = BooleanField()
 
 class DataSource(EmbeddedDocument):
-    file = StringField()
+    file = EmbeddedDocumentField(File)
     link = StringField()
     account = StringField()
     password = StringField(max_length=255)
@@ -47,13 +50,11 @@ class DataSource(EmbeddedDocument):
         self.password = make_password(raw_password)
         self.save()
         return self
-
-
-    
     
     
 
 class Entity(Document):
+    state = IntField()
     type = StringField(max_length=20)
     source_type = StringField(max_length=15)
     source = EmbeddedDocumentField(DataSource)
@@ -64,37 +65,3 @@ class Entity(Document):
     allowed_user = ListField()
     created_at = DateTimeField(default=datetime.datetime.now)
     updated_at = DateTimeField(default=datetime.datetime.now)
-    
-    
-    
-class Verifier(object):
-    @classmethod
-    def ver_field(cls, field_name, field_content):
-        assert cls is not Verifier, "class 'Verifier' is abstract"
-        return not (field_name in cls.fields_options) or (field_content in cls.fields_options[field_name])
-    
-    @classmethod
-    def ver_all(cls, all_data):
-        # Verify 'all_data' has all the required fields
-        for field in cls.required_fields:
-            if not field in all_data:
-                return False
-        # Verify that every field in 'all_data' follows the correct format
-        for field in all_data:
-            if not cls.ver_field(field, all_data[field]):
-                return False
-        
-        return True
-    
-    
-class EntityVerifier(Verifier):
-    fields_options = {"type":{"transaction", "something else",},
-            "source_type": {"local",}}
-    
-    required_fields = {"type", "source_type"}
-    
-    
-class DataHeaderVerifier(Verifier):
-    fields_options = {"data_type":util.string_caster}
-    
-    required_fields = {"source","mapped","data_type"}

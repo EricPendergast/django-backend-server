@@ -1,6 +1,6 @@
 from rest_framework_mongoengine.serializers import DocumentSerializer
 from models import Entity, DataHeader
-import util
+from util import InvalidInputError
 
 
 class EntitySummarySerializer(DocumentSerializer):
@@ -19,9 +19,10 @@ class DataHeaderSerializer(DocumentSerializer):
         fields = '__all__'
 
 class EntityDetailedSerializer(DocumentSerializer):
-    def validate(self, attrs):
-        raise util.InvalidInputError("Invalid serializer")
-        return attrs
+    # def validate(self, entity):
+        # pass
+        # raise util.InvalidInputError("Invalid serializer")
+        # return attrs
     
     class Meta:
         model = Entity

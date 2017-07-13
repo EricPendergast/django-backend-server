@@ -4,15 +4,15 @@ import os
 import xlrd
 import re
 import datetime
+import distutils.core
 
-def parser_to_list_of_dictionaries(parser, numLines=float("inf"), list=None):
+def parser_to_list_of_dictionaries(parser, headerRow=None, numLines=float("inf"), list=None):
     """
     Takes a csv file stores its contents into the given list, replacing the old
     content, or creating a new list if no list is given. The csv file is
     expected to be stored in the format:
     
-    <csv header line, optional>
-    header 1,header 2,header 3, . . .
+    <header line optional> header 1,header 2,header 3, . . .
     11,12,13
     21,22,23
     31,32,33
@@ -28,44 +28,46 @@ def parser_to_list_of_dictionaries(parser, numLines=float("inf"), list=None):
      .
      .
     ]
+    
+    If headerRow is None, it auto generates a header row in the format 
+    ["column 1", "column 2", ...]
     """
     
     list = [] if list is None else list
     del list[:]
     
-    firstRow = None
-    rowCount = 0
+    first = True
     for row in parser:
+        # numLines can be thought of as the number of lines remaining to be
+        # parsed
         if numLines <= 0:
             return list
         numLines -= 1
         
-        if firstRow is None:
-            firstRow = row
-            numLines += 1
-        else:
-            # "Header row and subsequent row(s) are not the same length"
-            if len(row) != len(firstRow):
-                raise InvalidInputError("Header row and subsequent row(s) are not the same length")
-                
-            def to_string(obj):
-                if type(obj) is xlrd.sheet.Cell:
-                    return str(obj.value)
-                else:
-                    return str(obj)
-            # Each item in the list is refered to as a "data
-            # point"
-            dataPointDict = {}
-            for i in range(0, len(row)):
-                dataPointDict[to_string(firstRow[i])] = to_string(row[i])
+        if headerRow is None:
+            headerRow = ["column %s" % (i+1) for i in range(len(row))]
             
-            list += (dataPointDict,)
+        if len(row) != len(headerRow):
+            raise InvalidInputError("Header row and subsequent row(s) are not the same length")
+            
+        def to_string(obj):
+            if type(obj) is xlrd.sheet.Cell:
+                return str(obj.value)
+            else:
+                return str(obj)
+        # Each item in the list is refered to as a "data
+        # point"
+        dataPointDict = {}
+        for i in range(0, len(row)):
+            dataPointDict[to_string(headerRow[i])] = to_string(row[i])
+        
+        list += (dataPointDict,)
             
     return list
 
 
 
-def file_to_list_of_dictionaries(file, numLines=float("inf"), list=None):
+def file_to_list_of_dictionaries(file, numLines=float("inf"), list=None, isHeaderIncluded=True):
     parser = None
     _, extension = os.path.splitext(file.name)
     
@@ -73,19 +75,35 @@ def file_to_list_of_dictionaries(file, numLines=float("inf"), list=None):
         # Reading the dialect from the file.
         dialect = csv.Sniffer().sniff(
                 codecs.EncodedFile(file, "utf-8").read(1024), delimiters=",\t")
-        # Since we read some stuff from the file, we must reset the point being
-        # read from
-        file.seek(0)
-        parser = csv.reader(codecs.EncodedFile(file, "utf-8"), dialect=dialect)
+        
+        file.seek(0) # reset the read point
+        
+        def csv_generator(csv_reader):
+            for line in csv_reader:
+                yield line
+        
+        parser = csv_generator(csv.reader(codecs.EncodedFile(file, "utf-8"),
+            dialect=dialect))
         
     elif extension.lower() in [".xls",".xlsx"]:
+        # TODO: possible bottleneck: figure out how to make it so that the
+        # excel file is not fully loaded into memory at once
+        
+        def xl_generator(worksheet):
+            for i in range(worksheet.nrows):
+                yield ws.row(i)
+            
         ws = xlrd.open_workbook(file.name).sheet_by_index(0)
-        parser = [ws.row(i) for i in range(ws.nrows)]
+        parser = xl_generator(ws)
     else:
         raise InvalidInputError("Unknown filetype: " + file.name)
         
+    if isHeaderIncluded:
+        headerRow = next(parser)
+    else:
+        headerRow = None
     
-    return parser_to_list_of_dictionaries(parser, numLines=numLines, list=list)
+    return parser_to_list_of_dictionaries(parser, headerRow=headerRow, numLines=numLines, list=list)
     
 
 
@@ -101,5 +119,6 @@ class InvalidInputError(Exception):
 string_caster = {
         "string":str,
         "date":lambda str: datetime.datetime.strptime(str, '%d/%m/%Y'),
-        "number":float
+        "number":float,
+        "bool":lambda str: bool(distutils.util.strtobool(str)),
     }
