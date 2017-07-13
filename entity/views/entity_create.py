@@ -9,14 +9,14 @@ from django.utils.six import BytesIO
 from django.template.response import TemplateResponse
 from django.http import HttpResponse
 
-from serializers import *
-from models import *
-from input_verifier import CreateEntityVerifier, CreateEntityMappedVerifier
-from handler import *
+from entity.serializers import *
+from entity.models import *
+from entity.input_verifier import CreateEntityVerifier, CreateEntityMappedVerifier
+from entity.handlers.create_entity import *
 
 import csv
-import util
-from util import InvalidInputError, string_caster
+import entity.util
+from entity.util import InvalidInputError, string_caster
 import os.path
 import uuid
 import re
@@ -60,7 +60,12 @@ class EntityViewSet(viewsets.ViewSet):
         
     """
     Creating entity (without mapping information)
-    @param: entity_type
+    If there is an error, the response will contain an "error" key, which
+    will map to the error message. Otherwise it will send a response with the following:
+        "entity_id", which maps to the id of the newly created entity
+        "data", which maps to the first 100 lines of data parsed from the input
+            file, with the original headers, or generated headers if no headers
+            were given
     """
     @list_route(methods=['post'])
     def create_entity(self, request):
@@ -87,7 +92,6 @@ class EntityViewSet(viewsets.ViewSet):
         
     """
     Creating entity (with mapping information)
-    @param: entity_type
     """
     @detail_route(methods=['post'])
     def create_entity_mapped(self, request, pk=None):
@@ -104,6 +108,7 @@ class EntityViewSet(viewsets.ViewSet):
                     verifier = verifier,
                     pk = pk)
             
+            print response_data
             assert verifier.verified
             return Response(response_data, status=200)
         except InvalidInputError as e:

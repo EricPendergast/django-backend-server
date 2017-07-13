@@ -36,6 +36,7 @@ class EntityTestCase(TestCase):
         # Taking the first item from the list of entities sent back
         data = self._from_json(response.content)[0]
         dataComp = self._from_json(self.entityJSON1)
+        # don't compare their id's
         del data["id"]
         del dataComp["id"]
 
@@ -43,6 +44,7 @@ class EntityTestCase(TestCase):
         # in the blank fields with defaults
         for key in dataComp:
             self.assertEquals(data[key], dataComp[key])
+            
 
     def test_create_entity_first_stage(self):
         c = Client()
@@ -68,45 +70,49 @@ class EntityTestCase(TestCase):
 
         entity = Entity.objects.first()
 
-        self.assertEquals(entity.data[0], {u'user_id': u'751-23-2405',
-            u'transaction_date': datetime.datetime(2017, 1, 9, 0, 0),
-            u'transaction_quantity': 8.0, u'transaction_id': u'228-08-3254',
-            u'transaction_value': 86.17})
+        self.assertEquals(entity.data[0], {u'User_ID': u'751-23-2405',
+            u'Transaction_Date': datetime.datetime(2017, 1, 9, 0, 0),
+            u'Transaction_Quantity': 8.0, u'Transaction_ID': u'228-08-3254',
+            u'Transaction_Value': 86.17})
 
-        self.assertEquals(entity.data[-1], {u'user_id': u'988-90-7620',
-            u'transaction_date': datetime.datetime(2017, 4, 25, 0, 0),
-            u'transaction_quantity': 14.0, u'transaction_id': u'293-64-2300',
-            u'transaction_value': 320.89})
+        self.assertEquals(entity.data[-1], {u'User_ID': u'988-90-7620',
+            u'Transaction_Date': datetime.datetime(2017, 4, 25, 0, 0),
+            u'Transaction_Quantity': 14.0, u'Transaction_ID': u'293-64-2300',
+            u'Transaction_Value': 320.89})
+        
 
     def test_create_entity_second_stage_csv(self):
         c = Client()
 
         entity = self._create_mapped_entity(c, self.entityDataHeaderJSON1, 'misc/test_files/entity_data_1.csv')['entity']
         
-        self.assertEquals(entity.data[0], {u'user_id': u'751-23-2405',
-            u'transaction_date': datetime.datetime(2017, 1, 9, 0, 0),
-            u'transaction_quantity': 8.0, u'transaction_id': u'228-08-3254',
-            u'transaction_value': 86.17})
+        self.assertEquals(entity.data[0], {u'User_ID': u'751-23-2405',
+            u'Transaction_Date': datetime.datetime(2017, 1, 9, 0, 0),
+            u'Transaction_Quantity': 8.0, u'Transaction_ID': u'228-08-3254',
+            u'Transaction_Value': 86.17})
 
-        self.assertEquals(entity.data[-1], {u'user_id': u'988-90-7620',
-            u'transaction_date': datetime.datetime(2017, 4, 25, 0, 0),
-            u'transaction_quantity': 14.0, u'transaction_id': u'293-64-2300',
-            u'transaction_value': 320.89})
+        self.assertEquals(entity.data[-1], {u'User_ID': u'988-90-7620',
+            u'Transaction_Date': datetime.datetime(2017, 4, 25, 0, 0),
+            u'Transaction_Quantity': 14.0, u'Transaction_ID': u'293-64-2300',
+            u'Transaction_Value': 320.89})
 
+        
     def test_create_entity_second_stage_tsv(self):
         c = Client()
 
         entity = self._create_mapped_entity(c, self.entityDataHeaderJSON1, 'misc/test_files/entity_data_2.tsv')['entity']
+        
+        
 
-        self.assertEquals(entity.data[0], {u'user_id': u'851-23-2405',
-            u'transaction_date': datetime.datetime(2017, 1, 9, 0, 0),
-            u'transaction_quantity': 8.0, u'transaction_id': u'228-08-3254',
-            u'transaction_value': 87.17})
+        self.assertEquals(entity.data[0], {u'User_ID': u'851-23-2405',
+            u'Transaction_Date': datetime.datetime(2017, 1, 9, 0, 0),
+            u'Transaction_Quantity': 8.0, u'Transaction_ID': u'228-08-3254',
+            u'Transaction_Value': 87.17})
 
-        self.assertEquals(entity.data[-1], {u'user_id': u'989-90-7620',
-            u'transaction_date': datetime.datetime(2017, 4, 25, 0, 0),
-            u'transaction_quantity': 14.0, u'transaction_id': u'294-64-2300',
-            u'transaction_value': 320.89})
+        self.assertEquals(entity.data[-1], {u'User_ID': u'989-90-7620',
+            u'Transaction_Date': datetime.datetime(2017, 4, 25, 0, 0),
+            u'Transaction_Quantity': 14.0, u'Transaction_ID': u'294-64-2300',
+            u'Transaction_Value': 320.89})
 
         
     def test_create_entity_invalid_csv(self):
@@ -116,36 +122,37 @@ class EntityTestCase(TestCase):
 
         self.assertTrue('error' in response)
 
+
     def test_create_entity_xls(self):
         c = Client()
 
         entity = self._create_mapped_entity(c, self.entityDataHeaderJSON1, 'misc/test_files/entity_data_5_large.xls')['entity']
 
-        self.assertEquals(entity.data[0], {u'user_id': u'988-90-7620',
-            u'transaction_date': datetime.datetime(2017, 4, 25, 0, 0),
-            u'transaction_quantity': 1.0, u'transaction_id': u'293-64-2300',
-            u'transaction_value': 320.89})
+        self.assertEquals(entity.data[0], {u'User_ID': u'988-90-7620',
+            u'Transaction_Date': datetime.datetime(2017, 4, 25, 0, 0),
+            u'Transaction_Quantity': 1.0, u'Transaction_ID': u'293-64-2300',
+            u'Transaction_Value': 320.89})
 
-        self.assertEquals(entity.data[-1], {u'user_id': u'988-90-7620',
-            u'transaction_date': datetime.datetime(2017, 4, 25, 0, 0),
-            u'transaction_quantity': 104.0, u'transaction_id': u'293-64-2300',
-            u'transaction_value': 320.89})
+        self.assertEquals(entity.data[-1], {u'User_ID': u'988-90-7620',
+            u'Transaction_Date': datetime.datetime(2017, 4, 25, 0, 0),
+            u'Transaction_Quantity': 104.0, u'Transaction_ID': u'293-64-2300',
+            u'Transaction_Value': 320.89})
 
-
+        
     def test_create_entity_xlsx(self):
         c = Client()
 
         entity = self._create_mapped_entity(c, self.entityDataHeaderJSON1, 'misc/test_files/entity_data_6_large.xlsx')['entity']
 
-        self.assertEquals(entity.data[0], {u'user_id': u'988-90-7620',
-            u'transaction_date': datetime.datetime(2017, 4, 25, 0, 0),
-            u'transaction_quantity': 1.0, u'transaction_id': u'293-64-2300',
-            u'transaction_value': 320.89})
+        self.assertEquals(entity.data[0], {u'User_ID': u'988-90-7620',
+            u'Transaction_Date': datetime.datetime(2017, 4, 25, 0, 0),
+            u'Transaction_Quantity': 1.0, u'Transaction_ID': u'293-64-2300',
+            u'Transaction_Value': 320.89})
 
-        self.assertEquals(entity.data[-1], {u'user_id': u'988-90-7620',
-            u'transaction_date': datetime.datetime(2017, 4, 25, 0, 0),
-            u'transaction_quantity': 104.0, u'transaction_id': u'293-64-2300',
-            u'transaction_value': 320.89})
+        self.assertEquals(entity.data[-1], {u'User_ID': u'988-90-7620',
+            u'Transaction_Date': datetime.datetime(2017, 4, 25, 0, 0),
+            u'Transaction_Quantity': 104.0, u'Transaction_ID': u'293-64-2300',
+            u'Transaction_Value': 320.89})
         
         
     def test_create_entity_invalid_init_request(self):
@@ -170,15 +177,13 @@ class EntityTestCase(TestCase):
             resp = client.post('/entity/create_entity/',
                 {'file_upload': fp, 'entity': self.entityJSON1})
             self.assertTrue('error' in self._from_json(resp.content))
+            
         
     def test_create_entity_invalid_final_request(self):
         c = Client()
             
-        # response = self._create_entity_init(c, filename=self.defaultFilename, json=self.entityJSON1)
-        
-        # self.assertTrue("error" in self._from_json(self._create_entity_final(c, response['entity_id'], self.entityDataHeaderJSON1)))
-        
-        resp = self._create_mapped_entity(c, self.entityDataHeaderInvalidType, self.defaultFilename)
+        resp = self._create_mapped_entity(c, self.entityDataHeaderInvalidType,
+                self.defaultFilename)
         self.assertTrue("error" in self._from_json(resp['final_response'].content))
         
     
@@ -200,6 +205,7 @@ class EntityTestCase(TestCase):
             self.assertTrue(Entity.objects.filter(
                 pk=responses[i]["entity_id"]))
             
+            
     def test_create_entity_no_header(self):
         client = Client()
         resp = self._create_mapped_entity(client, self.entityDataHeaderNoFileHeader,
@@ -209,11 +215,13 @@ class EntityTestCase(TestCase):
         for dataEntry in resp["init_response"]["data"]:
             for header_name in dataEntry:
                 self.assertRegex(header_name, "^column [0-9]+$")
+                
     
     # TODO: test that create_entity and create_entity_mapped send back 100
     # lines of data
     
     
+    # TODO: Handle this case
     # Doesn't work yet because of the way excel files measure line width
     # def test_create_entity_invalid_xlsx(self):
     #     c = Client()
@@ -222,7 +230,7 @@ class EntityTestCase(TestCase):
     #      self.assertTrue('error' in response)
 
 
-    # # TODO: Figure out how to handle this case: remove the entity from the
+    # # TODO: Handle this case by removing the entity from the
     # # database
     # # Uploading a csv where the error is after line 100
     # def test_create_entity_invalid_csv_after_100(self):

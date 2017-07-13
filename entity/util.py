@@ -86,9 +86,6 @@ def file_to_list_of_dictionaries(file, numLines=float("inf"), list=None, isHeade
             dialect=dialect))
         
     elif extension.lower() in [".xls",".xlsx"]:
-        # TODO: possible bottleneck: figure out how to make it so that the
-        # excel file is not fully loaded into memory at once
-        
         def xl_generator(worksheet):
             for i in range(worksheet.nrows):
                 yield ws.row(i)

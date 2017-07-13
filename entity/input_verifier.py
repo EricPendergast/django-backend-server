@@ -89,9 +89,10 @@ class CreateEntityVerifier(Verifier):
         
     def stage2(self, entity_dict):
         options = {"type":{"transaction",},
-                "source_type": {"local",}}
+                "source_type": {"local",},
+                "state":{1}}
         
-        required = {"type", "source_type"}
+        required = {"type", "source_type", "state"}
         
         Verifier.ver_dict(entity_dict, required, options)
         

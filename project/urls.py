@@ -17,7 +17,7 @@ from django.conf.urls import url, include
 from django.contrib import admin, auth
 admin.autodiscover()
 
-from entity.views import *
+from entity.views.entity_create import *
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
