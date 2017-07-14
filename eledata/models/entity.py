@@ -4,8 +4,6 @@ from mongoengine import *
 import datetime
 from django.contrib.auth.hashers import check_password, make_password
 
-import util
-
 # Create your models here.
 
 # example entity document

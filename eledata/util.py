@@ -6,6 +6,10 @@ import re
 import datetime
 import distutils.core
 
+from django.utils.six import BytesIO
+from rest_framework.parsers import JSONParser
+from rest_framework.renderers import JSONRenderer
+
 def parser_to_list_of_dictionaries(parser, headerRow=None, numLines=float("inf"), list=None):
     """
     Takes a csv file stores its contents into the given list, replacing the old
@@ -119,3 +123,11 @@ string_caster = {
         "number":float,
         "bool":lambda str: bool(distutils.util.strtobool(str)),
     }
+
+
+def to_json(data):
+    return JSONRenderer().render(data)
+    
+def from_json(json_string):
+    ret = JSONParser().parse(BytesIO(str(json_string)))
+    return ret

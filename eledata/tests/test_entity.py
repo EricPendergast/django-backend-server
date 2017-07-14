@@ -3,11 +3,9 @@ from __future__ import unicode_literals
 
 from django.test import TestCase
 from django.test import Client
-from entity.models import Entity
+from eledata.models.entity import Entity
 
-from django.utils.six import BytesIO
-from rest_framework.parsers import JSONParser
-from rest_framework.renderers import JSONRenderer
+from eledata.util import from_json, to_json
 
 import datetime
 # Create your tests here.
@@ -34,8 +32,8 @@ class EntityTestCase(TestCase):
         self.assertEquals(response.status_code, 200)
 
         # Taking the first item from the list of entities sent back
-        data = self._from_json(response.content)[0]
-        dataComp = self._from_json(self.entityJSON1)
+        data = from_json(response.content)[0]
+        dataComp = from_json(self.entityJSON1)
         # don't compare their id's
         del data["id"]
         del dataComp["id"]
@@ -52,7 +50,7 @@ class EntityTestCase(TestCase):
         Entity.objects.delete()
         response = self._create_entity_init_raw_response(c, 'misc/test_files/entity_data_1.csv')
 
-        id = self._from_json(response.content)['entity_id']
+        id = from_json(response.content)['entity_id']
         self.assertEquals(response.status_code, 200)
         self.assertEquals(len(Entity.objects.filter(pk=id)), 1)
 
@@ -167,8 +165,8 @@ class EntityTestCase(TestCase):
             self.assertTrue("error" in self._create_entity_init(c, filename=None, json=json))
             
         with open(self.defaultFilename) as fp:
-            self.assertTrue("error" in self._from_json(c.post('/entity/create_entity/', {'file_upload': fp}).content))
-            self.assertTrue("error" in self._from_json(c.post('/entity/create_entity/', {'entity':'{"source_type":"local", "type":"transaction"}'}).content))
+            self.assertTrue("error" in from_json(c.post('/entity/create_entity/', {'file_upload': fp}).content))
+            self.assertTrue("error" in from_json(c.post('/entity/create_entity/', {'entity':'{"source_type":"local", "type":"transaction"}'}).content))
             
             
     def test_create_entity_invalid_init_request_2(self):
@@ -176,7 +174,7 @@ class EntityTestCase(TestCase):
         with open(self.defaultFilename) as fp:
             resp = client.post('/entity/create_entity/',
                 {'file_upload': fp, 'entity': self.entityJSON1})
-            self.assertTrue('error' in self._from_json(resp.content))
+            self.assertTrue('error' in from_json(resp.content))
             
         
     def test_create_entity_invalid_final_request(self):
@@ -184,7 +182,7 @@ class EntityTestCase(TestCase):
             
         resp = self._create_mapped_entity(c, self.entityDataHeaderInvalidType,
                 self.defaultFilename)
-        self.assertTrue("error" in self._from_json(resp['final_response'].content))
+        self.assertTrue("error" in from_json(resp['final_response'].content))
         
     
     def test_create_multiple_entity(self):
@@ -245,12 +243,6 @@ class EntityTestCase(TestCase):
     #             entityDataHeaderJSON1)
     
     
-    def _to_json(self, data):
-        return JSONRenderer().render(data)
-        
-    def _from_json(self, json_string):
-        ret = JSONParser().parse(BytesIO(str(json_string)))
-        return ret
     
     def _create_entity_init_raw_response(self, client,
             filename, json=entityJSON1, fileHeaderIncluded=True):
@@ -262,7 +254,7 @@ class EntityTestCase(TestCase):
             return ret
         
     def _create_entity_init(self, *args, **kwargs):
-        return self._from_json(self._create_entity_init_raw_response(*args, **kwargs).content)
+        return from_json(self._create_entity_init_raw_response(*args, **kwargs).content)
         
     def _create_entity_final(self, client, id, data_header):
         final_response = client.post('/entity/%s/create_entity_mapped/' % id,

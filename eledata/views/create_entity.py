@@ -9,14 +9,14 @@ from django.utils.six import BytesIO
 from django.template.response import TemplateResponse
 from django.http import HttpResponse
 
-from entity.serializers import *
-from entity.models import *
-from entity.input_verifier import CreateEntityVerifier, CreateEntityMappedVerifier
-from entity.handlers.create_entity import *
+from eledata.serializers import *
+from eledata.models.entity import *
+from eledata.input_verifier import CreateEntityVerifier, CreateEntityMappedVerifier
+from eledata.handlers.create_entity import *
 
 import csv
-import entity.util
-from entity.util import InvalidInputError, string_caster
+import eledata.util
+from eledata.util import InvalidInputError, string_caster
 import os.path
 import uuid
 import re
@@ -108,7 +108,6 @@ class EntityViewSet(viewsets.ViewSet):
                     verifier = verifier,
                     pk = pk)
             
-            print response_data
             assert verifier.verified
             return Response(response_data, status=200)
         except InvalidInputError as e:

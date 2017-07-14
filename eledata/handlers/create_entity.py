@@ -2,11 +2,12 @@ from rest_framework.parsers import JSONParser
 from rest_framework.renderers import JSONRenderer
 from django.utils.six import BytesIO
 
-from entity.serializers import *
-from entity.models import *
+from eledata.serializers import *
+from eledata.models.entity import *
 
 import csv
-from entity.util import InvalidInputError, string_caster
+from eledata import util
+from eledata.util import InvalidInputError, string_caster
 import os.path
 import uuid
 
@@ -15,7 +16,6 @@ class EntityViewSetHandler():
     
     @staticmethod
     def create_entity(request_data, request_file, verifier):
-            
         # The dir that the uploaded data file will be saved to.
         # Appending the original filename to the end so that the new
         # filename has the same extension, while also making the filename
@@ -80,7 +80,6 @@ class EntityViewSetHandler():
                 del item[mapping["source"]]
         # Casting everything in data from strings to their proper data type
         # according to request.data['data_header']
-        print dummy['data_header']
         for item in data:
             for mapping in dummy['data_header']:
                 item[mapping["mapped"]] = \

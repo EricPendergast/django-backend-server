@@ -17,11 +17,14 @@ from django.conf.urls import url, include
 from django.contrib import admin, auth
 admin.autodiscover()
 
-from entity.views.entity_create import *
+from eledata.views.create_entity import *
+from eledata.views.analysis_questions import *
 from rest_framework.routers import DefaultRouter
 
-router = DefaultRouter()
-router.register(r'entity', EntityViewSet, r'entity')
+entity_router = DefaultRouter()
+entity_router.register(r'entity', EntityViewSet, r'entity')
+analysis_questions_router = DefaultRouter()
+analysis_questions_router.register(r'analysis_questions', AnalysisQuestionsViewSet, r'analysis_questions')
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
@@ -30,4 +33,5 @@ urlpatterns = [
     url(r'^$', index_view, {}, name='index'),
 ]
 
-urlpatterns += router.urls
+urlpatterns += entity_router.urls
+urlpatterns += analysis_questions_router.urls
