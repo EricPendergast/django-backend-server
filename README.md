@@ -31,7 +31,7 @@
 - [Django](https://github.com/django/django)
 - [MongoEngine](https://github.com/MongoEngine/mongoengine)
 - [Django-rest-framework](https://github.com/encode/django-rest-framework/tree/master)
-- [Django Rest Framework Mongoengine](https://github.com/umutbozkurt/django-rest-framework-mongoengine), Serializer is so important
+- [Django Rest Framework Mongoengine](https://github.com/umutbozkurt/django-rest-framework-mongoengine)
 <!--- [Facebook Python SDK](https://github.com/mobolic/facebook-sdk)-->
 <!--- [facepy](https://github.com/jgorset/facepy)-->
 <!--- [google-api-python-client](https://github.com/google/google-api-python-client)-->

@@ -2,7 +2,7 @@ from rest_framework.parsers import JSONParser
 from rest_framework.renderers import JSONRenderer
 from django.utils.six import BytesIO
 
-from eledata.serializers import *
+from eledata.serializers.entity import *
 from eledata.models.entity import *
 
 import csv

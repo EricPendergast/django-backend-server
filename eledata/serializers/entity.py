@@ -1,6 +1,6 @@
 from rest_framework_mongoengine.serializers import DocumentSerializer
 from eledata.models.entity import Entity, DataHeader
-from util import InvalidInputError
+from eledata.util import InvalidInputError
 
 
 class EntitySummarySerializer(DocumentSerializer):
@@ -19,11 +19,6 @@ class DataHeaderSerializer(DocumentSerializer):
         fields = '__all__'
 
 class EntityDetailedSerializer(DocumentSerializer):
-    # def validate(self, entity):
-        # pass
-        # raise util.InvalidInputError("Invalid serializer")
-        # return attrs
-    
     class Meta:
         model = Entity
         depth = 2

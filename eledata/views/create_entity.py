@@ -9,7 +9,7 @@ from django.utils.six import BytesIO
 from django.template.response import TemplateResponse
 from django.http import HttpResponse
 
-from eledata.serializers import *
+from eledata.serializers.entity import *
 from eledata.models.entity import *
 from eledata.input_verifier import CreateEntityVerifier, CreateEntityMappedVerifier
 from eledata.handlers.create_entity import *

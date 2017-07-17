@@ -9,7 +9,7 @@ from django.utils.six import BytesIO
 from django.template.response import TemplateResponse
 from django.http import HttpResponse
 
-from eledata.serializers import *
+from eledata.serializers.analysis_questions import *
 from eledata.models.entity import *
 from eledata.input_verifier import CreateEntityVerifier, CreateEntityMappedVerifier
 from eledata.handlers.create_entity import *
@@ -22,7 +22,12 @@ import uuid
 
 
 class AnalysisQuestionsViewSet(viewsets.ViewSet):
-    @list_route(methods=['post'])
-    def create_thing(self, request):
-        return Response("Hello", status=200)
+    
+    @list_route(methods=['get'])
+    def get_all_existing_analysis_questions(self, request):
+        ser = AnalysisQuestionSerializer(AnalysisQuestion.objects.all(), many=True)
+        
+        return Response(ser.data, status=200)
+    
+    
         
