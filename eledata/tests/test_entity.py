@@ -10,6 +10,7 @@ from eledata.util import from_json, to_json
 import datetime
 # Create your tests here.
 
+#TODO: add more documentation
 class EntityTestCase(TestCase):
     entityJSON1 = '''{ "id": "59560d779a4c0e4abaa1b6a8", "type": "transaction", "source_type": "local", "allowed_user": [], "created_at": "2017-06-28T14:08:10.276000", "updated_at": "2017-06-28T14:08:10.276000"}'''
     
@@ -20,6 +21,11 @@ class EntityTestCase(TestCase):
 
     defaultFilename = 'misc/test_files/entity_data_1.csv'
     csvNoHeaderFilename = 'misc/test_files/entity_data_8_no_header.csv'
+    
+    '''
+    Sending a get request to get_all_entity and testing that it sends back all
+    the entities in the database
+    '''
     def test_get_all_entity(self):
         Entity.objects.delete()
         c = Client()
@@ -39,11 +45,16 @@ class EntityTestCase(TestCase):
         del dataComp["id"]
 
         # Don't compare all the fields because creating an entity object fills
-        # in the blank fields with defaults
+        # in the blank fields with defaults. This is why it is not "for key in
+        # data"
         for key in dataComp:
             self.assertEquals(data[key], dataComp[key])
             
 
+    '''
+    Testing that sending a first stage entity creation post request (to
+    entity/create_entity) puts the entity in the database.
+    '''
     def test_create_entity_first_stage(self):
         c = Client()
 
@@ -55,35 +66,45 @@ class EntityTestCase(TestCase):
         self.assertEquals(len(Entity.objects.filter(pk=id)), 1)
 
 
-    def test_create_entity_second_stage(self):
-        c = Client()
 
-        Entity.objects.delete()
-        response = self._create_entity_init(c, 'misc/test_files/entity_data_1.csv')
-
-        id = Entity.objects.first().id
-        c.post('/entity/%s/create_entity_mapped/' % id,
-                data=self.entityDataHeaderJSON1, content_type="application/json",
-                HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-
-        entity = Entity.objects.first()
-
-        self.assertEquals(entity.data[0], {u'User_ID': u'751-23-2405',
-            u'Transaction_Date': datetime.datetime(2017, 1, 9, 0, 0),
-            u'Transaction_Quantity': 8.0, u'Transaction_ID': u'228-08-3254',
-            u'Transaction_Value': 86.17})
-
-        self.assertEquals(entity.data[-1], {u'User_ID': u'988-90-7620',
-            u'Transaction_Date': datetime.datetime(2017, 4, 25, 0, 0),
-            u'Transaction_Quantity': 14.0, u'Transaction_ID': u'293-64-2300',
-            u'Transaction_Value': 320.89})
+    # Pretty sure this test does the exact same thing as the
+    # test_create_entity_second_stage_csv test
+    # def test_create_entity_second_stage(self):
+    #     c = Client()
+    #
+    #     Entity.objects.delete()
+    #     response = self._create_entity_init(c, 'misc/test_files/entity_data_1.csv')
+    #
+    #     id = Entity.objects.first().id
+    #     c.post('/entity/%s/create_entity_mapped/' % id,
+    #             data=self.entityDataHeaderJSON1, content_type="application/json",
+    #             HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+    #
+    #     entity = Entity.objects.first()
+    #
+    #     self.assertEquals(entity.data[0], {u'User_ID': u'751-23-2405',
+    #         u'Transaction_Date': datetime.datetime(2017, 1, 9, 0, 0),
+    #         u'Transaction_Quantity': 8.0, u'Transaction_ID': u'228-08-3254',
+    #         u'Transaction_Value': 86.17})
+    #
+    #     self.assertEquals(entity.data[-1], {u'User_ID': u'988-90-7620',
+    #         u'Transaction_Date': datetime.datetime(2017, 4, 25, 0, 0),
+    #         u'Transaction_Quantity': 14.0, u'Transaction_ID': u'293-64-2300',
+    #         u'Transaction_Value': 320.89})
         
 
+    '''
+    Testing that sending a second stage entity creation post request (to
+    entity/create_entity_mapped) creates and puts an entity with the csv data
+    into the database. 
+    '''
     def test_create_entity_second_stage_csv(self):
         c = Client()
 
         entity = self._create_mapped_entity(c, self.entityDataHeaderJSON1, 'misc/test_files/entity_data_1.csv')['entity']
         
+        # Checking that the first and last rows of data are the same as the
+        # first and last rows of the csv
         self.assertEquals(entity.data[0], {u'User_ID': u'751-23-2405',
             u'Transaction_Date': datetime.datetime(2017, 1, 9, 0, 0),
             u'Transaction_Quantity': 8.0, u'Transaction_ID': u'228-08-3254',
@@ -95,6 +116,10 @@ class EntityTestCase(TestCase):
             u'Transaction_Value': 320.89})
 
         
+    '''
+    The same as 'test_create_entity_second_stage_csv' (above), except using a
+    tsv file as input
+    '''
     def test_create_entity_second_stage_tsv(self):
         c = Client()
 
@@ -113,6 +138,9 @@ class EntityTestCase(TestCase):
             u'Transaction_Value': 320.89})
 
         
+    '''
+    Testing that sending an invalid csv causes an error
+    '''
     def test_create_entity_invalid_csv(self):
         client = Client()
 
@@ -121,6 +149,10 @@ class EntityTestCase(TestCase):
         self.assertTrue('error' in response)
 
 
+    '''
+    The same as 'test_create_entity_second_stage_csv', except using a
+    xls file as input
+    '''
     def test_create_entity_xls(self):
         c = Client()
 
@@ -137,6 +169,10 @@ class EntityTestCase(TestCase):
             u'Transaction_Value': 320.89})
 
         
+    '''
+    The same as 'test_create_entity_second_stage_csv', except using a
+    xlsx file as input
+    '''
     def test_create_entity_xlsx(self):
         c = Client()
 
@@ -153,6 +189,13 @@ class EntityTestCase(TestCase):
             u'Transaction_Value': 320.89})
         
         
+    '''
+    Testing all the different ways json part of the initial request could be
+    invalid, and making sure they all generate errors.
+    
+    Also testing an error is generated if either the file upload or the entity
+    json is left out
+    '''
     def test_create_entity_invalid_init_request(self):
         c = Client()
         invalid_json = ['{}',
@@ -169,6 +212,10 @@ class EntityTestCase(TestCase):
             self.assertTrue("error" in from_json(c.post('/entity/create_entity/', {'entity':'{"source_type":"local", "type":"transaction"}'}).content))
             
             
+    '''
+    Testing that an error is generated if you make an initial request without
+    specifying if the header is included with 'isFileHeaderIncluded'.
+    '''
     def test_create_entity_invalid_init_request_2(self):
         client = Client()
         with open(self.defaultFilename) as fp:
@@ -177,16 +224,25 @@ class EntityTestCase(TestCase):
             self.assertTrue('error' in from_json(resp.content))
             
         
+    '''
+    Testing that an error is generated if an invalid header is sent to the
+    final request.
+    '''
     def test_create_entity_invalid_final_request(self):
         c = Client()
             
         resp = self._create_mapped_entity(c, self.entityDataHeaderInvalidType,
                 self.defaultFilename)
+        print resp['final_response']
         self.assertTrue("error" in from_json(resp['final_response'].content))
         
     
+    '''
+    Testing that nothing bad happens when you create many entities at once.
+    '''
     def test_create_multiple_entity(self):
         c = Client()
+        # Will contain all the responses from the create_entity requests
         responses = []
         
         num = 20
@@ -204,6 +260,10 @@ class EntityTestCase(TestCase):
                 pk=responses[i]["entity_id"]))
             
             
+    '''
+    Testing that if you send a csv with no header, the program will create an
+    autogenerated header.
+    '''
     def test_create_entity_no_header(self):
         client = Client()
         resp = self._create_mapped_entity(client, self.entityDataHeaderNoFileHeader,
