@@ -49,7 +49,7 @@ class AnalysisQuestionTestCase(TestCase):
         user_aqs.save()
         
         c = Client()
-        response = c.get('/analysis_questions/get_analysis_questions_settings/')
+        response = c.get('/analysis_questions/get_all_existing_analysis_settings/')
         self.assertEqual(response.status_code, 200)
         data = from_json(response.content)
         

@@ -24,7 +24,6 @@ import eledata.handlers.analysis_questions as handler
 
 class AnalysisQuestionsViewSet(viewsets.ViewSet):
     
-    # TODO: sort return by type and orientation
     @list_route(methods=['get'])
     def get_all_existing_analysis_questions(self, request):
         ser = AnalysisQuestionSerializer(AnalysisQuestion.objects.all(), many=True)
@@ -34,7 +33,7 @@ class AnalysisQuestionsViewSet(viewsets.ViewSet):
     
         
     @list_route(methods=['get'])
-    def get_analysis_questions_settings(self, request):
+    def get_all_existing_analysis_settings(self, request):
         user = UserAnalysisQuestions.objects.get()
         resp_data = handler.get_analysis_questions_settings(user)
         

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from mongoengine import *
-import datetime
 from django.contrib.auth.hashers import check_password, make_password
 
 # Create your models here.
