@@ -3,7 +3,9 @@ from eledata.serializers.analysis_questions import *
 
 from eledata.util import to_json, from_json
 
+
 def get_analysis_questions_settings(user):
+    assert type(user) is UserAnalysisQuestions
     ret_data = {"analysis_questions":[], "analysis_params":[]}
     
     # Load the analysis questions into ret_data, adding user specific
@@ -23,7 +25,7 @@ def get_analysis_questions_settings(user):
     for answered_param in user.parameters:
         entry = AnalysisParameterSerializer(answered_param.parameter).data
         del entry['id']
-        entry['choice_input_value'] = answered_param.choice_input_value
+        entry['choice_input'] = answered_param.choice_input
         entry['choice_index'] = answered_param.choice_index
         
         ret_data["analysis_params"] += [entry,]

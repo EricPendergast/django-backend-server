@@ -51,10 +51,32 @@ class AnalysisQuestionTestCase(TestCase):
         c = Client()
         response = c.get('/analysis_questions/get_analysis_questions_settings/')
         self.assertEqual(response.status_code, 200)
-        data = response.content
+        data = from_json(response.content)
         
-        #TODO: Finish writing this test
-        # self.assertEquals(data, {"analysis_params":[{"content":"What is your company's average monthly income?","label":None,"floating_label":None,"choices":[{"content":"Default. Handled by Eledata","default_value":None},{"content":"Enter your value:","default_value":"50,000"}],"value":None,"choice_index":0},{"content":"What is your expected variation of CLV?","label":None,"floating_label":None,"choices":[{"content":"Default. Handled by Eledata","default_value":None}],"value":None,"choice_index":0}],"analysis_questions":[{"content":"What has caused the most customers to leave?","label":"cause of leave","type":"descriptive","orientation":"customer","enabled":True,"selected":True},{"content":"Which customers will likely be leaving in the coming time?","label":"leaving","type":"predictive","orientation":"customer","enabled":True,"selected":False},{"content":"Which products will be the most popular in the future?","label":"poplularity","type":"predictive","orientation":"product","enabled":False,"selected":False}]})
-        print data
+        self.assertTrue(_same_elements(data['analysis_params'], 
+                [{u'choice_index': 0, u'label': u'clv', u'choices': [{u'content': u'Default. Handled by Eledata', u'default_value': None}], u'content': u'What is your expected variation of CLV?', u'floating_label': u'Variation', u'choice_input': None}, {u'choice_index': 0, u'label': u'income', u'choices': [{u'content': u'Default. Handled by Eledata', u'default_value': None}, {u'content': u'Enter your value:', u'default_value': u'50,000'}], u'content': u"What is your company's average monthly income?", u'floating_label': u'Income', u'choice_input': None}]))
+        
+        
+        del data['analysis_params']
+        self.assertEquals(data, {
+            u'analysis_questions': [
+            {u'orientation': u'customer', u'selected': True, u'enabled': True, u'label': u'cause of leave', u'content': u'What has caused the most customers to leave?', u'type': u'descriptive'},
+            {u'orientation': u'customer', u'selected': False, u'enabled': True, u'label': u'leaving', u'content': u'Which customers will likely be leaving in the coming time?', u'type': u'predictive'},
+            {u'orientation': u'product', u'selected': False, u'enabled': False, u'label': u'poplularity', u'content': u'Which products will be the most popular in the future?', u'type': u'predictive'}]}
+)
         
         self.assertIn("analysis_questions", response.data)
+        
+    
+    
+def _same_elements(list1, list2):
+    for item in list1:
+        if item not in list2:
+            return False
+    
+    for item in list2:
+        if item not in list1:
+            return False
+    
+    return True
+        

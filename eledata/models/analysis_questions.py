@@ -55,7 +55,7 @@ class AnalysisParameterAnswered(EmbeddedDocument):
     choice_index = IntField(default=0)
     # The value the user inputted to the choice. This value may be null, since
     # not all choices take inputs.
-    choice_input_value = StringField()
+    choice_input = StringField()
     
 
 
