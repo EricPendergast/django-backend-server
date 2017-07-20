@@ -57,7 +57,9 @@ def analysis_question_toggled(request_data, user, verifier):
         user.selected_questions.remove(analysis_question)
     else: 
         # I use append because doing "+= [item,]" uses inplace modification,
-        # which makes mongodb not recognize that the list was changed
+        # which makes mongodb not recognize that the list was changed. This
+        # could have been fixed by adding 'selected_questions' to
+        # 'user._changed_fields', but this way is cleaner.
         user.selected_questions.append(analysis_question)
     
     user.update_parameters()
