@@ -61,16 +61,8 @@ def analysis_question_toggled(request_data, user, verifier):
         user.selected_questions.append(analysis_question)
     
     user.update_parameters()
-    # print "HERE"
-    # import pdb; pdb.set_trace()
-    
-    # print "A'",user.selected_questions,"'"
-    # print "changed fields: ", user._changed_fields
     user.save()
     user = UserAnalysisQuestions.objects.get(pk=user.id)
-    # print "B'",user.selected_questions,"'"
-    # print user.selected_questions
-    # print "User has been saved"
     
     return {}
 

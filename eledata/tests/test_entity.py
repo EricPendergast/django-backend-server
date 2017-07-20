@@ -10,7 +10,6 @@ from eledata.util import from_json, to_json
 import datetime
 # Create your tests here.
 
-#TODO: add more documentation
 class EntityTestCase(TestCase):
     entityJSON1 = '''{ "id": "59560d779a4c0e4abaa1b6a8", "type": "transaction", "source_type": "local", "allowed_user": [], "created_at": "2017-06-28T14:08:10.276000", "updated_at": "2017-06-28T14:08:10.276000"}'''
     

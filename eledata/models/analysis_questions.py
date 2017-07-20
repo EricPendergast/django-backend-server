@@ -74,84 +74,36 @@ Contains the state of the analysis questions for a given user. This includes
 the selected questions, the enabled questions, and the parameters that must be
 filled out
 '''
+# At some point this will be embedded in a user document, but for now, it is
+# standalone
 # class UserAnalysisQuestions(EmbeddedDocument):
 class UserAnalysisQuestions(Document):
     selected_questions = ListField(ReferenceField(AnalysisQuestion))
     enabled_questions = ListField(ReferenceField(AnalysisQuestion))
     parameters = EmbeddedDocumentListField(AnalysisParameterAnswered)
     
-    test_field = StringField(default="default")
+    '''
+    Each question has a list of parameters it needs, so this method figures out
+    which parameters need to be added to 'parameters' based on all the selected
+    questions. This method does not remove anything from 'parameters'. This has
+    the effect of saving the users answers to parameters of deselected
+    questions.
     
+    Does not call self.save()
+    '''
     def update_parameters(self):
-        #TODO: make variable names better
-        parameter_set = set()
-        self_parameter_set = set(item.parameter for item in self.parameters)
+        current_parameters = set(item.parameter for item in self.parameters)
         
+        # Will contain all the parameters that need to be in 'self.parameters',
+        # based off of the selected questions
+        all_needed_parameters = set()
         for question in self.selected_questions:
-            parameter_set.update(question.parameters)
+            all_needed_parameters.update(question.parameters)
             
-        for parameter in parameter_set:
-            if parameter not in self_parameter_set:
-                bool_val = parameter in parameter_set
+        for parameter in all_needed_parameters:
+            if parameter not in current_parameters:
+                enabled = parameter in all_needed_parameters
                 
-                # param1 = AnalysisParameterAnswered(parameter=parameter)
-                # param1.enabled = bool_val
-                # param1.parameter = parameter
-                # self.parameters += [AnalysisParameterAnswered(parameter=parameter),]
-                # self.parameters[-1].enabled = bool_val
-                
-                param2 = AnalysisParameterAnswered(parameter=parameter, enabled=bool_val)
-                
-                # assert dir(param2) == dir(param1)
-                # self.save()
-                
-                # for field in dir(param1):
-                #     if hasattr(param1, field) and hasattr(param2, field):
-                #         if getattr(param1, field) != getattr(param2, field):
-                #             print "Two objects differ by field: %s" % field
-                #             print "obj1: %s,    obj2: %s" % (getattr(param1, field), getattr(param2, field))
-                #     elif hasattr(param1, field) != hasattr(param2, field):
-                #         print "Two objects differ by field: %s" % field
-                # if param1 == param2:
-                    # print "They are equal"
-                # else:
-                    # print "They are not equal"
-                
-                self.parameters += [param2,]
-                # self.save()
-                # self.parameters[-1].enabled=bool_val
-                # TODO: remember to change this back
-                # self.parameters[-1]._changed_fields = []
-                # util.debug_deep_compare(param1, param2)
-                # print "Equal?: " + str(
-                
-                # self.parameters += [AnalysisParameterAnswered(parameter=parameter, enabled=bool_val),]
-                
-        # for parameter in self.parameters:
-            # parameter.enabled = (parameter.parameter in parameter_set)
-            # parameter.enabled = True
+                self.parameters.append(AnalysisParameterAnswered(parameter=parameter, enabled=enabled))
         
-        # print len(self.parameters)
-        # self.parameters[0].enabled = True
-        # self.parameters[1].enabled = True
-        # print self.parameters
-        
-    # TODO: This method is broken
-    # parameters should hold all possible parameters. This method should only
-    # set their 'enabled' field to true or false
-    # def update_parameters(self):
-    #     # Maps each analysis parameter to its corresponding answered version in
-    #     # 'self.parameters', mapping to 'None' if no answered version exists
-    #     current_parameters = dict([(answered.parameter, answered) for answered in self.parameters])
-    #
-    #     new_parameters = {}
-    #     for question in self.selected_questions:
-    #         for parameter in question.parameters:
-    #
-    #             if parameter in current_parameters:
-    #                 new_parameters[parameter] = current_parameters[parameter]
-    #             else:
-    #                 new_parameters[parameter] = AnalysisParameterAnswered(parameter=parameter)
-    #
-    #     self.parameters = list(new_parameters.values())
         
