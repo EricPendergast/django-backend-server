@@ -37,7 +37,7 @@ class AnalysisQuestion(Document):
     # Content of the question. e.g. "Which customers will be likely leaving in the coming time?"
     content = StringField()
     # Short descriptor of the question.  e.g. "leaving"
-    label = StringField()
+    label = StringField(unique=True)
     ## Categorical information
     type = StringField()
     orientation = StringField()
