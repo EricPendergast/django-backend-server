@@ -131,3 +131,15 @@ def to_json(data):
 def from_json(json_string):
     ret = JSONParser().parse(BytesIO(str(json_string)))
     return ret
+
+
+def debug_deep_compare(param1, param2):
+    if dir(param1) != dir(param2):
+        print "The two objects have different parameters"
+    for field in dir(param1):
+        if hasattr(param1, field) and hasattr(param2, field):
+            if getattr(param1, field) != getattr(param2, field):
+                print "obj1.%s: %s,    obj2.%s: %s" % (field, getattr(param1, field), field, getattr(param2, field))
+        elif hasattr(param1, field) != hasattr(param2, field):
+            print "Two objects differ by field: %s. One object is missing the field." % field
+

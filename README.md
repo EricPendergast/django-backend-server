@@ -14,7 +14,7 @@
 <!--- [ ] Logging-->
 
 ## Setup
-- Install Mongodb (confirmed to work with version MongoDB 3.4.5)
+- Install Mongodb (confirmed to work with MongoDB version 3.4.5)
     -  Windows:
         - Download the latest .msi
         https://www.mongodb.com/download-center#community

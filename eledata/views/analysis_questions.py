@@ -13,6 +13,7 @@ from eledata.serializers.analysis_questions import *
 from eledata.models.entity import *
 from eledata.input_verifier import CreateEntityVerifier, CreateEntityMappedVerifier
 from eledata.handlers.create_entity import *
+from eledata.verifiers.analysis_questions import *
 
 import csv
 import eledata.util
@@ -34,8 +35,33 @@ class AnalysisQuestionsViewSet(viewsets.ViewSet):
         
     @list_route(methods=['get'])
     def get_all_existing_analysis_settings(self, request):
+        # This is a dummy user. In the future there will be real users.
         user = UserAnalysisQuestions.objects.get()
         resp_data = handler.get_analysis_questions_settings(user)
         
         return Response(resp_data, status=200)
         
+    @list_route(methods=['post'])
+    def toggle_analysis_question(self, request):
+        '''
+        request will be in the format:
+        {
+            "toggled":"label"
+        }
+        
+        where "label" is the label of the analysis question that was toggled.
+        '''
+        
+        try:
+            verifier = ToggleAnalysisQuestionVerifier()
+            user = UserAnalysisQuestions.objects.get()
+            
+            resp_data = handler.analysis_question_toggled(request.data, user, verifier)
+            
+            
+            
+            assert verifier.verified
+            
+            return Response(resp_data, status=200)
+        except InvalidInputError as e:
+            return Response({"error":str(e)}, status=400)
