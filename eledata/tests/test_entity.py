@@ -232,7 +232,6 @@ class EntityTestCase(TestCase):
             
         resp = self._create_mapped_entity(c, self.entityDataHeaderInvalidType,
                 self.defaultFilename)
-        print resp['final_response']
         self.assertTrue("error" in from_json(resp['final_response'].content))
         
     

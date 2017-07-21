@@ -11,7 +11,6 @@ from django.http import HttpResponse
 
 from eledata.serializers.analysis_questions import *
 from eledata.models.entity import *
-from eledata.input_verifier import CreateEntityVerifier, CreateEntityMappedVerifier
 from eledata.handlers.create_entity import *
 from eledata.verifiers.analysis_questions import *
 
@@ -31,7 +30,6 @@ class AnalysisQuestionsViewSet(viewsets.ViewSet):
         
         return Response(ser.data, status=200)
     
-    
         
     @list_route(methods=['get'])
     def get_all_existing_analysis_settings(self, request):
@@ -40,16 +38,17 @@ class AnalysisQuestionsViewSet(viewsets.ViewSet):
         resp_data = handler.get_analysis_questions_settings(user)
         
         return Response(resp_data, status=200)
-        
+    
+    
     @list_route(methods=['post'])
     def toggle_analysis_question(self, request):
         '''
         request will be in the format:
         {
-            "toggled":"label"
+            "toggled":<label>
         }
         
-        where "label" is the label of the analysis question that was toggled.
+        where <label> is the label of the analysis question that was toggled.
         '''
         
         try:
@@ -58,10 +57,36 @@ class AnalysisQuestionsViewSet(viewsets.ViewSet):
             
             resp_data = handler.analysis_question_toggled(request.data, user, verifier)
             
-            
-            
             assert verifier.verified
             
             return Response(resp_data, status=200)
         except InvalidInputError as e:
             return Response({"error":str(e)}, status=400)
+    
+    
+    @list_route(methods=['post'])
+    def change_analysis_parameter(self, request):
+        '''
+        The request should be in the format:
+        {
+            "label":<param_label>,
+            "choice_index":<index>,
+            "choice_input":<input>
+        }
+        Where <param_label> is the label of the parameter that was changed,
+        <index> is the index of the choice selected, and <input> is the input
+        to that choice. <param_label> and <index> are required, <input> is
+        optional
+        '''
+        
+        try:
+            verifier = ChangeAnalysisParameterVerifier()
+            user = UserAnalysisQuestions.objects.get()
+            
+            resp_data = handler.change_analysis_parameter(request.data, user, verifier)
+            
+            assert verifier.verified
+            return Response(resp_data, status=200)
+        except InvalidInputError as e:
+            return Response({"error":str(e)}, status=400)
+            

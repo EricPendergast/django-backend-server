@@ -4,7 +4,6 @@ import datetime
 import eledata.util as util
 
     
-#TODO: add __str__ methods to all models
 '''
 An analysis parameter is a question that the user answers that helps eledata
 answer the analysis question. Each analysis parameter is a multiple choice
@@ -20,7 +19,7 @@ class AnalysisParameter(Document):
         default_value = StringField()
         
     content = StringField()
-    label = StringField(unique=True)
+    label = StringField(unique=True, required=True)
     floating_label = StringField()
     choices = EmbeddedDocumentListField(AnalysisParameterChoice)
     
@@ -34,10 +33,12 @@ this list is shared across users through references. Each AnalysisQuestion
 contains no user input.
 '''
 class AnalysisQuestion(Document):
-    # Content of the question. e.g. "Which customers will be likely leaving in the coming time?"
+    # Content of the question. e.g. "Which customers will be likely leaving in
+    # the coming time?"
     content = StringField()
+    #TODO: index the labels
     # Short descriptor of the question.  e.g. "leaving"
-    label = StringField(unique=True)
+    label = StringField(unique=True, required=True)
     ## Categorical information
     type = StringField()
     orientation = StringField()
@@ -78,10 +79,23 @@ filled out
 # standalone
 # class UserAnalysisQuestions(EmbeddedDocument):
 class UserAnalysisQuestions(Document):
+    # TODO: Maybe make these dictionaries, keyed by the question/parameter
+    # labels
     selected_questions = ListField(ReferenceField(AnalysisQuestion))
     enabled_questions = ListField(ReferenceField(AnalysisQuestion))
     parameters = EmbeddedDocumentListField(AnalysisParameterAnswered)
     
+    def get_question(self, label):
+        for question in enabled_questions:
+            if question.label == label:
+                return question
+        return None
+    
+    def get_parameter(self, label):
+        for param in self.parameters:
+            if param.parameter.label == label:
+                return param
+        return None
     '''
     Each question has a list of parameters it needs, so this method figures out
     which parameters need to be added to 'parameters' based on all the selected
@@ -107,3 +121,5 @@ class UserAnalysisQuestions(Document):
                 self.parameters.append(AnalysisParameterAnswered(parameter=parameter, enabled=enabled))
         
         
+    def __str__(self):
+        return str(parameters)

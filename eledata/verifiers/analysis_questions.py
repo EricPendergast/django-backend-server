@@ -11,3 +11,18 @@ class ToggleAnalysisQuestionVerifier(Verifier):
             raise InvalidInputError("Analysis question either is not enabled or doesn't exist")
         
     stages = [stage0, stage1]
+
+class ChangeAnalysisParameterVerifier(Verifier):
+    def stage0(self, request_data):
+        Verifier.ver_dict(request_data,
+                required={"label","choice_index"}, options={})
+    
+    def stage1(self, param, label):
+        if param is None:
+            raise InvalidInputError("Parameter with label %s doesn't exist" % label)
+    
+    def stage2(self, parameter):
+        if int(parameter.choice_index) not in range(len(parameter.parameter.choices)):
+            raise InvalidInputError("'choice_index', value %s, is out of range %s" % (parameter.choice_index, range(len(parameter.parameter.choices))))
+    
+    stages = [stage0, stage1, stage2]

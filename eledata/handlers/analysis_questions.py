@@ -58,7 +58,7 @@ def analysis_question_toggled(request_data, user, verifier):
     else: 
         # I use append because doing "+= [item,]" uses inplace modification,
         # which makes mongodb not recognize that the list was changed. This
-        # could have been fixed by adding 'selected_questions' to
+        # could have been fixed by adding "selected_questions" to
         # 'user._changed_fields', but this way is cleaner.
         user.selected_questions.append(analysis_question)
     
@@ -68,3 +68,19 @@ def analysis_question_toggled(request_data, user, verifier):
     
     return {}
 
+def change_analysis_parameter(request_data, user, verifier):
+    verifier.verify(0, request_data)
+    param_to_change = user.get_parameter(request_data["label"])
+    verifier.verify(1, param_to_change, request_data["label"])
+    param_to_change.choice_index = request_data["choice_index"]
+    verifier.verify(2, param_to_change)
+    
+    if "choice_input" in request_data:
+        param_to_change.choice_input = request_data["choice_input"]
+    else:
+        param_to_change.choice_input = None
+    
+    user.save()
+    
+    return {}
+    

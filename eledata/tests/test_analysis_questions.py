@@ -59,8 +59,7 @@ class AnalysisQuestionTestCase(TestCase):
             u'analysis_questions': [
             {u'orientation': u'customer', u'selected': True, u'enabled': True, u'label': u'cause of leave', u'content': u'What has caused the most customers to leave?', u'type': u'descriptive'},
             {u'orientation': u'customer', u'selected': False, u'enabled': True, u'label': u'leaving', u'content': u'Which customers will likely be leaving in the coming time?', u'type': u'predictive'},
-            {u'orientation': u'product', u'selected': False, u'enabled': False, u'label': u'poplularity', u'content': u'Which products will be the most popular in the future?', u'type': u'predictive'}]}
-)
+            {u'orientation': u'product', u'selected': False, u'enabled': False, u'label': u'poplularity', u'content': u'Which products will be the most popular in the future?', u'type': u'predictive'}]})
 
         self.assertIn("analysis_questions", response.data)
         
@@ -94,13 +93,54 @@ class AnalysisQuestionTestCase(TestCase):
         self.assertFalse(is_label_selected(user, "cause of leave"))
         
     
+    def test_change_analysis_parameter(self):
+        c = Client()
+        user = self._create_default_user()
+        def assert_analysis_parameter_is(user, label, choice_index, choice_input):
+            param = user.get_parameter(label=label)
+            self.assertTrue(param is not None)
+            self.assertEqual(param.choice_index, choice_index)
+            self.assertEqual(param.choice_input, choice_input)
+            
+        assert_analysis_parameter_is(user, "income", 0, None)
+        
+        response = c.post('/analysis_questions/change_analysis_parameter/', 
+                data = {"label":"income", 
+                "choice_index":1, "choice_input":"30000"})
+        user.reload()
+        assert_analysis_parameter_is(user, "income", 1, "30000")
+        
+        
+        response = c.post('/analysis_questions/change_analysis_parameter/', 
+                data = {"label":"income", 
+                "choice_index":1})
+        user.reload()
+        assert_analysis_parameter_is(user, "income", 1, None)
     
+    
+        response = c.post('/analysis_questions/change_analysis_parameter/', 
+                data = {"label":"not a label", 
+                "choice_index":1})
+        self.assertIn("error", response.data)
+        
+        
+        response = c.post('/analysis_questions/change_analysis_parameter/', 
+                data = {"label":"income", 
+                "choice_index":-1})
+        self.assertIn("error", response.data)
+    
+        response = c.post('/analysis_questions/change_analysis_parameter/', 
+                data = {"label":"income", 
+                "choice_index":2})
+        self.assertIn("error", response.data)
+        
     def _create_default_user(self):
         # getting all the questions, but in a way that the order will always be
         # the same
         all_qs = [AnalysisQuestion.objects.get(label=item['label']) for item in self.analysis_questions_init]
         UserAnalysisQuestions.objects.delete()
         user_aqs = UserAnalysisQuestions(enabled_questions=[all_qs[0],all_qs[2]], selected_questions = [all_qs[2],])
+        user_aqs.update_parameters()
         user_aqs.save()
         return user_aqs
     
