@@ -13,3 +13,4 @@ pyxdg==0.25
 PyYAML==3.11
 xlrd==1.0.0
 six==1.10.0
+coverage

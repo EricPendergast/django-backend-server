@@ -1,0 +1,4 @@
+mongo django_test --eval "db.dropDatabase();"
+source venv/bin/activate
+coverage run --source eledata/,project/ manage.py test
+coverage report -m
