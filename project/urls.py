@@ -19,11 +19,13 @@ admin.autodiscover()
 
 from eledata.views.create_entity import *
 from eledata.views.analysis_questions import *
+from eledata.views.test_sessions import SessionTestViewSet
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
 router.register(r'entity', EntityViewSet, r'entity')
 router.register(r'analysis_questions', AnalysisQuestionsViewSet, r'analysis_questions')
+router.register(r'session', SessionTestViewSet, r'session')
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
