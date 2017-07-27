@@ -36,6 +36,8 @@ from bson.objectid import ObjectId
 def _get_user_session_key(request):
     # This value in the session is always serialized to a string, so we need
     # to convert it back to Python whenever we access it.
+    # The following line was changed. Original: 
+    # return get_user_model()._meta.pk.to_python(request.session[SESSION_KEY])
     return ObjectId(request.session[SESSION_KEY])
 
 def login(request, user, backend=None):
@@ -74,7 +76,9 @@ def login(request, user, backend=None):
                 '`backend` attribute on the user.'
             )
 
-    request.session[SESSION_KEY] = str(user.pk)#user._meta.pk.value_to_string(user)
+    # The following line was changed. Original:
+    # request.session[SESSION_KEY] = user._meta.pk.value_to_string(user)
+    request.session[SESSION_KEY] = str(user.pk)
     request.session[BACKEND_SESSION_KEY] = backend
     request.session[HASH_SESSION_KEY] = session_auth_hash
     if hasattr(request, 'user'):

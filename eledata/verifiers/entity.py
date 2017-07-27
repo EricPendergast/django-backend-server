@@ -41,7 +41,12 @@ class CreateEntityMappedVerifier(Verifier):
         if not ('data_header' in request_data):
             raise InvalidInputError("No data header.")
     
-    def stage1(self, headers, entity_source_file):
+    def stage1(self, entity, group):
+        if entity.group != group:
+            raise InvalidInputError("User does not have permission to access this entity")
+        
+        
+    def stage2(self, headers, entity_source_file):
         required = {"source","mapped","data_type"}
         options = {"data_type":util.string_caster,}
         
@@ -51,9 +56,9 @@ class CreateEntityMappedVerifier(Verifier):
         if entity_source_file == None:
             raise InvalidInputError("Can't find the entity source file.")
         
-    def stage2(self, serializer):
+    def stage3(self, serializer):
         if not serializer.is_valid():
             raise InvalidInputError("Invalid serializer")
         
-    stages = [stage0, stage1, stage2]
+    stages = [stage0, stage1, stage2, stage3]
     

@@ -21,13 +21,17 @@ class EntityTestCase(TestCase):
     defaultFilename = 'misc/test_files/entity_data_1.csv'
     csvNoHeaderFilename = 'misc/test_files/entity_data_8_no_header.csv'
     
-    response = Client().post("/users/create_user/", {"username":"dummy", "password":"asdf", "group":"dummy_group"})
-    #
-    # user = User.objects.get(username="dummy")
-    # dummy_user = User.objects.get()
-    # del c
-    # def loggedin(*args, **kwargs):
-    #     def decorator():
+    client = Client()
+    
+    # Creating a dummy user+group
+    client.post("/users/create_user/", {"username":"dummy", "password":"asdf", "group":"dummy_group"})
+    
+    # Log out of the old client and log into a new client
+    def setUp(self):
+        self.client.post("/users/logout/", {})
+        self.client = Client()
+        self.client.post("/users/login/", {"username":"dummy", "password":"asdf"})
+        
             
     '''
     Sending a get request to get_all_entity and testing that it sends back all
@@ -35,7 +39,7 @@ class EntityTestCase(TestCase):
     '''
     def test_get_all_entity(self):
         Entity.objects.delete()
-        c = Client()
+        c = self.client
         response = c.get('/entity/get_all_entity/')
         self.assertEquals(response.status_code, 200)
         self.assertEquals(response.content, "[]")
@@ -63,7 +67,7 @@ class EntityTestCase(TestCase):
     entity/create_entity) puts the entity in the database.
     '''
     def test_create_entity_first_stage(self):
-        c = Client()
+        c = self.client
 
         Entity.objects.delete()
         response = self._create_entity_init_raw_response(c, 'misc/test_files/entity_data_1.csv')
@@ -77,7 +81,7 @@ class EntityTestCase(TestCase):
     # Pretty sure this test does the exact same thing as the
     # test_create_entity_second_stage_csv test
     # def test_create_entity_second_stage(self):
-    #     c = Client()
+    #     c = self.client
     #
     #     Entity.objects.delete()
     #     response = self._create_entity_init(c, 'misc/test_files/entity_data_1.csv')
@@ -106,7 +110,7 @@ class EntityTestCase(TestCase):
     into the database. 
     '''
     def test_create_entity_second_stage_csv(self):
-        c = Client()
+        c = self.client
 
         entity = self._create_mapped_entity(c, self.entityDataHeaderJSON1, 'misc/test_files/entity_data_1.csv')['entity']
         
@@ -128,7 +132,7 @@ class EntityTestCase(TestCase):
     tsv file as input
     '''
     def test_create_entity_second_stage_tsv(self):
-        c = Client()
+        c = self.client
 
         entity = self._create_mapped_entity(c, self.entityDataHeaderJSON1, 'misc/test_files/entity_data_2.tsv')['entity']
         
@@ -149,7 +153,7 @@ class EntityTestCase(TestCase):
     Testing that sending an invalid csv causes an error
     '''
     def test_create_entity_invalid_csv(self):
-        client = Client()
+        client = self.client
 
         response = self._create_entity_init(client, 'misc/test_files/entity_data_invalid_3.csv')
 
@@ -161,7 +165,7 @@ class EntityTestCase(TestCase):
     xls file as input
     '''
     def test_create_entity_xls(self):
-        c = Client()
+        c = self.client
 
         entity = self._create_mapped_entity(c, self.entityDataHeaderJSON1, 'misc/test_files/entity_data_5_large.xls')['entity']
 
@@ -181,7 +185,7 @@ class EntityTestCase(TestCase):
     xlsx file as input
     '''
     def test_create_entity_xlsx(self):
-        c = Client()
+        c = self.client
 
         entity = self._create_mapped_entity(c, self.entityDataHeaderJSON1, 'misc/test_files/entity_data_6_large.xlsx')['entity']
 
@@ -204,7 +208,7 @@ class EntityTestCase(TestCase):
     json is left out
     '''
     def test_create_entity_invalid_init_request(self):
-        c = Client()
+        c = self.client
         invalid_json = ['{}',
                 '{"type":"transaction"}',
                 '{"source_type":"local", "type":"unicorn"}',
@@ -224,7 +228,7 @@ class EntityTestCase(TestCase):
     specifying if the header is included with 'isFileHeaderIncluded'.
     '''
     def test_create_entity_invalid_init_request_2(self):
-        client = Client()
+        client = self.client
         with open(self.defaultFilename) as fp:
             resp = client.post('/entity/create_entity/',
                 {'file_upload': fp, 'entity': self.entityJSON1})
@@ -236,7 +240,7 @@ class EntityTestCase(TestCase):
     final request.
     '''
     def test_create_entity_invalid_final_request(self):
-        c = Client()
+        c = self.client
             
         resp = self._create_mapped_entity(c, self.entityDataHeaderInvalidType,
                 self.defaultFilename)
@@ -247,7 +251,7 @@ class EntityTestCase(TestCase):
     Testing that nothing bad happens when you create many entities at once.
     '''
     def test_create_multiple_entity(self):
-        c = Client()
+        c = self.client
         # Will contain all the responses from the create_entity requests
         responses = []
         
@@ -271,7 +275,7 @@ class EntityTestCase(TestCase):
     autogenerated header.
     '''
     def test_create_entity_no_header(self):
-        client = Client()
+        client = self.client
         resp = self._create_mapped_entity(client, self.entityDataHeaderNoFileHeader,
                 self.csvNoHeaderFilename, fileHeaderIncluded=False)
         
@@ -281,6 +285,26 @@ class EntityTestCase(TestCase):
                 self.assertRegex(header_name, "^column [0-9]+$")
                 
     
+    # Test that two users in the same group can edit the same entity, while one
+    # outside that group cannot
+    def test_entity_permissions(self):
+        client1 = self.client
+        
+        client2 = Client()
+        client2.post("/users/create_user/", {"username":"dummy2", "password":"asdf", "group":"different_dummy_group"})
+        client2.post("/users/login/", {"username":"dummy2", "password":"asdf"})
+        
+        client3 = Client()
+        client3.post("/users/create_user/", {"username":"dummy3", "password":"asdf", "group":"dummy_group"})
+        client3.post("/users/login/", {"username":"dummy3", "password":"asdf"})
+        
+        id = self._create_entity_init(client1, filename=None)['entity_id']
+        response = self._create_entity_final(client2, id, self.entityDataHeaderJSON1)
+        self.assertIn('error', response.data)
+        
+        response = self._create_entity_final(client3, id, self.entityDataHeaderJSON1)
+        self.assertNotIn('error', response.data)
+    
     # TODO: test that create_entity and create_entity_mapped send back 100
     # lines of data
     
@@ -288,7 +312,7 @@ class EntityTestCase(TestCase):
     # TODO: Handle this case
     # Doesn't work yet because of the way excel files measure line width
     # def test_create_entity_invalid_xlsx(self):
-    #     c = Client()
+    #     c = self.client
     #
     #     response = self._create_entity_init(c, json=self.entityDataHeaderJSON1, filename= 'misc/test_files/entity_data_7_invalid.xlsx')
     #      self.assertTrue('error' in response)
@@ -298,7 +322,7 @@ class EntityTestCase(TestCase):
     # # database
     # # Uploading a csv where the error is after line 100
     # def test_create_entity_invalid_csv_after_100(self):
-    #     client = Client()
+    #     client = self.client
     #
     #     response = self._create_entity_init(client, 'misc/test_files/entity_data_invalid_long_4.csv')
     #

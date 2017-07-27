@@ -32,14 +32,12 @@ class Group(Document):
     name = fields.StringField(max_length=80, unique=True)
 
 class User(auth.User):
-    # TODO: maybe denormalize group.name; add a field called group_name to
-    # User, which is in sync with the name of the group it's in.
-    
     # 'counter' is used for testing
     counter = fields.IntField(default=0)
     group = fields.ReferenceField(Group)
     
 
+#TODO: Is Token being used by anything?
 @python_2_unicode_compatible
 class Token(Document):
     """

@@ -8,8 +8,8 @@ from eledata.models.users import User, Token, Group
 
 # We can use native django authentication because it dierctly makes use of the
 # mongoengine authentication backend set in the settings.
-from django.contrib.auth import authenticate
-from eledata.auth import login, get_user
+from django.contrib.auth import authenticate, logout
+from eledata.auth import login
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 
@@ -22,18 +22,13 @@ class UserIndexViewSet(viewsets.ViewSet):
     @method_decorator(login_required)
     @list_route(methods=['get'])
     def index(self, request):
-        if not request.user.is_authenticated():
-            return Response("User not authenticated")
-        # user = Token.objects.get(key=request.session['session_id']).user
-        # user = authenticate(session_id=request.session['session_id'])
-        user = request.user
-        user.counter += 1
+        request.user.counter += 1
         
-        user.group.counter += 1
-        user.group.save()
-        user.save()
+        request.user.group.counter += 1
+        request.user.group.save()
+        request.user.save()
         
-        return Response("User counter: %s,  Group counter: %s" % (user.counter, user.group.counter))
+        return Response("User counter: %s,  Group counter: %s" % (request.user.counter, request.user.group.counter))
 
 class UserViewSet(viewsets.ViewSet):
     
@@ -79,3 +74,8 @@ class UserViewSet(viewsets.ViewSet):
         # request.session['session_id'] = token.key
         
         return Response("Login successful")
+    
+    @list_route(methods=['post'])
+    def logout(self, request):
+        logout(request)
+        return Response({"msg":"Logged out"})

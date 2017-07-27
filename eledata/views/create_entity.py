@@ -1,6 +1,8 @@
 from rest_framework import viewsets, permissions
 from rest_framework.response import Response
 from rest_framework.decorators import detail_route, list_route
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 
 from rest_framework.parsers import JSONParser
 from rest_framework.renderers import JSONRenderer
@@ -73,6 +75,7 @@ class EntityViewSet(viewsets.ViewSet):
             file, with the original headers, or generated headers if no headers
             were given
     """
+    @method_decorator(login_required)
     @list_route(methods=['post'])
     def create_entity(self, request):
         # 0. checking (to be developed afterwards)
@@ -85,15 +88,13 @@ class EntityViewSet(viewsets.ViewSet):
             verifier = CreateEntityVerifier()
             verifier.verify(0, request)
             
-            group = authenticate(username='dummy', password='asdf').group
-            
             response_data = EntityViewSetHandler.create_entity(
                     request_data=request.data,
                     request_file=request.FILES["file_upload"],
-                    group=group,
+                    group=request.user.group,
                     verifier=verifier)
             
-            assert verifier.verified, "Improper use of verifier"
+            assert verifier.verified
             return Response(response_data, status=200)
         except InvalidInputError as e:
             return Response({"error":str(e)}, status=400)
@@ -102,6 +103,7 @@ class EntityViewSet(viewsets.ViewSet):
     """
     Creating entity (with mapping information)
     """
+    @method_decorator(login_required)
     @detail_route(methods=['post'])
     def create_entity_mapped(self, request, pk=None):
         # 0. checking (to be developed afterwards)
@@ -111,13 +113,12 @@ class EntityViewSet(viewsets.ViewSet):
         # 4. return 100 rows of data
         
         try:
-            group = authenticate(username='dummy', password='asdf').group
-            
             verifier = CreateEntityMappedVerifier()
             response_data = EntityViewSetHandler.create_entity_mapped(
                     request_data = request.data, 
                     verifier = verifier,
-                    pk = pk)
+                    pk = pk,
+                    group = request.user.group)
             
             assert verifier.verified
             return Response(response_data, status=200)

@@ -17,6 +17,7 @@ class EntityViewSetHandler():
     
     @staticmethod
     def create_entity(request_data, request_file, group, verifier):
+        verifier.verify(1, request_data)
         # The dir that the uploaded data file will be saved to.
         # Appending the original filename to the end so that the new
         # filename has the same extension, while also making the filename
@@ -29,24 +30,23 @@ class EntityViewSetHandler():
         # Parsing the entity JSON passed in into a dictionary
         entity_dict = util.from_json(request_data["entity"])
         
-        verifier.verify(1, request_data)
-        
         entity_dict["source"] = {"file":
                {"filename":filename,
                 "isHeaderIncluded":request_data["isFileHeaderIncluded"]}}
                
         entity_dict['state'] = 1
-        entity_dict['group'] = group
-        
         verifier.verify(2, entity_dict)
         
-        response_data = {}
         serializer = EntityDetailedSerializer(data=entity_dict)
-        
         verifier.verify(3, serializer)
         
+        entity = serializer.create(serializer.validated_data)
+        entity.group = group
+        entity.save()
+        
+        response_data = {}
         # Saving the serializer while also adding its id to the response
-        response_data['entity_id'] = str(serializer.save().id)
+        response_data['entity_id'] = str(entity.id)
         # Loading the first 100 lines of data from the request file
         response_data['data'] = util.file_to_list_of_dictionaries(
                 open(entity_dict["source"]["file"]["filename"]),
@@ -59,10 +59,11 @@ class EntityViewSetHandler():
     
     
     @staticmethod
-    def create_entity_mapped(request_data, verifier, pk):
+    def create_entity_mapped(request_data, verifier, pk, group):
         entity = Entity.objects.get(pk=pk)
         verifier.verify(0, request_data, entity, pk)
-        verifier.verify(1, request_data['data_header'], entity.source.file.filename)
+        verifier.verify(1, entity, group)
+        verifier.verify(2, request_data['data_header'], entity.source.file.filename)
         
         # We will create a dummy entity whose only purpose is to serialize the
         # two fields we give it, so we can add them to the actual entity. The
@@ -79,6 +80,7 @@ class EntityViewSetHandler():
             for mapping in dummy['data_header']:
                 item[mapping["mapped"]] = item[mapping["source"]]
                 del item[mapping["source"]]
+                
         # Casting everything in data from strings to their proper data type
         # according to request.data['data_header']
         for item in data:
@@ -90,7 +92,7 @@ class EntityViewSetHandler():
         dummy['data'] = data
         dummySerializer = EntityDetailedSerializer(data=dummy)
         
-        verifier.verify(2, dummySerializer)
+        verifier.verify(3, dummySerializer)
         
         dummy = Entity(**dummySerializer.validated_data)
         
