@@ -4,6 +4,7 @@ from django.utils.six import BytesIO
 
 from eledata.serializers.entity import *
 from eledata.models.entity import *
+from eledata.models.users import Group
 
 import csv
 from eledata import util
@@ -15,7 +16,7 @@ import uuid
 class EntityViewSetHandler():
     
     @staticmethod
-    def create_entity(request_data, request_file, verifier):
+    def create_entity(request_data, request_file, group, verifier):
         # The dir that the uploaded data file will be saved to.
         # Appending the original filename to the end so that the new
         # filename has the same extension, while also making the filename
@@ -26,7 +27,7 @@ class EntityViewSetHandler():
             file.write(request_file.read())
         
         # Parsing the entity JSON passed in into a dictionary
-        entity_dict = JSONParser().parse(BytesIO(request_data["entity"]))
+        entity_dict = util.from_json(request_data["entity"])
         
         verifier.verify(1, request_data)
         
@@ -34,8 +35,8 @@ class EntityViewSetHandler():
                {"filename":filename,
                 "isHeaderIncluded":request_data["isFileHeaderIncluded"]}}
                
-            
         entity_dict['state'] = 1
+        entity_dict['group'] = group
         
         verifier.verify(2, entity_dict)
         

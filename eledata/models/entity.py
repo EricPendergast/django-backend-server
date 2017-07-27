@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 from mongoengine import *
 from django.contrib.auth.hashers import check_password, make_password
+from .users import Group
 
 import datetime
 # Create your models here.
@@ -63,3 +64,4 @@ class Entity(Document):
     allowed_user = ListField()
     created_at = DateTimeField(default=datetime.datetime.now)
     updated_at = DateTimeField(default=datetime.datetime.now)
+    group = ReferenceField(Group)

@@ -6,6 +6,8 @@ from rest_framework.parsers import JSONParser
 from rest_framework.renderers import JSONRenderer
 from django.utils.six import BytesIO
 
+from django.contrib.auth import authenticate
+
 from django.template.response import TemplateResponse
 from django.http import HttpResponse
 
@@ -13,6 +15,7 @@ from eledata.serializers.entity import *
 from eledata.models.entity import *
 from eledata.verifiers.entity import *
 from eledata.handlers.create_entity import *
+from eledata.models.users import User
 
 import csv
 import eledata.util
@@ -59,9 +62,12 @@ class EntityViewSet(viewsets.ViewSet):
 
         
     """
-    Creating entity (without mapping information)
+    Creates an entity (without mapping information). Adds it to the group of
+    the user who made the request
+    
     If there is an error, the response will contain an "error" key, which
     will map to the error message. Otherwise it will send a response with the following:
+    
         "entity_id", which maps to the id of the newly created entity
         "data", which maps to the first 100 lines of data parsed from the input
             file, with the original headers, or generated headers if no headers
@@ -79,12 +85,15 @@ class EntityViewSet(viewsets.ViewSet):
             verifier = CreateEntityVerifier()
             verifier.verify(0, request)
             
+            group = authenticate(username='dummy', password='asdf').group
+            
             response_data = EntityViewSetHandler.create_entity(
                     request_data=request.data,
                     request_file=request.FILES["file_upload"],
+                    group=group,
                     verifier=verifier)
             
-            assert verifier.verified, "Verification failed"
+            assert verifier.verified, "Improper use of verifier"
             return Response(response_data, status=200)
         except InvalidInputError as e:
             return Response({"error":str(e)}, status=400)
@@ -102,6 +111,8 @@ class EntityViewSet(viewsets.ViewSet):
         # 4. return 100 rows of data
         
         try:
+            group = authenticate(username='dummy', password='asdf').group
+            
             verifier = CreateEntityMappedVerifier()
             response_data = EntityViewSetHandler.create_entity_mapped(
                     request_data = request.data, 

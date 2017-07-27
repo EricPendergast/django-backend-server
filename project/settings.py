@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_mongoengine',
     'eledata',
-    'users',
+    # 'users',
 ]
 
 MIDDLEWARE = [
@@ -50,7 +50,8 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    # 'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'eledata.middleware.CustomAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -127,7 +128,9 @@ else:
 # This doesn't seem to work with the current version of mongoengine. Just using
 # the default authentication for now
 AUTHENTICATION_BACKENDS = (
-     'mongoengine.django.auth.MongoEngineBackend',
+     'eledata.auth.CustomAuthBackend',
+     # 'mongoengine.django.auth.MongoEngineBackend',
+     # 'users.authentication.TokenAuthentication',
 )
 
 
@@ -151,6 +154,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+LOGIN_URL = '/users/login/'
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/

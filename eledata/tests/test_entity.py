@@ -21,6 +21,14 @@ class EntityTestCase(TestCase):
     defaultFilename = 'misc/test_files/entity_data_1.csv'
     csvNoHeaderFilename = 'misc/test_files/entity_data_8_no_header.csv'
     
+    response = Client().post("/users/create_user/", {"username":"dummy", "password":"asdf", "group":"dummy_group"})
+    #
+    # user = User.objects.get(username="dummy")
+    # dummy_user = User.objects.get()
+    # del c
+    # def loggedin(*args, **kwargs):
+    #     def decorator():
+            
     '''
     Sending a get request to get_all_entity and testing that it sends back all
     the entities in the database
