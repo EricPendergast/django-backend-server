@@ -25,6 +25,8 @@ class EntityTestCase(TestCase):
     
     # Creating a dummy user+group
     client.post("/users/create_user/", {"username":"dummy", "password":"asdf", "group":"dummy_group"})
+    Client().post("/users/create_user/", {"username":"dummy2", "password":"asdf", "group":"different_dummy_group"})
+    Client().post("/users/create_user/", {"username":"dummy3", "password":"asdf", "group":"dummy_group"})
     
     # Log out of the old client and log into a new client
     def setUp(self):
@@ -61,6 +63,18 @@ class EntityTestCase(TestCase):
         for key in dataComp:
             self.assertEquals(data[key], dataComp[key])
             
+    def test_get_all_entity_multiple_groups(self):
+        Entity.objects.delete()
+        c = self.client
+        self._create_entity_init(c, self.defaultFilename)
+        response = c.get('/entity/get_all_entity/').data
+        self.assertEquals(len(response), 1)
+        
+        c.post('/users/logout/', {})
+        c.post('/users/login/', {'username':'dummy2', 'password':'asdf'})
+        response = c.get('/entity/get_all_entity/').data
+        self.assertEquals(len(response), 0)
+        
 
     '''
     Testing that sending a first stage entity creation post request (to
@@ -291,11 +305,9 @@ class EntityTestCase(TestCase):
         client1 = self.client
         
         client2 = Client()
-        client2.post("/users/create_user/", {"username":"dummy2", "password":"asdf", "group":"different_dummy_group"})
         client2.post("/users/login/", {"username":"dummy2", "password":"asdf"})
         
         client3 = Client()
-        client3.post("/users/create_user/", {"username":"dummy3", "password":"asdf", "group":"dummy_group"})
         client3.post("/users/login/", {"username":"dummy3", "password":"asdf"})
         
         id = self._create_entity_init(client1, filename=None)['entity_id']

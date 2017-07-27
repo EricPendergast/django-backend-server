@@ -42,9 +42,11 @@ class EntityViewSet(viewsets.ViewSet):
     """
     Get all entity summary
     """
+    #TODO: Should this be changed to returning all entities in a certain group?
+    @method_decorator(login_required)
     @list_route(methods=['get'])
     def get_all_entity(self, request):
-        query_set = Entity.objects()
+        query_set = Entity.objects(group=request.user.group)
         serializer = EntitySummarySerializer(query_set, many=True, required=True)
         return Response(serializer.data)
 
@@ -53,22 +55,25 @@ class EntityViewSet(viewsets.ViewSet):
     Select Entity in-details
     @param: entity_type
     """
+    @method_decorator(login_required)
     @detail_route(methods=['get'])
     def select_entity(self, request, pk=None):
-        query_set = Entity.objects(type=pk).first()
-        if query_set is None:
+        entity = Entity.objects(type=pk).first()
+        if entity is None:
             return Response()
-        serializer = EntityDetailedSerializer(query_set)
+        if entity.group != request.user.group:
+            return Response({"error":"User does not have permission to access this entity"})
+        serializer = EntityDetailedSerializer(entity)
         return Response(serializer.data)
-
 
         
     """
     Creates an entity (without mapping information). Adds it to the group of
     the user who made the request
     
-    If there is an error, the response will contain an "error" key, which
-    will map to the error message. Otherwise it will send a response with the following:
+    If there is an error, the response will contain an "error" key, which will
+    map to the error message. Otherwise it will send a response with the
+    following:
     
         "entity_id", which maps to the id of the newly created entity
         "data", which maps to the first 100 lines of data parsed from the input
