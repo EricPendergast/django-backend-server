@@ -1,6 +1,8 @@
 from rest_framework import viewsets, permissions
 from rest_framework.response import Response
 from rest_framework.decorators import detail_route, list_route
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 
 from rest_framework.parsers import JSONParser
 from rest_framework.renderers import JSONRenderer
@@ -24,22 +26,26 @@ import eledata.handlers.analysis_questions as handler
 
 class AnalysisQuestionsViewSet(viewsets.ViewSet):
     
+    # Returns all the analysis questions in the group of the current user
+    @method_decorator(login_required)
     @list_route(methods=['get'])
     def get_all_existing_analysis_questions(self, request):
-        ser = AnalysisQuestionSerializer(AnalysisQuestion.objects.all(), many=True)
+        ser = AnalysisQuestionSerializerSummary(request.user.group.analysis_settings.questions, many=True)
         
         return Response(ser.data, status=200)
-    
         
+    
+    @method_decorator(login_required)
     @list_route(methods=['get'])
-    def get_all_existing_analysis_settings(self, request):
-        # This is a dummy user. In the future there will be real users.
-        user = UserAnalysisQuestions.objects.get()
-        resp_data = handler.get_analysis_questions_settings(user)
+    def get_all_analysis_settings(self, request):
+        
+        resp_data = handler.get_analysis_questions_settings(
+                settings=request.user.group.analysis_settings)
         
         return Response(resp_data, status=200)
     
     
+    @method_decorator(login_required)
     @list_route(methods=['post'])
     def toggle_analysis_question(self, request):
         '''
@@ -53,17 +59,22 @@ class AnalysisQuestionsViewSet(viewsets.ViewSet):
         
         try:
             verifier = ToggleAnalysisQuestionVerifier()
-            user = UserAnalysisQuestions.objects.get()
+            group = request.user.group
             
-            resp_data = handler.analysis_question_toggled(request.data, user, verifier)
+            resp_data = handler.toggle_analysis_question(
+                    request_data=request.data,
+                    settings=group.analysis_settings,
+                    verifier=verifier)
+            
+            group.save()
             
             assert verifier.verified
-            
             return Response(resp_data, status=200)
         except InvalidInputError as e:
             return Response({"error":str(e)}, status=400)
     
     
+    @method_decorator(login_required)
     @list_route(methods=['post'])
     def change_analysis_parameter(self, request):
         '''
@@ -81,9 +92,14 @@ class AnalysisQuestionsViewSet(viewsets.ViewSet):
         
         try:
             verifier = ChangeAnalysisParameterVerifier()
-            user = UserAnalysisQuestions.objects.get()
+            group = request.user.group
             
-            resp_data = handler.change_analysis_parameter(request.data, user, verifier)
+            resp_data = handler.change_analysis_parameter(
+                    request_data=request.data,
+                    settings=group.analysis_settings,
+                    verifier=verifier)
+            
+            group.save()
             
             assert verifier.verified
             return Response(resp_data, status=200)

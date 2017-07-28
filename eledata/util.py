@@ -143,3 +143,11 @@ def debug_deep_compare(param1, param2):
         elif hasattr(param1, field) != hasattr(param2, field):
             print "Two objects differ by field: %s. One object is missing the field." % field
 
+def debug_deep_print(obj):
+    print type(obj), ": {"
+    for field in dir(obj):
+        try:
+            print field, ": ", getattr(obj, field), ", "
+        except Exception:
+            print "Got error when trying to read field '", field, "',"
+    print "}"

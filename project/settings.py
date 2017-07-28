@@ -128,8 +128,8 @@ else:
 # This doesn't seem to work with the current version of mongoengine. Just using
 # the default authentication for now
 AUTHENTICATION_BACKENDS = (
-     'eledata.auth.CustomAuthBackend',
-     # 'mongoengine.django.auth.MongoEngineBackend',
+     # 'eledata.auth.CustomAuthBackend',
+     'mongoengine.django.auth.MongoEngineBackend',
      # 'users.authentication.TokenAuthentication',
 )
 

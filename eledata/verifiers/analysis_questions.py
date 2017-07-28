@@ -22,7 +22,7 @@ class ChangeAnalysisParameterVerifier(Verifier):
             raise InvalidInputError("Parameter with label %s doesn't exist" % label)
     
     def stage2(self, parameter):
-        if int(parameter.choice_index) not in range(len(parameter.parameter.choices)):
-            raise InvalidInputError("'choice_index', value %s, is out of range %s" % (parameter.choice_index, range(len(parameter.parameter.choices))))
+        if int(parameter.choice_index) not in range(len(parameter.choices)):
+            raise InvalidInputError("'choice_index', value %s, is out of range %s" % (parameter.choice_index, range(len(parameter.choices))))
     
     stages = [stage0, stage1, stage2]

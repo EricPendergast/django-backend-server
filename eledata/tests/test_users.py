@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from django.test import TestCase
 from django.test import Client
-from eledata.models.users import User, Group, Token
+from eledata.models.users import User, Group
 
 from eledata.util import from_json, to_json
 
@@ -57,4 +57,3 @@ class UsersTestCase(TestCase):
     def doCleanups(self):
         User.drop_collection()
         Group.drop_collection()
-        Token.drop_collection()

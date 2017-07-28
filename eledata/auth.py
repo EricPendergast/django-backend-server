@@ -1,30 +1,11 @@
 from mongoengine.django.auth import MongoEngineBackend
-from eledata.models.users import Token
+# from eledata.models.users import Token
 
 from django.contrib.auth import SESSION_KEY, BACKEND_SESSION_KEY, HASH_SESSION_KEY, constant_time_compare, _get_backends, rotate_token, load_backend
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth.signals import user_logged_in, user_logged_out, user_login_failed
 
 from project import settings
-
-#TODO: should I use the name token or session_id?
-class CustomAuthBackend(MongoEngineBackend):
-    def authenticate(self, username=None, password=None):
-        if username is not None and password is not None:
-            return super(CustomAuthBackend, self).authenticate(username=username, password=password)
-        elif session_id is not None:
-            try:
-                token = Token.objects.get(key=session_id)
-            except Token.DoesNotExist:
-                raise exceptions.AuthenticationFailed('Invalid token.')
-
-            if not token.user.is_active:
-                raise exceptions.AuthenticationFailed('User inactive or deleted.')
-
-            return token.user
-        else:
-            raise exceptions.AuthenticationFailed('Not enough information')
-            
 
 
 #########################################################

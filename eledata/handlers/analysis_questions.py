@@ -1,33 +1,29 @@
 from eledata.models.analysis_questions import *
 from eledata.serializers.analysis_questions import *
 
-from eledata.util import to_json, from_json
+from eledata.util import to_json, from_json, debug_deep_print
 
 
-def get_analysis_questions_settings(user):
-    assert type(user) is UserAnalysisQuestions
+def get_analysis_questions_settings(settings):
+    assert type(settings) is GroupAnalysisSettings
     ret_data = {"analysis_questions":[], "analysis_params":[]}
     
-    # Load the analysis questions into ret_data, adding user specific
-    # information
-    for question in AnalysisQuestion.objects.all():
+    # Load the analysis questions into ret_data
+    for question in settings.questions:
         entry = AnalysisQuestionSerializer(question).data
-        entry['enabled'] = question in user.enabled_questions
-        entry['selected'] = question in user.selected_questions
         
-        del entry['parameters']
-        del entry['id']
+        del entry['parameter_labels']
         
         ret_data["analysis_questions"] += [entry,]
     
-    user.update_parameters()
+    # Make sure that the parameters are in sync with the analysis questions.
+    settings.update_parameters()
         
-    for answered_param in user.parameters:
-        if answered_param.enabled:
-            entry = AnalysisParameterSerializer(answered_param.parameter).data
-            del entry['id']
-            entry['choice_input'] = answered_param.choice_input
-            entry['choice_index'] = answered_param.choice_index
+    # Load the parameters into ret_data
+    for param in settings.parameters:
+        if param.enabled:
+            entry = AnalysisParameterSerializer(param).data
+            del entry['enabled']
             
             ret_data["analysis_params"] += [entry,]
         
@@ -40,37 +36,32 @@ def get_analysis_questions_settings(user):
 
 
 
-def analysis_question_toggled(request_data, user, verifier):
+def toggle_analysis_question(request_data, settings, verifier):
     verifier.verify(0, request_data)
     
     label = request_data['toggled']
     
+    # The analysis question that the user is trying to toggle
     analysis_question = None
     
-    for q in user.enabled_questions:
-        if q.label == label:
+    for q in settings.questions:
+        if q.enabled and q.label == label:
             analysis_question = q
+            break
     
     verifier.verify(1, analysis_question)
     
-    if analysis_question in user.selected_questions:
-        user.selected_questions.remove(analysis_question)
-    else: 
-        # I use append because doing "+= [item,]" uses inplace modification,
-        # which makes mongodb not recognize that the list was changed. This
-        # could have been fixed by adding "selected_questions" to
-        # 'user._changed_fields', but this way is cleaner.
-        user.selected_questions.append(analysis_question)
+    analysis_question.selected = not analysis_question.selected
     
-    user.update_parameters()
-    user.save()
-    user = UserAnalysisQuestions.objects.get(pk=user.id)
+    settings.update_parameters()
     
-    return {}
+    return {"msg":"Toggle successful"}
 
-def change_analysis_parameter(request_data, user, verifier):
+
+
+def change_analysis_parameter(request_data, settings, verifier):
     verifier.verify(0, request_data)
-    param_to_change = user.get_parameter(request_data["label"])
+    param_to_change = settings.get_parameter(request_data["label"])
     verifier.verify(1, param_to_change, request_data["label"])
     param_to_change.choice_index = request_data["choice_index"]
     verifier.verify(2, param_to_change)
@@ -80,7 +71,5 @@ def change_analysis_parameter(request_data, user, verifier):
     else:
         param_to_change.choice_input = None
     
-    user.save()
-    
-    return {}
+    return {"msg":"Change successful"}
     

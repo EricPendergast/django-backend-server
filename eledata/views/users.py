@@ -4,7 +4,7 @@ from rest_framework.decorators import detail_route, list_route
 
 import mongoengine
 
-from eledata.models.users import User, Token, Group
+from eledata.models.users import User, Group
 
 # We can use native django authentication because it dierctly makes use of the
 # mongoengine authentication backend set in the settings.
@@ -32,7 +32,6 @@ class UserIndexViewSet(viewsets.ViewSet):
 
 class UserViewSet(viewsets.ViewSet):
     
-    #TODO: Move questions from their own database to being embedded in user groups
     #TODO: Create server side json file that contains all questions
     #Maybe TODO: Create update_questions method. Looks at the json questions file and updates all user groups to match the file.
     

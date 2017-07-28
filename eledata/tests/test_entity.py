@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from django.test import TestCase
 from django.test import Client
 from eledata.models.entity import Entity
+from eledata.models.users import User, Group
 
 from eledata.util import from_json, to_json
 
@@ -21,20 +22,22 @@ class EntityTestCase(TestCase):
     defaultFilename = 'misc/test_files/entity_data_1.csv'
     csvNoHeaderFilename = 'misc/test_files/entity_data_8_no_header.csv'
     
-    client = Client()
     
-    # Creating a dummy user+group
-    client.post("/users/create_user/", {"username":"dummy", "password":"asdf", "group":"dummy_group"})
-    Client().post("/users/create_user/", {"username":"dummy2", "password":"asdf", "group":"different_dummy_group"})
-    Client().post("/users/create_user/", {"username":"dummy3", "password":"asdf", "group":"dummy_group"})
-    
+    def doCleanups(self):
+        Group.drop_collection()
+        User.drop_collection()
+        
     # Log out of the old client and log into a new client
     def setUp(self):
-        self.client.post("/users/logout/", {})
+        assert len(Group.objects) == 0
+        assert len(User.objects) == 0
         self.client = Client()
-        self.client.post("/users/login/", {"username":"dummy", "password":"asdf"})
+        Client().post("/users/create_user/", {"username":"dummy", "password":"asdf", "group":"dummy_group"})
+        Client().post("/users/create_user/", {"username":"dummy2", "password":"asdf", "group":"different_dummy_group"})
+        Client().post("/users/create_user/", {"username":"dummy3", "password":"asdf", "group":"dummy_group"})
         
-            
+        self.client.post("/users/login/", {"username":"dummy", "password":"asdf"})
+    
     '''
     Sending a get request to get_all_entity and testing that it sends back all
     the entities in the database
