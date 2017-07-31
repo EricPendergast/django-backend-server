@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import detail_route, list_route
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 from rest_framework.parsers import JSONParser
 from rest_framework.renderers import JSONRenderer
@@ -34,7 +35,8 @@ def index_view(request):
     # return TemplateResponse(request, 'index.html', context)
     
 
-class EntityViewSet(viewsets.ViewSet):
+class EntityViewSet(LoginRequiredMixin, viewsets.ViewSet):
+    raise_exception=True
     """
     Read-only User endpoint
     """
@@ -42,8 +44,6 @@ class EntityViewSet(viewsets.ViewSet):
     """
     Get all entity summary
     """
-    #TODO: Should this be changed to returning all entities in a certain group?
-    @method_decorator(login_required)
     @list_route(methods=['get'])
     def get_all_entity(self, request):
         query_set = Entity.objects(group=request.user.group)
@@ -55,7 +55,6 @@ class EntityViewSet(viewsets.ViewSet):
     Select Entity in-details
     @param: entity_type
     """
-    @method_decorator(login_required)
     @detail_route(methods=['get'])
     def select_entity(self, request, pk=None):
         entity = Entity.objects(type=pk).first()
@@ -80,7 +79,6 @@ class EntityViewSet(viewsets.ViewSet):
             file, with the original headers, or generated headers if no headers
             were given
     """
-    @method_decorator(login_required)
     @list_route(methods=['post'])
     def create_entity(self, request):
         # 0. checking (to be developed afterwards)
@@ -108,7 +106,6 @@ class EntityViewSet(viewsets.ViewSet):
     """
     Creating entity (with mapping information)
     """
-    @method_decorator(login_required)
     @detail_route(methods=['post'])
     def create_entity_mapped(self, request, pk=None):
         # 0. checking (to be developed afterwards)

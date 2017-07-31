@@ -34,7 +34,13 @@ class UsersTestCase(TestCase):
         self.assertTrue(second_group.filter(username=self.users[1][0]["username"]))
         
         
+    def test_not_logged_in(self):
+        c = Client()
+        response = c.get("/entity/get_all_entity/")
+        self.assertEqual(response.status_code, 403)
        
+        response = c.get("/analysis_questions/get_all_existing_analysis_questions/")
+        self.assertEqual(response.status_code, 403)
     
     def _test_create_and_login(self, data, login_data):
         c = Client()
