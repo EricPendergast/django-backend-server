@@ -19,6 +19,7 @@ class UsersTestCase(TestCase):
     def test_create_user(self):
         self._test_create_and_login(*self.users[0])
         
+        
     def test_create_multiple_user(self):
         for user in self.users:
             self._test_create_and_login(*user)
@@ -43,6 +44,7 @@ class UsersTestCase(TestCase):
         self.assertEqual(response.status_code, 401)
     
     
+    # Testing that the proper message is sent back if the user login fails due to incorrect username or password
     def test_fail_login(self):
         c = Client()
         response = c.post("/users/login/", {"username":"eric", "password":"thing"})
@@ -53,6 +55,41 @@ class UsersTestCase(TestCase):
         self.assertEqual(response.status_code, 403)
     
     
+    def test_create_user_invalid_request(self):
+        def assert_invalid(data):
+            c = Client()
+            response = c.post("/users/create_user/", data)
+            self.assertEquals(response.status_code, 400)
+            
+        assert_invalid({"username":"usr"})
+        assert_invalid({"password":"pswrd"})
+        assert_invalid({"group":"grp"})
+        assert_invalid({"username":"usr", "group":"grp"})
+        assert_invalid({"password":"pswrd", "group":"grp"})
+        assert_invalid({"username":"usr", "password":"pswrd"})
+            
+            
+    def test_login_invalid_request(self):
+        def assert_invalid(data):
+            c = Client()
+            response = c.post("/users/login/", data)
+            self.assertEquals(response.status_code, 400)
+        
+        assert_invalid({"username":"eric"})
+        assert_invalid({"password":"pswd"})
+    
+    
+    def test_logout(self):
+        user = self.users[0]
+        c = self._test_create_and_login(*user)
+        
+        # response = c.get("/analysis_questions/get_all_existing_analysis_questions/")
+        # self.assertEquals(response.status_code, 200)
+        
+        c.post("/users/logout/")
+        
+        response = c.get("/analysis_questions/get_all_existing_analysis_questions/")
+        self.assertEquals(response.status_code, 401)
     
     
     def _test_create_and_login(self, data, login_data):
@@ -72,6 +109,7 @@ class UsersTestCase(TestCase):
         response = c.get("/users/index/")
         self.assertTrue(response.status_code == 200)
         
+        return c
         
     def doCleanups(self):
         User.drop_collection()
