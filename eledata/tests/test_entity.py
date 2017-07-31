@@ -9,6 +9,7 @@ from eledata.models.users import User, Group
 from eledata.util import from_json, to_json
 
 import datetime
+import platform
 # Create your tests here.
 
 class EntityTestCase(TestCase):
@@ -182,6 +183,10 @@ class EntityTestCase(TestCase):
     xls file as input
     '''
     def test_create_entity_xls(self):
+
+        if platform.system() == "Windows":
+            return
+
         c = self.client
 
         entity = self._create_mapped_entity(c, self.entityDataHeaderJSON1, 'misc/test_files/entity_data_5_large.xls')['entity']
@@ -202,6 +207,10 @@ class EntityTestCase(TestCase):
     xlsx file as input
     '''
     def test_create_entity_xlsx(self):
+
+        if platform.system() == "Windows":
+            return
+
         c = self.client
 
         entity = self._create_mapped_entity(c, self.entityDataHeaderJSON1, 'misc/test_files/entity_data_6_large.xlsx')['entity']

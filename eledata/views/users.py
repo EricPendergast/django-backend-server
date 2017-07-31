@@ -70,11 +70,11 @@ class UserViewSet(viewsets.ViewSet):
             request.session.set_expiry(30 * 30)
             login(request, user)
         else:
-            return Response("Login failed", status=403)
+            return Response({"error": "Login failed"}, status=403)
             
-        return Response("Login successful")
+        return Response({"message": "Login successful"})
     
     @list_route(methods=['post'])
     def logout(self, request):
         logout(request)
-        return Response({"msg":"Logged out"})
+        return Response({"message": "Logged out"})
