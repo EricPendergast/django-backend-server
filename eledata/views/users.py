@@ -61,7 +61,7 @@ class UserViewSet(viewsets.ViewSet):
         user = authenticate(username=username, password=password)
         
         if user is not None:
-            request.session.set_expiry(30)
+            request.session.set_expiry(30 * 30)
             login(request, user)
         else:
             return Response("Login failed")

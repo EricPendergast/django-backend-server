@@ -17,14 +17,14 @@ class AnalysisQuestionTestCase(TestCase):
             {u'content': u'What is your expected variation of CLV?', 'label':'clv', 'floating_label':'Variation', u'id': u'596c858d9a4c0e5f19c78f3e', u'choices': [{u'content': u'Default. Handled by Eledata', u'default_value': None}]},
             {'content':"What is your company's average monthly income?", 'label':'income', 'floating_label':'Income', 'id':'596c858d9a4c0e5f19c78f3f', 'choices': [{'content':'Default. Handled by Eledata'}, {'content':'Enter your value:', "default_value":"50,000"}]},]
     
-    analysis_params_init_objs = [AnalysisParameter2(**item) for item in analysis_params_init]
+    analysis_params_init_objs = [AnalysisParameter(**item) for item in analysis_params_init]
     
     analysis_questions_init = [
             {"content": "Which customers will likely be leaving in the coming time?", "label":"leaving", "type":"predictive", "orientation":"customer", "parameter_labels":[]}, 
             {"content": "Which products will be the most popular in the future?", "label":"poplularity", "type":"predictive", "orientation":"product", "parameter_labels":[analysis_params_init[0]['label']]},
             {"content": "What has caused the most customers to leave?", "label":"cause of leave", "type":"descriptive", "orientation":"customer", "parameter_labels": [a['label'] for a in analysis_params_init]},]
         
-    analysis_questions_init_objs = [AnalysisQuestion2(**item) for item in analysis_questions_init]
+    analysis_questions_init_objs = [AnalysisQuestion(**item) for item in analysis_questions_init]
     
     
     def doCleanups(self):
