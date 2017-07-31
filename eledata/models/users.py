@@ -19,10 +19,10 @@ class Group(Document):
     # 'counter' is used for testing
     counter = fields.IntField(default=0)
     name = fields.StringField(max_length=80, unique=True, required=True)
-    analysis_settings = fields.EmbeddedDocumentField(GroupAnalysisSettings, required=True)
+    analysis_settings = fields.EmbeddedDocumentField(GroupAnalysisSettings)
 
 class User(auth.User):
     # 'counter' is used for testing
     counter = fields.IntField(default=0)
-    group = fields.ReferenceField(Group, required=True)
+    group = fields.ReferenceField(Group)
     

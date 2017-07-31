@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import detail_route, list_route
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 from rest_framework.parsers import JSONParser
 from rest_framework.renderers import JSONRenderer
@@ -24,10 +25,10 @@ import uuid
 import eledata.handlers.analysis_questions as handler
 
 
-class AnalysisQuestionsViewSet(viewsets.ViewSet):
+class AnalysisQuestionsViewSet(LoginRequiredMixin, viewsets.ViewSet):
+    raise_exception=True
     
     # Returns all the analysis questions in the group of the current user
-    @method_decorator(login_required)
     @list_route(methods=['get'])
     def get_all_existing_analysis_questions(self, request):
         ser = AnalysisQuestionSerializerSummary(request.user.group.analysis_settings.questions, many=True)
@@ -35,7 +36,6 @@ class AnalysisQuestionsViewSet(viewsets.ViewSet):
         return Response(ser.data, status=200)
         
     
-    @method_decorator(login_required)
     @list_route(methods=['get'])
     def get_all_analysis_settings(self, request):
         
@@ -45,7 +45,6 @@ class AnalysisQuestionsViewSet(viewsets.ViewSet):
         return Response(resp_data, status=200)
     
     
-    @method_decorator(login_required)
     @list_route(methods=['post'])
     def toggle_analysis_question(self, request):
         '''
@@ -74,7 +73,6 @@ class AnalysisQuestionsViewSet(viewsets.ViewSet):
             return Response({"error":str(e)}, status=400)
     
     
-    @method_decorator(login_required)
     @list_route(methods=['post'])
     def change_analysis_parameter(self, request):
         '''

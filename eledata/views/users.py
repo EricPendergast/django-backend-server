@@ -67,11 +67,6 @@ class UserViewSet(viewsets.ViewSet):
             return Response("Login failed")
             
         
-        # token = Token(user=user)
-        # token.save()
-        
-        # request.session['session_id'] = token.key
-        
         return Response("Login successful")
     
     @list_route(methods=['post'])

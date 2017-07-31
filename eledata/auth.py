@@ -1,5 +1,4 @@
 from mongoengine.django.auth import MongoEngineBackend
-# from eledata.models.users import Token
 
 from django.contrib.auth import SESSION_KEY, BACKEND_SESSION_KEY, HASH_SESSION_KEY, constant_time_compare, _get_backends, rotate_token, load_backend
 from django.contrib.auth.models import AnonymousUser
