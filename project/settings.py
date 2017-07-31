@@ -27,8 +27,8 @@ SECRET_KEY = 'c*s4n%@c#3sjzc(g4fiq7htu0pfu2reuk)ax((c7y-^h^cu+$*'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+with open('allowed_hosts.txt') as file:
+    ALLOWED_HOSTS = [str(file.readline()).strip()]
 
 # Application definition
 
