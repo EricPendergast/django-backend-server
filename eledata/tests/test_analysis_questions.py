@@ -123,18 +123,18 @@ class AnalysisQuestionTestCase(TestCase):
         response = c.post('/analysis_questions/change_analysis_parameter/',
                 data = {"label":"not a label",
                 "choice_index":1})
-        self.assertIn("error", response.data)
+        self.assertIn("error", from_json(response.content))
 
 
         response = c.post('/analysis_questions/change_analysis_parameter/',
                 data = {"label":"income",
                 "choice_index":-1})
-        self.assertIn("error", response.data)
+        self.assertIn("error", from_json(response.content))
 
         response = c.post('/analysis_questions/change_analysis_parameter/',
                 data = {"label":"income",
                 "choice_index":2})
-        self.assertIn("error", response.data)
+        self.assertIn("error", from_json(response.content))
         
         
     def _create_default_user(self):
@@ -161,6 +161,7 @@ class AnalysisQuestionTestCase(TestCase):
         
     # TODO: Write a test that accounts for multiple groups
         
+# Checks whether list1 and list2 have the same elements, regardless of order
 def _same_elements(list1, list2):
     for item in list1:
         if item not in list2:
@@ -171,4 +172,5 @@ def _same_elements(list1, list2):
             return False
     
     return True
+        
         

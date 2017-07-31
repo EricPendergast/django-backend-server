@@ -51,9 +51,10 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     # 'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'eledata.middleware.CustomAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'eledata.middleware.CustomAuthenticationMiddleware',
+    'eledata.middleware.HandleInvalidInputMiddleware',
 ]
 
 ROOT_URLCONF = 'project.urls'

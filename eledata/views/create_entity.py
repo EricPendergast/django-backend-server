@@ -86,22 +86,19 @@ class EntityViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
         # 2. save file to temp dir
         # 3. save basic entity information, temp dir folder "progressing" state in mongo
         # 4. return 100 rows of data
+    
+        verifier = CreateEntityVerifier()
+        verifier.verify(0, request)
         
-        try:
-            verifier = CreateEntityVerifier()
-            verifier.verify(0, request)
-            
-            response_data = EntityViewSetHandler.create_entity(
-                    request_data=request.data,
-                    request_file=request.FILES["file_upload"],
-                    group=request.user.group,
-                    verifier=verifier)
-            
-            assert verifier.verified
-            return Response(response_data, status=200)
-        except InvalidInputError as e:
-            return Response({"error":str(e)}, status=400)
+        response_data = EntityViewSetHandler.create_entity(
+                request_data=request.data,
+                request_file=request.FILES["file_upload"],
+                group=request.user.group,
+                verifier=verifier)
         
+        assert verifier.verified
+        return Response(response_data, status=200)
+    
         
     """
     Creating entity (with mapping information)
@@ -114,16 +111,13 @@ class EntityViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
         # 3. validating mapping (to be developed afterwards)
         # 4. return 100 rows of data
         
-        try:
-            verifier = CreateEntityMappedVerifier()
-            response_data = EntityViewSetHandler.create_entity_mapped(
-                    request_data = request.data, 
-                    verifier = verifier,
-                    pk = pk,
-                    group = request.user.group)
-            
-            assert verifier.verified
-            return Response(response_data, status=200)
-        except InvalidInputError as e:
-            return Response({"error":str(e)}, status=400)
+        verifier = CreateEntityMappedVerifier()
+        response_data = EntityViewSetHandler.create_entity_mapped(
+                request_data = request.data, 
+                verifier = verifier,
+                pk = pk,
+                group = request.user.group)
         
+        assert verifier.verified
+        return Response(response_data, status=200)
+    

@@ -315,10 +315,10 @@ class EntityTestCase(TestCase):
         
         id = self._create_entity_init(client1, filename=None)['entity_id']
         response = self._create_entity_final(client2, id, self.entityDataHeaderJSON1)
-        self.assertIn('error', response.data)
+        self.assertIn('error', from_json(response.content))
         
         response = self._create_entity_final(client3, id, self.entityDataHeaderJSON1)
-        self.assertNotIn('error', response.data)
+        self.assertNotIn('error', from_json(response.content))
     
     # TODO: test that create_entity and create_entity_mapped send back 100
     # lines of data

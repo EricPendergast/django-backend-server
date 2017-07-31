@@ -18,7 +18,6 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 
-    
 class UserIndexViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
     @list_route(methods=['get'])
     def index(self, request):
@@ -40,48 +39,40 @@ class UserViewSet(viewsets.ViewSet):
     
     @list_route(methods=['post'])
     def create_user(self, request):
+        verifier = CreateUserVerifier()
+        verifier.verify(0, request.data)
+        username = request.data['username']
+        password = request.data['password']
+        group_name = request.data['group']
+        
+        user = User.create_user(username, password)
         try:
-            verifier = CreateUserVerifier()
-            verifier.verify(0, request.data)
-            username = request.data['username']
-            password = request.data['password']
-            group_name = request.data['group']
-            
-            user = User.create_user(username, password)
-            try:
-                group = Group.objects.get(name=group_name)
-            except mongoengine.DoesNotExist:
-                group = Group(name=group_name)
-                group.save()
-            
-            user.group = group
-            user.save()
-            
-            assert verifier.verified
-            return Response("Created user %s" % user.username)
-        except InvalidInputError as e:
-            #TODO: Turn this into a mixin
-            return Response({"error":str(e)}, status=400)
+            group = Group.objects.get(name=group_name)
+        except mongoengine.DoesNotExist:
+            group = Group(name=group_name)
+            group.save()
+        
+        user.group = group
+        user.save()
+        
+        assert verifier.verified
+        return Response("Created user %s" % user.username)
         
     @list_route(methods=['post'])
     def login(self, request):
-        try:
-            verifier = LoginVerifier()
-            verifier.verify(0, request.data)
-            username = request.data['username']
-            password = request.data['password']
-            user = authenticate(username=username, password=password)
+        verifier = LoginVerifier()
+        verifier.verify(0, request.data)
+        username = request.data['username']
+        password = request.data['password']
+        user = authenticate(username=username, password=password)
+        
+        if user is not None:
+            request.session.set_expiry(30 * 30)
+            login(request, user)
+        else:
+            return Response("Login failed", status=403)
             
-            if user is not None:
-                request.session.set_expiry(30 * 30)
-                login(request, user)
-            else:
-                return Response("Login failed", status=403)
-                
-            return Response("Login successful")
-        except InvalidInputError as e:
-            #TODO: Turn this into a mixin
-            return Response({"error":str(e)}, status=400)
+        return Response("Login successful")
     
     @list_route(methods=['post'])
     def logout(self, request):

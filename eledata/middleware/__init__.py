@@ -3,6 +3,10 @@ from eledata import auth
 from django.utils.deprecation import MiddlewareMixin
 from django.utils.functional import SimpleLazyObject
 
+from django.http import JsonResponse
+
+from eledata.util import InvalidInputError
+
 # The authentication middleware needs to be reimplemented so that it works with
 # mongoengine User objects. This allows for django automatic sessions. i.e.
 # after you call 'eledata.auth.login', 'request.user' will be the user in the
@@ -23,3 +27,11 @@ class CustomAuthenticationMiddleware(MiddlewareMixin):
             "'django.contrib.auth.middleware.AuthenticationMiddleware'."
         ) % ("_CLASSES" if settings.MIDDLEWARE is None else "")
         request.user = SimpleLazyObject(lambda: get_user(request))
+
+
+class HandleInvalidInputMiddleware(MiddlewareMixin):
+    def process_exception(self, request, exception):
+        if isinstance(exception, InvalidInputError):
+            response = JsonResponse({"error":str(exception)}, status=400)
+            return response
+

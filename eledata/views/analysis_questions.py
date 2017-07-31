@@ -57,22 +57,18 @@ class AnalysisQuestionsViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
         where <label> is the label of the analysis question that was toggled.
         '''
         
-        try:
-            verifier = ToggleAnalysisQuestionVerifier()
-            group = request.user.group
-            
-            resp_data = handler.toggle_analysis_question(
-                    request_data=request.data,
-                    settings=group.analysis_settings,
-                    verifier=verifier)
-            
-            group.save()
-            
-            assert verifier.verified
-            return Response(resp_data, status=200)
-        except InvalidInputError as e:
-            return Response({"error":str(e)}, status=400)
-    
+        verifier = ToggleAnalysisQuestionVerifier()
+        group = request.user.group
+        
+        resp_data = handler.toggle_analysis_question(
+                request_data=request.data,
+                settings=group.analysis_settings,
+                verifier=verifier)
+        
+        group.save()
+        
+        assert verifier.verified
+        return Response(resp_data, status=200)
     
     @list_route(methods=['post'])
     def change_analysis_parameter(self, request):
@@ -89,19 +85,16 @@ class AnalysisQuestionsViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
         optional
         '''
         
-        try:
-            verifier = ChangeAnalysisParameterVerifier()
-            group = request.user.group
-            
-            resp_data = handler.change_analysis_parameter(
-                    request_data=request.data,
-                    settings=group.analysis_settings,
-                    verifier=verifier)
-            
-            group.save()
-            
-            assert verifier.verified
-            return Response(resp_data, status=200)
-        except InvalidInputError as e:
-            return Response({"error":str(e)}, status=400)
+        verifier = ChangeAnalysisParameterVerifier()
+        group = request.user.group
+        
+        resp_data = handler.change_analysis_parameter(
+                request_data=request.data,
+                settings=group.analysis_settings,
+                verifier=verifier)
+        
+        group.save()
+        
+        assert verifier.verified
+        return Response(resp_data, status=200)
             
