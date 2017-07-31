@@ -9,7 +9,7 @@ from eledata.models.users import User, Group
 # We can use native django authentication because it dierctly makes use of the
 # mongoengine authentication backend set in the settings.
 from django.contrib.auth import authenticate, logout
-from eledata.auth import login
+from eledata.auth import login, CustomLoginRequiredMixin
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 
@@ -17,9 +17,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 
     
-class UserIndexViewSet(viewsets.ViewSet):
-    
-    @method_decorator(login_required)
+class UserIndexViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
     @list_route(methods=['get'])
     def index(self, request):
         request.user.counter += 1
@@ -34,6 +32,7 @@ class UserViewSet(viewsets.ViewSet):
     
     #TODO: Create server side json file that contains all questions
     #Maybe TODO: Create update_questions method. Looks at the json questions file and updates all user groups to match the file.
+    #TODO: validate input
     
     
     @list_route(methods=['post'])
@@ -64,7 +63,7 @@ class UserViewSet(viewsets.ViewSet):
             request.session.set_expiry(30 * 30)
             login(request, user)
         else:
-            return Response("Login failed")
+            return Response("Login failed", status=403)
             
         
         return Response("Login successful")

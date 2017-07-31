@@ -6,6 +6,18 @@ from django.contrib.auth.signals import user_logged_in, user_logged_out, user_lo
 
 from project import settings
 
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import PermissionDenied
+from  django.http import JsonResponse
+
+class CustomLoginRequiredMixin(LoginRequiredMixin):
+    def handle_no_permission(self):
+        if self.raise_exception:
+            # Must use JsonResponse instead of Response  because of middleware issues
+            return JsonResponse({"error":"Not logged in"}, status=401)
+            
+        return redirect_to_login(self.request.get_full_path(), self.get_login_url(), self.get_redirect_field_name())
+    
 
 #########################################################
 #  Mostly Copied from /django/contrib/auth/__init__.py  #

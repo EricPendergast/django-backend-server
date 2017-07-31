@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import detail_route, list_route
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
-from django.contrib.auth.mixins import LoginRequiredMixin
+from eledata.auth import CustomLoginRequiredMixin
 
 from rest_framework.parsers import JSONParser
 from rest_framework.renderers import JSONRenderer
@@ -35,7 +35,7 @@ def index_view(request):
     # return TemplateResponse(request, 'index.html', context)
     
 
-class EntityViewSet(LoginRequiredMixin, viewsets.ViewSet):
+class EntityViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
     raise_exception=True
     """
     Read-only User endpoint

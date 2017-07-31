@@ -159,6 +159,7 @@ class AnalysisQuestionTestCase(TestCase):
         
         return (c, User.objects.get(username="dummy1"))
         
+    # TODO: Write a test that accounts for multiple groups
         
 def _same_elements(list1, list2):
     for item in list1:

@@ -37,10 +37,23 @@ class UsersTestCase(TestCase):
     def test_not_logged_in(self):
         c = Client()
         response = c.get("/entity/get_all_entity/")
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 401)
        
         response = c.get("/analysis_questions/get_all_existing_analysis_questions/")
+        self.assertEqual(response.status_code, 401)
+    
+    
+    def test_fail_login(self):
+        c = Client()
+        response = c.post("/users/login/", {"username":"eric", "password":"thing"})
         self.assertEqual(response.status_code, 403)
+        
+        c.post("/users/create_user/", {"username":"eric", "password":"thing", "group":"grp"})
+        response = c.post("/users/login/", {"username":"eric", "password":"not the right password"})
+        self.assertEqual(response.status_code, 403)
+    
+    
+    
     
     def _test_create_and_login(self, data, login_data):
         c = Client()

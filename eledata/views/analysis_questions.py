@@ -24,8 +24,9 @@ import os.path
 import uuid
 import eledata.handlers.analysis_questions as handler
 
+from eledata.auth import CustomLoginRequiredMixin
 
-class AnalysisQuestionsViewSet(LoginRequiredMixin, viewsets.ViewSet):
+class AnalysisQuestionsViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
     raise_exception=True
     
     # Returns all the analysis questions in the group of the current user
