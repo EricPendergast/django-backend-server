@@ -36,13 +36,11 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
-    'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_mongoengine',
     'eledata',
-    # 'users',
 ]
 
 MIDDLEWARE = [
@@ -50,7 +48,6 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    # 'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'eledata.middleware.CustomAuthenticationMiddleware',
@@ -85,8 +82,6 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-        # 'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-        # 'ENGINE': '',
     }
 }
 
@@ -126,16 +121,13 @@ else:
     mongoengine.connect(db=_MONGODB_NAME, host=_MONGODB_DATABASE_HOST)
     
 
-# This doesn't seem to work with the current version of mongoengine. Just using
-# the default authentication for now
 AUTHENTICATION_BACKENDS = (
      # 'eledata.auth.CustomAuthBackend',
      'mongoengine.django.auth.MongoEngineBackend',
-     # 'users.authentication.TokenAuthentication',
 )
 
 
-# SESSION_ENGINE = 'mongoengine.django.sessions'
+SESSION_ENGINE = 'mongoengine.django.sessions'
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators

@@ -36,7 +36,6 @@ def index_view(request):
     
 
 class EntityViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
-    raise_exception=True
     """
     Read-only User endpoint
     """

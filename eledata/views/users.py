@@ -33,7 +33,6 @@ class UserViewSet(viewsets.ViewSet):
     
     #TODO: Create server side json file that contains all questions
     #Maybe TODO: Create update_questions method. Looks at the json questions file and updates all user groups to match the file.
-    #TODO: validate input
     #TODO: Should creating a user with a nonexistant group create a new group or throw an error?
     
     

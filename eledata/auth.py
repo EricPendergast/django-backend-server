@@ -10,14 +10,11 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from  django.http import JsonResponse
 
+# This mixin works the same way as the LoginRequiredMixin, except that when it finds that the user is not logged in, it sends a 401 error response
 class CustomLoginRequiredMixin(LoginRequiredMixin):
     def handle_no_permission(self):
-        if self.raise_exception:
-            # Must use JsonResponse instead of Response  because of middleware issues
-            return JsonResponse({"error":"Not logged in"}, status=401)
-            
-        return redirect_to_login(self.request.get_full_path(), self.get_login_url(), self.get_redirect_field_name())
-    
+        # Must use JsonResponse instead of Response  because of middleware issues
+        return JsonResponse({"error":"Not logged in"}, status=401)
 
 #########################################################
 #  Mostly Copied from /django/contrib/auth/__init__.py  #
