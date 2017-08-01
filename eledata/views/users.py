@@ -58,7 +58,7 @@ class UserViewSet(viewsets.ViewSet):
             group = Group.objects.get(name=group_name)
         except mongoengine.DoesNotExist:
             group = Group(name=group_name)
-            #TODO: Don't read from the file each time; save as a constant, maybe in settings.py
+            #TODO: Don't read from the file each time; save as a constant, maybe as static variable in GroupAnalysisSettings
             with open(settings.CONSTANTS_DIR + "analysis_settings.json", "r") as file:
                 data = from_json(file.read())
             group.analysis_settings = GroupAnalysisSettings(**data['analysis_settings'])
