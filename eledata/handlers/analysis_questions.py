@@ -1,8 +1,9 @@
 from eledata.models.analysis_questions import *
 from eledata.serializers.analysis_questions import *
 
-from eledata.util import to_json, from_json, debug_deep_print
+from eledata.util import to_json, from_json
 
+from project import settings
 
 def get_analysis_questions_settings(settings):
     assert type(settings) is GroupAnalysisSettings
@@ -48,6 +49,7 @@ def toggle_analysis_question(request_data, settings, verifier):
         if q.enabled and q.label == label:
             analysis_question = q
             break
+    
     
     verifier.verify(1, analysis_question)
     

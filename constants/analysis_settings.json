@@ -1,0 +1,61 @@
+{
+    "analysis_settings": {
+        "parameters": [
+            {
+                "choices": [
+                    {
+                        "content": "Default. Handled by Eledata"
+                    }
+                ],
+                "content": "What is your expected variation of CLV?",
+                "floating_label": "Variation",
+                "label": "clv"
+            },
+            {
+                "choices": [
+                    {
+                        "content": "Default. Handled by Eledata"
+                    },
+                    {
+                        "content": "Enter your value:",
+                        "default_value": "50,000"
+                    }
+                ],
+                "content": "What is your company's average monthly income?",
+                "floating_label": "Income",
+                "label": "income"
+            }
+        ],
+        "questions": [
+            {
+                "content": "Which customers will likely be leaving in the coming time?",
+                "enabled": false,
+                "label": "leaving",
+                "orientation": "customer",
+                "selected": false,
+                "type": "predictive",
+                "parameter_labels":[]
+
+            },
+            {
+                "content": "Which products will be the most popular in the future?",
+                "enabled": false,
+                "label": "popularity",
+                "orientation": "product",
+                "selected": false,
+                "type": "predictive",
+                "parameter_labels":["clv"]
+
+            },
+            {
+                "content": "What has caused the most customers to leave?",
+                "enabled": false,
+                "label": "cause of leave",
+                "orientation": "customer",
+                "selected": false,
+                "type": "descriptive",
+                "parameter_labels":["clv","income"]
+            }
+        ]
+    }
+}

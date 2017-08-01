@@ -14,14 +14,14 @@ from eledata.serializers.analysis_questions import *
 class AnalysisQuestionTestCase(TestCase):
     
     analysis_params_init = [
-            {u'content': u'What is your expected variation of CLV?', 'label':'clv', 'floating_label':'Variation', u'id': u'596c858d9a4c0e5f19c78f3e', u'choices': [{u'content': u'Default. Handled by Eledata', u'default_value': None}]},
-            {'content':"What is your company's average monthly income?", 'label':'income', 'floating_label':'Income', 'id':'596c858d9a4c0e5f19c78f3f', 'choices': [{'content':'Default. Handled by Eledata'}, {'content':'Enter your value:', "default_value":"50,000"}]},]
+            {u'content': u'What is your expected variation of CLV?', 'label':'clv', 'floating_label':'Variation', u'choices': [{u'content': u'Default. Handled by Eledata', u'default_value': None}]},
+            {'content':"What is your company's average monthly income?", 'label':'income', 'floating_label':'Income', 'choices': [{'content':'Default. Handled by Eledata'}, {'content':'Enter your value:', "default_value":"50,000"}]},]
     
     analysis_params_init_objs = [AnalysisParameter(**item) for item in analysis_params_init]
     
     analysis_questions_init = [
             {"content": "Which customers will likely be leaving in the coming time?", "label":"leaving", "type":"predictive", "orientation":"customer", "parameter_labels":[]}, 
-            {"content": "Which products will be the most popular in the future?", "label":"poplularity", "type":"predictive", "orientation":"product", "parameter_labels":[analysis_params_init[0]['label']]},
+            {"content": "Which products will be the most popular in the future?", "label":"popularity", "type":"predictive", "orientation":"product", "parameter_labels":[analysis_params_init[0]['label']]},
             {"content": "What has caused the most customers to leave?", "label":"cause of leave", "type":"descriptive", "orientation":"customer", "parameter_labels": [a['label'] for a in analysis_params_init]},]
         
     analysis_questions_init_objs = [AnalysisQuestion(**item) for item in analysis_questions_init]
@@ -40,10 +40,10 @@ class AnalysisQuestionTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
 
         for item in ret_data:
-            self.assertTrue(item in self.analysis_questions_init)
+            self.assertIn(item, self.analysis_questions_init)
 
         for item in self.analysis_questions_init:
-            self.assertTrue(item in ret_data)
+            self.assertIn(item, ret_data)
 
 
 
@@ -62,7 +62,7 @@ class AnalysisQuestionTestCase(TestCase):
             u'analysis_questions': [
             {u'orientation': u'customer', u'selected': True, u'enabled': True, u'label': u'cause of leave', u'content': u'What has caused the most customers to leave?', u'type': u'descriptive'},
             {u'orientation': u'customer', u'selected': False, u'enabled': True, u'label': u'leaving', u'content': u'Which customers will likely be leaving in the coming time?', u'type': u'predictive'},
-            {u'orientation': u'product', u'selected': False, u'enabled': False, u'label': u'poplularity', u'content': u'Which products will be the most popular in the future?', u'type': u'predictive'}]})
+            {u'orientation': u'product', u'selected': False, u'enabled': False, u'label': u'popularity', u'content': u'Which products will be the most popular in the future?', u'type': u'predictive'}]})
 
         self.assertIn("analysis_questions", response.data)
 
@@ -76,8 +76,7 @@ class AnalysisQuestionTestCase(TestCase):
                     return question.selected
             return False
 
-
-        c.post('/analysis_questions/toggle_analysis_question/', data = {"toggled":"leaving"})
+        response = c.post('/analysis_questions/toggle_analysis_question/', data = {"toggled":"leaving"})
         user.reload()
         self.assertTrue(is_label_selected(user, "leaving"))
         self.assertTrue(is_label_selected(user, "cause of leave"))
@@ -86,13 +85,19 @@ class AnalysisQuestionTestCase(TestCase):
         c.post('/analysis_questions/toggle_analysis_question/', data = {"toggled":"leaving"})
         user.reload()
         self.assertFalse(is_label_selected(user, "leaving"))
-        self.assertTrue(is_label_selected(user, "cause of leave"))
 
 
         c.post('/analysis_questions/toggle_analysis_question/', data = {"toggled":"cause of leave"})
         user.reload()
         self.assertFalse(is_label_selected(user, "leaving"))
-        self.assertFalse(is_label_selected(user, "cause of leave"))
+        
+        
+        # This analysis question is not enabled, so nothing should change, and
+        # an error should be generated
+        response = c.post('/analysis_questions/toggle_analysis_question/', data = {"toggled":"popularity"})
+        self.assertTrue('error' in from_json(response.content))
+        user.reload()
+        self.assertFalse(is_label_selected(user, "popularity"))
 
 
     def test_change_analysis_parameter(self):
@@ -145,7 +150,6 @@ class AnalysisQuestionTestCase(TestCase):
         c.post("/users/create_user/", {"username":"dummy1", "password":"asdf", "group":"dummy_group"})
         
         group = Group.objects.get(name="dummy_group")
-        group.analysis_settings = GroupAnalysisSettings(questions=self.analysis_questions_init_objs, parameters=self.analysis_params_init_objs)
         group.analysis_settings.questions[0].enabled = True
         group.analysis_settings.questions[0].selected = False
         group.analysis_settings.questions[1].enabled = False
@@ -158,7 +162,8 @@ class AnalysisQuestionTestCase(TestCase):
         c.post("/users/login/", {"username":"dummy1", "password":"asdf"})
         
         return (c, User.objects.get(username="dummy1"))
-        
+    
+    
     # TODO: Write a test that accounts for multiple groups
         
 # Checks whether list1 and list2 have the same elements, regardless of order

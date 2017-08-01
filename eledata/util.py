@@ -143,6 +143,8 @@ def debug_deep_compare(param1, param2):
         elif hasattr(param1, field) != hasattr(param2, field):
             print "Two objects differ by field: %s. One object is missing the field." % field
 
+# Infinite recursion warning: reference loops are possible and not checked for
+# in this function. Use only for debugging.
 def debug_deep_print(obj):
     print type(obj), ": {"
     for field in dir(obj):
