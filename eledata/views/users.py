@@ -36,7 +36,6 @@ class UserIndexViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
 
 class UserViewSet(viewsets.ViewSet):
     
-    #TODO: Create server side json file that contains all questions
     #Maybe TODO: Create update_questions method. Looks at the json questions file and updates all user groups to match the file.
     #TODO: Should creating a user with a nonexistant group create a new group or throw an error?
     
@@ -50,6 +49,7 @@ class UserViewSet(viewsets.ViewSet):
         username = request.data['username']
         password = request.data['password']
         group_name = request.data['group']
+        
         
         user = User.create_user(username, password)
         try:
@@ -89,7 +89,7 @@ class UserViewSet(viewsets.ViewSet):
         user = authenticate(username=username, password=password)
         
         if user is not None:
-            request.session.set_expiry(30 * 30)
+            request.session.set_expiry(60 * 60)
             login(request, user)
         else:
             return Response("Login failed", status=403)
