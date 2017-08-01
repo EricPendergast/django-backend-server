@@ -50,6 +50,8 @@ class UserViewSet(viewsets.ViewSet):
         password = request.data['password']
         group_name = request.data['group']
         
+        if User.objects(username=username).only('username').limit(1) is not None:
+            raise InvalidInputError("A user with this name already exists")
         
         user = User.create_user(username, password)
         try:
