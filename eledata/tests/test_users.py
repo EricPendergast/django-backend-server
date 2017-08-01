@@ -92,6 +92,15 @@ class UsersTestCase(TestCase):
         self.assertEquals(response.status_code, 401)
     
     
+    def test_create_user_already_exist(self):
+        c = Client()
+        response = c.post("/users/create_user/", self.users[0][0])
+        self.assertEquals(response.status_code, 200)
+        
+        response = c.post("/users/create_user/", self.users[0][0])
+        self.assertIn('error', from_json(response.content))
+        
+    
     def _test_create_and_login(self, data, login_data):
         c = Client()
         response = c.post("/users/create_user/", data)

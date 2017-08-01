@@ -80,6 +80,7 @@ class AnalysisQuestionTestCase(TestCase):
         user.reload()
         self.assertTrue(is_label_selected(user, "leaving"))
         self.assertTrue(is_label_selected(user, "cause of leave"))
+        self.assertFalse(is_label_selected(user, "invalid label"))
 
 
         c.post('/analysis_questions/toggle_analysis_question/', data = {"toggled":"leaving"})
@@ -98,7 +99,11 @@ class AnalysisQuestionTestCase(TestCase):
         self.assertTrue('error' in from_json(response.content))
         user.reload()
         self.assertFalse(is_label_selected(user, "popularity"))
-
+        
+        
+        response = c.post('/analysis_questions/toggle_analysis_question/', data = {"something":"something else"})
+        self.assertIn("error", from_json(response.content))
+        
 
     def test_change_analysis_parameter(self):
         c, user = self._create_default_user()
@@ -141,6 +146,10 @@ class AnalysisQuestionTestCase(TestCase):
                 "choice_index":2})
         self.assertIn("error", from_json(response.content))
         
+    def test_same_elements(self):
+        self.assertTrue(_same_elements([5,6,7,3], [3,6,7,5]))
+        self.assertTrue(not _same_elements([5,6,7,4], [3,6,7,5]))
+        self.assertTrue(not _same_elements([3,6,7,5], [5,6,7,3,8]))
         
     def _create_default_user(self):
         assert len(User.objects) == 0
