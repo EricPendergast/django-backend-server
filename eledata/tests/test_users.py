@@ -94,7 +94,6 @@ class UsersTestCase(TestCase):
     
     def _test_create_and_login(self, data, login_data):
         c = Client()
-        
         response = c.post("/users/create_user/", data)
         self.assertTrue(response.status_code == 200)
         
