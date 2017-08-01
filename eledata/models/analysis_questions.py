@@ -88,7 +88,7 @@ class GroupAnalysisSettings(EmbeddedDocument):
         
     def get_question(self, label):
         # return getattr(self.questions, label, None)
-        for question in questions:
+        for question in self.questions:
             if question.label == label:
                 return question
         return None

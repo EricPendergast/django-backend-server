@@ -159,12 +159,15 @@ class AnalysisQuestionTestCase(TestCase):
         c.post("/users/create_user/", {"username":"dummy1", "password":"asdf", "group":"dummy_group"})
         
         group = Group.objects.get(name="dummy_group")
-        group.analysis_settings.questions[0].enabled = True
-        group.analysis_settings.questions[0].selected = False
-        group.analysis_settings.questions[1].enabled = False
-        group.analysis_settings.questions[1].selected = False
-        group.analysis_settings.questions[2].enabled = True
-        group.analysis_settings.questions[2].selected = True
+        
+        statuses = {"leaving":{'enabled':True,'selected':False},
+                 "popularity":{'enabled':False,'selected':False},
+                 "cause of leave":{'enabled':True,'selected':True}}
+        
+        for label in statuses:
+            q = group.analysis_settings.get_question(label)
+            q.enabled = statuses[label]['enabled']
+            q.selected = statuses[label]['selected']
         
         group.save()
         

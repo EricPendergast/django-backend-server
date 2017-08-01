@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 import os
 import sys
 import mongoengine
+import json
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -27,6 +28,7 @@ SECRET_KEY = 'c*s4n%@c#3sjzc(g4fiq7htu0pfu2reuk)ax((c7y-^h^cu+$*'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+# TODO: Make this read all lines from the file
 with open('allowed_hosts.txt') as file:
     ALLOWED_HOSTS = [str(file.readline()).strip()]
 
@@ -111,7 +113,9 @@ if not is_test():
     mongoengine.connect(db=_MONGODB_NAME, host=_MONGODB_DATABASE_HOST)
     
     
-    CONSTANTS_DIR = "constants/"
+    # CONSTANTS_DIR = "constants/"
+    with open("constants/constants.json") as file:
+        CONSTANTS = json.dumps(file.readlines())
 else:
     _MONGODB_USER = 'admin'
     _MONGODB_PASSWD = 'password'
@@ -124,7 +128,9 @@ else:
     mongoengine.connect(db=_MONGODB_NAME, host=_MONGODB_DATABASE_HOST)
     
     
-    CONSTANTS_DIR = "misc/test_files/test_constants/"
+    # CONSTANTS_DIR = "misc/test_files/test_constants/"
+    with open("misc/test_files/test_constants/constants.json") as file:
+        CONSTANTS = json.load(file)
 
 AUTHENTICATION_BACKENDS = (
      # 'eledata.auth.CustomAuthBackend',
