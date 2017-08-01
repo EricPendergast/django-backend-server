@@ -272,7 +272,6 @@ class EntityTestCase(TestCase):
                 self.defaultFilename)
         self.assertTrue("error" in from_json(resp['final_response'].content))
         
-    
     '''
     Testing that nothing bad happens when you create many entities at once.
     '''
