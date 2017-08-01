@@ -245,19 +245,19 @@ class EntityTestCase(TestCase):
             self.assertTrue("error" in self._create_entity_init(c, filename=None, json=json))
             
         with open(self.defaultFilename) as fp:
-            self.assertTrue("error" in from_json(c.post('/entity/create_entity/', {'file_upload': fp}).content))
+            self.assertTrue("error" in from_json(c.post('/entity/create_entity/', {'file': fp}).content))
             self.assertTrue("error" in from_json(c.post('/entity/create_entity/', {'entity':'{"source_type":"local", "type":"transaction"}'}).content))
             
             
     '''
     Testing that an error is generated if you make an initial request without
-    specifying if the header is included with 'isFileHeaderIncluded'.
+    specifying if the header is included with 'is_header_included'.
     '''
     def test_create_entity_invalid_init_request_2(self):
         client = self.client
         with open(self.defaultFilename) as fp:
             resp = client.post('/entity/create_entity/',
-                {'file_upload': fp, 'entity': self.entityJSON1})
+                {'file': fp, 'entity': self.entityJSON1})
             self.assertTrue('error' in from_json(resp.content))
             
         
@@ -364,7 +364,7 @@ class EntityTestCase(TestCase):
         
         with open(filename) as fp:
             ret = client.post('/entity/create_entity/',
-                {'file_upload': fp, 'entity': json, 'isFileHeaderIncluded':fileHeaderIncluded})
+                {'file': fp, 'entity': json, 'isHeaderIncluded':fileHeaderIncluded})
             return ret
         
     def _create_entity_init(self, *args, **kwargs):

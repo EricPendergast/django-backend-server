@@ -26,24 +26,23 @@ class EntityViewSetHandler():
         
         with open(filename, "w") as file:
             file.write(request_file.read())
-        
         # Parsing the entity JSON passed in into a dictionary
         entity_dict = util.from_json(request_data["entity"])
-        
+
         entity_dict["source"] = {"file":
                {"filename":filename,
-                "isHeaderIncluded":request_data["isFileHeaderIncluded"]}}
+                "is_header_included":request_data["isHeaderIncluded"]}}
                
         entity_dict['state'] = 1
         verifier.verify(2, entity_dict)
-        
+
         serializer = EntityDetailedSerializer(data=entity_dict)
         verifier.verify(3, serializer)
-        
+
         entity = serializer.create(serializer.validated_data)
         entity.group = group
         entity.save()
-        
+
         response_data = {}
         # Saving the serializer while also adding its id to the response
         response_data['entity_id'] = str(entity.id)
@@ -51,8 +50,8 @@ class EntityViewSetHandler():
         response_data['data'] = util.file_to_list_of_dictionaries(
                 open(entity_dict["source"]["file"]["filename"]),
                 numLines=100,
-                isHeaderIncluded=util.string_caster["bool"](
-                    entity_dict["source"]["file"]["isHeaderIncluded"]))
+                is_header_included=util.string_caster["bool"](
+                    entity_dict["source"]["file"]["is_header_included"]))
         
         return response_data
             
@@ -74,7 +73,7 @@ class EntityViewSetHandler():
         assert os.path.isfile(entity.source.file.filename)
         data = util.file_to_list_of_dictionaries(
                 open(entity.source.file.filename, 'r'),
-                isHeaderIncluded=entity.source.file.isHeaderIncluded)
+                is_header_included=entity.source.file.is_header_included)
         
         for item in data:
             for mapping in dummy['data_header']:

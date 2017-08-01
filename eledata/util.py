@@ -71,7 +71,7 @@ def parser_to_list_of_dictionaries(parser, headerRow=None, numLines=float("inf")
 
 
 
-def file_to_list_of_dictionaries(file, numLines=float("inf"), list=None, isHeaderIncluded=True):
+def file_to_list_of_dictionaries(file, numLines=float("inf"), list=None, is_header_included=True):
     parser = None
     _, extension = os.path.splitext(file.name)
     
@@ -99,7 +99,7 @@ def file_to_list_of_dictionaries(file, numLines=float("inf"), list=None, isHeade
     else:
         raise InvalidInputError("Unknown filetype: " + file.name)
         
-    if isHeaderIncluded:
+    if is_header_included:
         headerRow = next(parser)
     else:
         headerRow = None
