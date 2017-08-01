@@ -7,9 +7,9 @@ class CreateEntityVerifier(Verifier):
     def stage0(self, request):
         if not ('entity' in request.data):
             raise InvalidInputError("No entity data in request")
-        if not ('file_upload' in request.FILES):
+        if not ('file' in request.FILES):
             raise InvalidInputError("No file uploaded")
-        if not ('isFileHeaderIncluded' in request.data):
+        if not ('isHeaderIncluded' in request.data):
             raise InvalidInputError("Didn't specify whether the file header is included")
         
             

@@ -91,7 +91,7 @@ class EntityViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
         
         response_data = EntityViewSetHandler.create_entity(
                 request_data=request.data,
-                request_file=request.FILES["file_upload"],
+                request_file=request.FILES['file'],
                 group=request.user.group,
                 verifier=verifier)
         

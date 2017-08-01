@@ -91,10 +91,10 @@ class UserViewSet(viewsets.ViewSet):
         if user is not None:
             request.session.set_expiry(60 * 60)
             login(request, user)
+            return Response({"username": user.username, "message": "Login successful"})
+
         else:
             return Response({"error": "Login failed"}, status=403)
-            
-        return Response({"message": "Login successful"})
     
     
     

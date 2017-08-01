@@ -23,7 +23,7 @@ class DataSummary(EmbeddedDocument):
 
 class File(EmbeddedDocument):
     filename = StringField()
-    isHeaderIncluded = BooleanField()
+    is_header_included = BooleanField()
 
 class DataSource(EmbeddedDocument):
     file = EmbeddedDocumentField(File)
