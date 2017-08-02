@@ -115,7 +115,7 @@ if not is_test():
     
     # CONSTANTS_DIR = "constants/"
     with open("constants/constants.json") as file:
-        CONSTANTS = json.dumps(file.readlines())
+        CONSTANTS = json.load(file)
 else:
     _MONGODB_USER = 'admin'
     _MONGODB_PASSWD = 'password'
