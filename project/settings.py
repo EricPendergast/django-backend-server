@@ -131,6 +131,9 @@ else:
     with open("misc/test_files/test_constants/constants.json") as file:
         CONSTANTS = json.load(file)
         
+    PASSWORD_HASHERS = [
+        'django.contrib.auth.hashers.MD5PasswordHasher',
+    ]
 
 AUTHENTICATION_BACKENDS = (
      # 'eledata.auth.CustomAuthBackend',
