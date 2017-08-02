@@ -15,10 +15,10 @@ from project import settings
 # We can use native django authentication because it dierctly makes use of the
 # mongoengine authentication backend set in the settings.
 from django.contrib.auth import authenticate, logout
-from eledata.auth import login, CustomLoginRequiredMixin
+from eledata.auth import login, CustomLoginRequiredMixin, GroupAdminRequiredMixin
 
 
-class UserExtrasViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
+class UserActions(CustomLoginRequiredMixin, viewsets.ViewSet):
     @list_route(methods=['get'])
     def index(self, request):
         request.user.counter += 1
@@ -27,14 +27,15 @@ class UserExtrasViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
         request.user.group.save()
         request.user.save()
         
-        return Response("User counter: %s,  Group counter: %s" % (request.user.counter, request.user.group.counter))
+        return Response("User counter: %s,  Group counter: %s" % 
+                (request.user.counter, request.user.group.counter))
 
 
     # TODO: Should the user have to be logged in to change their password?
     '''
     Lets the user change their password. The user must be logged in.
     
-    Expects the request to contain
+    Expects the request to contain:
     
     {"username":<username>, "password":<password>, "new_password":<new password>}
     
@@ -52,9 +53,15 @@ class UserExtrasViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
         
         return Response({"message":"Password changed"}, status=200)
     
-
-class UserViewSet(viewsets.ViewSet):
     
+    @list_route(methods=['post'])
+    def logout(self, request):
+        logout(request)
+        return Response({"message": "Logged out"})
+    
+    
+    
+class GroupAdminActions(GroupAdminRequiredMixin, viewsets.ViewSet):
     #Maybe TODO: Create update_questions method. Looks at the json questions file and updates all user groups to match the file.
     #TODO: Should creating a user with a nonexistant group create a new group or throw an error?
     
@@ -84,9 +91,14 @@ class UserViewSet(viewsets.ViewSet):
         
         assert verifier.verified
         return Response("Created user %s" % user.username)
-        
+
+
+class UserLogin(viewsets.ViewSet):
+    '''
+    Expects request in the form:
     
-        
+    {"username":<username>, "password":<password>}
+    '''
     @list_route(methods=['post'])
     def login(self, request):
         verifier = LoginVerifier()
@@ -102,10 +114,3 @@ class UserViewSet(viewsets.ViewSet):
 
         else:
             return Response({"error": "Login failed"}, status=403)
-    
-    
-    
-    @list_route(methods=['post'])
-    def logout(self, request):
-        logout(request)
-        return Response({"message": "Logged out"})

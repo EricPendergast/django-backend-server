@@ -113,9 +113,9 @@ if not is_test():
     mongoengine.connect(db=_MONGODB_NAME, host=_MONGODB_DATABASE_HOST)
     
     
-    # CONSTANTS_DIR = "constants/"
     with open("constants/constants.json") as file:
         CONSTANTS = json.dumps(file.readlines())
+        
 else:
     _MONGODB_USER = 'admin'
     _MONGODB_PASSWD = 'password'
@@ -128,9 +128,9 @@ else:
     mongoengine.connect(db=_MONGODB_NAME, host=_MONGODB_DATABASE_HOST)
     
     
-    # CONSTANTS_DIR = "misc/test_files/test_constants/"
     with open("misc/test_files/test_constants/constants.json") as file:
         CONSTANTS = json.load(file)
+        
 
 AUTHENTICATION_BACKENDS = (
      # 'eledata.auth.CustomAuthBackend',

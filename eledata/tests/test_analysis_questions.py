@@ -9,6 +9,8 @@ from eledata.models.analysis_questions import AnalysisQuestion, AnalysisParamete
 
 
 class AnalysisQuestionTestCase(TestCase):
+    admin = None
+    admin_client = None
     
     analysis_params_init = [
             {u'content': u'What is your expected variation of CLV?', 'label':'clv', 'floating_label':'Variation', u'choices': [{u'content': u'Default. Handled by Eledata', u'default_value': None}]},
@@ -149,11 +151,11 @@ class AnalysisQuestionTestCase(TestCase):
         self.assertTrue(not _same_elements([3,6,7,5], [5,6,7,3,8]))
         
     def _create_default_user(self):
-        assert len(User.objects) == 0
+        assert len(User.objects) == 1
         assert len(Group.objects) == 0
 
         c = Client()
-        c.post("/users/create_user/", {"username":"dummy1", "password":"asdf", "group":"dummy_group"})
+        self.admin_client.post("/users/create_user/", {"username":"dummy1", "password":"asdf", "group":"dummy_group"})
         
         group = Group.objects.get(name="dummy_group")
         
@@ -173,7 +175,16 @@ class AnalysisQuestionTestCase(TestCase):
         return (c, User.objects.get(username="dummy1"))
     
     
-    # TODO: Write a test that accounts for multiple groups
+    def setUp(self):
+        #Create admin manually
+        self.admin = User.create_user(username="admin", password="pass")
+        self.admin.is_group_admin = True
+        self.admin.save()
+        
+        self.admin_client = Client()
+        self.admin_client.post("/users/login/", {"username":"admin", "password":"pass"})
+    
+# TODO: Write a test that accounts for multiple groups
         
 # Checks whether list1 and list2 have the same elements, regardless of order
 def _same_elements(list1, list2):

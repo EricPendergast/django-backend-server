@@ -13,6 +13,13 @@ class CustomLoginRequiredMixin(LoginRequiredMixin):
         # Must use JsonResponse instead of Response  because of middleware issues
         return JsonResponse({"error":"Not logged in"}, status=401)
 
+class GroupAdminRequiredMixin(object):
+    def dispatch(self, request, *args, **kwargs):
+        if hasattr(request.user,'is_group_admin') and request.user.is_group_admin:
+            return super(GroupAdminRequiredMixin, self).dispatch(request, *args, **kwargs)
+        else:
+            return JsonResponse({"error":"Not admin"}, status=401)
+
 #########################################################
 #  Mostly Copied from /django/contrib/auth/__init__.py  #
 #  A few lines are changed so that it works with        #

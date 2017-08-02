@@ -13,4 +13,5 @@ class User(auth.User):
     # 'counter' is used for testing
     counter = fields.IntField(default=0)
     group = fields.ReferenceField(Group)
+    is_group_admin = fields.BooleanField(default=False)
     

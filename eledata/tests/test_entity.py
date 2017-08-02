@@ -32,10 +32,18 @@ class EntityTestCase(TestCase):
     def setUp(self):
         assert len(Group.objects) == 0
         assert len(User.objects) == 0
+        
+        #Create admin manually
+        self.admin = User.create_user(username="admin", password="pass")
+        self.admin.is_group_admin = True
+        self.admin.save()
+        
         self.client = Client()
-        Client().post("/users/create_user/", {"username":"dummy", "password":"asdf", "group":"dummy_group"})
-        Client().post("/users/create_user/", {"username":"dummy2", "password":"asdf", "group":"different_dummy_group"})
-        Client().post("/users/create_user/", {"username":"dummy3", "password":"asdf", "group":"dummy_group"})
+        self.client.post("/users/login/", {"username":"admin", "password":"pass"})
+        
+        self.client.post("/users/create_user/", {"username":"dummy", "password":"asdf", "group":"dummy_group"})
+        self.client.post("/users/create_user/", {"username":"dummy2", "password":"asdf", "group":"different_dummy_group"})
+        self.client.post("/users/create_user/", {"username":"dummy3", "password":"asdf", "group":"dummy_group"})
         
         self.client.post("/users/login/", {"username":"dummy", "password":"asdf"})
     

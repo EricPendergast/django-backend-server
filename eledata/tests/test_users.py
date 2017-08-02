@@ -8,12 +8,15 @@ from eledata.models.users import User, Group
 from eledata.util import from_json, to_json
 
 import copy
+import time
 
 class UsersTestCase(TestCase):
     users = [({"username":"user1_data", "password":"asdf", "group":"grp"}, {"username":"user1_data", "password":"asdf"}),
              ({"username":"user2_data", "password":"sdfg", "group":"oth"}, {"username":"user2_data", "password":"sdfg"}),
              ({"username":"user3_data", "password":"aaaa", "group":"grp"}, {"username":"user3_data", "password":"aaaa"}),]
             
+    admin = None
+    admin_client = None
     
     def test_create_user(self):
         self._test_create_and_login(*self.users[0])
@@ -49,7 +52,7 @@ class UsersTestCase(TestCase):
         response = c.post("/users/login/", {"username":"eric", "password":"thing"})
         self.assertEqual(response.status_code, 403)
         
-        c.post("/users/create_user/", {"username":"eric", "password":"thing", "group":"grp"})
+        self.admin_client.post("/users/create_user/", {"username":"eric", "password":"thing", "group":"grp"})
         response = c.post("/users/login/", {"username":"eric", "password":"not the right password"})
         self.assertEqual(response.status_code, 403)
     
@@ -57,7 +60,7 @@ class UsersTestCase(TestCase):
     def test_create_user_invalid_request(self):
         def assert_invalid(data):
             c = Client()
-            response = c.post("/users/create_user/", data)
+            response = self.admin_client.post("/users/create_user/", data)
             self.assertEquals(response.status_code, 400)
             
         assert_invalid({"username":"usr"})
@@ -93,10 +96,10 @@ class UsersTestCase(TestCase):
     
     def test_create_user_already_exist(self):
         c = Client()
-        response = c.post("/users/create_user/", self.users[0][0])
+        response = self.admin_client.post("/users/create_user/", self.users[0][0])
         self.assertEquals(response.status_code, 200)
         
-        response = c.post("/users/create_user/", self.users[0][0])
+        response = self.admin_client.post("/users/create_user/", self.users[0][0])
         self.assertIn('error', from_json(response.content))
         
         
@@ -135,7 +138,8 @@ class UsersTestCase(TestCase):
         
     def _test_create_and_login(self, data, login_data):
         c = Client()
-        response = c.post("/users/create_user/", data)
+        
+        response = self.admin_client.post("/users/create_user/", data)
         self.assertTrue(response.status_code == 200)
         
         user = User.objects.get(username=data['username'])
@@ -150,6 +154,16 @@ class UsersTestCase(TestCase):
         self.assertTrue(response.status_code == 200)
         
         return c
+        
+    def setUp(self):
+        #Create admin manually
+        self.admin = User.create_user(username="admin", password="pass")
+        self.admin.is_group_admin = True
+        self.admin.save()
+        
+        
+        self.admin_client = Client()
+        self.admin_client.post("/users/login/", {"username":"admin", "password":"pass"})
         
     def doCleanups(self):
         User.drop_collection()
