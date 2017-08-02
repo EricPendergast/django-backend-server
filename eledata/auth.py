@@ -1,13 +1,10 @@
-from mongoengine.django.auth import MongoEngineBackend
-
 from django.contrib.auth import SESSION_KEY, BACKEND_SESSION_KEY, HASH_SESSION_KEY, constant_time_compare, _get_backends, rotate_token, load_backend
 from django.contrib.auth.models import AnonymousUser
-from django.contrib.auth.signals import user_logged_in, user_logged_out, user_login_failed
+from django.contrib.auth.signals import user_logged_in
 
 from project import settings
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.exceptions import PermissionDenied
 from  django.http import JsonResponse
 
 # This mixin works the same way as the LoginRequiredMixin, except that when it finds that the user is not logged in, it sends a 401 error response

@@ -1,6 +1,6 @@
 from rest_framework_mongoengine.serializers import DocumentSerializer
 
-from eledata.models.analysis_questions import *
+from eledata.models.analysis_questions import AnalysisParameter, AnalysisQuestion
 
 class AnalysisParameterSerializer(DocumentSerializer):
     class Meta:

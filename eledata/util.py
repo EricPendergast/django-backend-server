@@ -2,7 +2,6 @@ import csv
 import codecs
 import os
 import xlrd
-import re
 import datetime
 import distutils.core
 

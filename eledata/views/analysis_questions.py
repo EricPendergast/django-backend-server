@@ -1,26 +1,14 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets
 from rest_framework.response import Response
-from rest_framework.decorators import detail_route, list_route
-from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
-from django.contrib.auth.mixins import LoginRequiredMixin
+from rest_framework.decorators import list_route
 
-from rest_framework.parsers import JSONParser
-from rest_framework.renderers import JSONRenderer
-from django.utils.six import BytesIO
-
-from django.template.response import TemplateResponse
-from django.http import HttpResponse
-
-from eledata.serializers.analysis_questions import *
 from eledata.models.entity import *
+
 from eledata.handlers.create_entity import *
 from eledata.verifiers.analysis_questions import *
 
-import csv
 import eledata.util
 from eledata.util import InvalidInputError, string_caster
-import os.path
 import uuid
 import eledata.handlers.analysis_questions as handler
 
@@ -31,7 +19,7 @@ class AnalysisQuestionsViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
     # Returns all the analysis questions in the group of the current user
     @list_route(methods=['get'])
     def get_all_existing_analysis_questions(self, request):
-        ser = AnalysisQuestionSerializerSummary(request.user.group.analysis_settings.questions, many=True)
+        ser = eledata.serializers.analysis_questions.AnalysisQuestionSerializerSummary(request.user.group.analysis_settings.questions, many=True)
         
         return Response(ser.data, status=200)
         

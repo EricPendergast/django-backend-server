@@ -1,9 +1,7 @@
-from eledata.models.analysis_questions import *
-from eledata.serializers.analysis_questions import *
+from eledata.models.analysis_questions import GroupAnalysisSettings
+from eledata.serializers.analysis_questions import AnalysisQuestionSerializer, AnalysisParameterSerializer
 
-from eledata.util import to_json, from_json
 
-from project import settings
 
 def get_analysis_questions_settings(settings):
     assert type(settings) is GroupAnalysisSettings

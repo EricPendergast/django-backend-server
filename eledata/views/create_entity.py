@@ -1,29 +1,16 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.decorators import detail_route, list_route
-from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
 from eledata.auth import CustomLoginRequiredMixin
 
-from rest_framework.parsers import JSONParser
-from rest_framework.renderers import JSONRenderer
-from django.utils.six import BytesIO
-
-from django.contrib.auth import authenticate
-
-from django.template.response import TemplateResponse
 from django.http import HttpResponse
 
 from eledata.serializers.entity import *
 from eledata.models.entity import *
 from eledata.verifiers.entity import *
 from eledata.handlers.create_entity import *
-from eledata.models.users import User
 
-import csv
-import eledata.util
 from eledata.util import InvalidInputError, string_caster
-import os.path
 import uuid
 import re
 
@@ -32,7 +19,6 @@ import re
 def index_view(request):
     context = {}
     return HttpResponse("index stub page")
-    # return TemplateResponse(request, 'index.html', context)
     
 
 class EntityViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):

@@ -1,4 +1,4 @@
-import eledata.util as util
+from eledata import util
 from eledata.util import InvalidInputError
 from verifier import Verifier
 

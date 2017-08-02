@@ -8,8 +8,6 @@ from eledata.models.users import User, Group
 from eledata.util import from_json, to_json
 
 
-import datetime
-
 class UsersTestCase(TestCase):
     users = [({"username":"user1_data", "password":"asdf", "group":"grp"}, {"username":"user1_data", "password":"asdf"}),
              ({"username":"user2_data", "password":"sdfg", "group":"oth"}, {"username":"user2_data", "password":"sdfg"}),

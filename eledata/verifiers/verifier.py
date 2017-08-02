@@ -1,4 +1,3 @@
-import eledata.util as util
 from eledata.util import InvalidInputError
 
 # The way verifiers work is that they contain a list of stages, where each

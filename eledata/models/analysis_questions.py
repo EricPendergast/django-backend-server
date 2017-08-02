@@ -1,7 +1,5 @@
 from __future__ import unicode_literals
 from mongoengine import *
-import datetime
-import eledata.util as util
 
     
 '''

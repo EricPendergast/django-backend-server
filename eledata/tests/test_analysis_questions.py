@@ -2,13 +2,10 @@ from __future__ import unicode_literals
 
 from django.test import TestCase
 from django.test import Client
-from eledata.models.entity import Entity
 from eledata.models.users import User, Group
-from eledata.models.analysis_questions import GroupAnalysisSettings
 
 from eledata.util import from_json, to_json, debug_deep_compare
-from eledata.models.analysis_questions import *
-from eledata.serializers.analysis_questions import *
+from eledata.models.analysis_questions import AnalysisQuestion, AnalysisParameter
 
 
 class AnalysisQuestionTestCase(TestCase):

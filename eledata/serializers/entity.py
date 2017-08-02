@@ -1,6 +1,5 @@
 from rest_framework_mongoengine.serializers import DocumentSerializer
 from eledata.models.entity import Entity, DataHeader
-from eledata.util import InvalidInputError
 
 
 class EntitySummarySerializer(DocumentSerializer):

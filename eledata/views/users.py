@@ -17,11 +17,6 @@ from project import settings
 from django.contrib.auth import authenticate, logout
 from eledata.auth import login, CustomLoginRequiredMixin
 
-from django.contrib.auth.mixins import LoginRequiredMixin
-
-from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
-
 
 class UserIndexViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
     @list_route(methods=['get'])
@@ -69,16 +64,6 @@ class UserViewSet(viewsets.ViewSet):
         return Response("Created user %s" % user.username)
         
     
-    #TODO: Handle the case of creating a group that already exists
-    # @list_route(methods=['post'])
-    # def create_group(self, request):
-    #     group_name = request.data['group']
-    #
-    #     group = Group(name=group_name)
-    #     #TODO: Don't read from the file each time; save as a constant, maybe in settings.py
-    #     with open("/constants/analysis_questions.json", "r") as file:
-    #         data = from_json(file.read())
-    #         group.analysis_settings = GroupAnalysisSettings(**data['analysis_settings'])
         
     @list_route(methods=['post'])
     def login(self, request):

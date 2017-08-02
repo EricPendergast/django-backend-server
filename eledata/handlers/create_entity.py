@@ -1,14 +1,8 @@
-from rest_framework.parsers import JSONParser
-from rest_framework.renderers import JSONRenderer
-from django.utils.six import BytesIO
+from eledata.serializers.entity import EntityDetailedSerializer
+from eledata.models.entity import Entity
 
-from eledata.serializers.entity import *
-from eledata.models.entity import *
-from eledata.models.users import Group
-
-import csv
 from eledata import util
-from eledata.util import InvalidInputError, string_caster
+from eledata.util import string_caster
 import os.path
 import uuid
 
