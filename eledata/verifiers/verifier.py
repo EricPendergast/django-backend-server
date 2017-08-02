@@ -61,7 +61,7 @@ class Verifier(object):
     # 'data' that is also in 'options' maps to one of the options given in
     # 'options'. If it fails, it throws a helpful error message. 
     @staticmethod
-    def ver_dict(data, required, options):
+    def ver_dict(data, required=set(), options={}):
         # Verify 'data' has all the required fields
         for field in required:
             if not field in data:

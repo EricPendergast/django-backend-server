@@ -15,7 +15,7 @@ class ToggleAnalysisQuestionVerifier(Verifier):
 class ChangeAnalysisParameterVerifier(Verifier):
     def stage0(self, request_data):
         Verifier.ver_dict(request_data,
-                required={"label","choice_index"}, options={})
+                required={"label","choice_index"})
     
     def stage1(self, param, label):
         if param is None:

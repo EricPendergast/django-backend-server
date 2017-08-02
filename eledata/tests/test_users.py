@@ -7,6 +7,7 @@ from eledata.models.users import User, Group
 
 from eledata.util import from_json, to_json
 
+import copy
 
 class UsersTestCase(TestCase):
     users = [({"username":"user1_data", "password":"asdf", "group":"grp"}, {"username":"user1_data", "password":"asdf"}),
@@ -98,7 +99,40 @@ class UsersTestCase(TestCase):
         response = c.post("/users/create_user/", self.users[0][0])
         self.assertIn('error', from_json(response.content))
         
+        
+    def test_change_password(self):
+        c = self._test_create_and_login(*self.users[0])
+        user_info = self.users[0][0]
+        
+        
+        response = c.post("/users/change_password/", {"username":user_info['username'], "password":user_info['password'], "new_password":"password1"})
+        self.assertEquals(response.status_code, 200)
+        
+        response = c.post("/users/logout/", {})
+        self.assertEquals(response.status_code, 200)
+        
+        response = c.post("/users/login/", {"username":user_info['username'], "password":'password1'})
+        self.assertEquals(response.status_code, 200)
+        
     
+    def test_change_password_invalid_input(self):
+        c = self._test_create_and_login(*self.users[0])
+        self._test_create_and_login(*self.users[1])
+        username = self.users[0][0]['username']
+        password = self.users[0][0]['password']
+        def assertInvalid(client, data):
+            response = c.post("/users/change_password/", data)
+            self.assertIn("error", from_json(response.content))
+            
+        assertInvalid(c, {"username":username+"somethingelse", "password":password, "new_password":"password1"})
+        assertInvalid(c, {"username":username, "password":password+"somethingelse", "new_password":"password1"})
+        assertInvalid(c, {"username":self.users[1][0]['username'], "password":self.users[1][0]['password'], "new_password":"password1"})
+        assertInvalid(c, {"username":username, "new_password":"password1"})
+        assertInvalid(c, {"password":password, "new_password":"password1"})
+        assertInvalid(c, {"username":username, "password":password})
+        assertInvalid(c, {"new_password":"password1"})
+        
+        
     def _test_create_and_login(self, data, login_data):
         c = Client()
         response = c.post("/users/create_user/", data)

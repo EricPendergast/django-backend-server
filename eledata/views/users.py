@@ -7,7 +7,7 @@ import mongoengine
 from eledata.models.users import User, Group
 from eledata.models.analysis_questions import GroupAnalysisSettings
 
-from eledata.verifiers.users import CreateUserVerifier, LoginVerifier
+from eledata.verifiers.users import CreateUserVerifier, LoginVerifier, ChangePasswordVerifier
 from eledata.util import InvalidInputError, from_json, to_json
 
 from project import settings
@@ -18,7 +18,7 @@ from django.contrib.auth import authenticate, logout
 from eledata.auth import login, CustomLoginRequiredMixin
 
 
-class UserIndexViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
+class UserExtrasViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
     @list_route(methods=['get'])
     def index(self, request):
         request.user.counter += 1
@@ -29,13 +29,35 @@ class UserIndexViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
         
         return Response("User counter: %s,  Group counter: %s" % (request.user.counter, request.user.group.counter))
 
+
+    # TODO: Should the user have to be logged in to change their password?
+    '''
+    Lets the user change their password. The user must be logged in.
+    
+    Expects the request to contain
+    
+    {"username":<username>, "password":<password>, "new_password":<new password>}
+    
+    This takes the username to make sure the user is logged in to the account
+    they think they are. It takes the password for added security.
+    '''
+    @list_route(methods=['post'])
+    def change_password(self, request):
+        verifier = ChangePasswordVerifier()
+        verifier.verify(0, request.data, request.user)
+        
+        assert verifier.verified
+        
+        request.user.set_password(request.data['new_password'])
+        
+        return Response({"message":"Password changed"}, status=200)
+    
+
 class UserViewSet(viewsets.ViewSet):
     
     #Maybe TODO: Create update_questions method. Looks at the json questions file and updates all user groups to match the file.
     #TODO: Should creating a user with a nonexistant group create a new group or throw an error?
     
-    
-    #TODO: Handle the case of creating a user that already exists
     @list_route(methods=['post'])
     def create_user(self, request):
         verifier = CreateUserVerifier()
