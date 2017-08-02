@@ -7,10 +7,12 @@ import pandas as pd
 
 
 class CoreSummaryTestCase(TestCase):
+    # TODO: test for service logs, facebook and ga
     core_test__dir = 'misc/test_files/core_test/'
     conversion_filename = core_test__dir + 'Conversion.csv'
     offline_event_filename = core_test__dir + 'Offline_Event_Entity.csv'
     subscription_filename = core_test__dir + 'Subscription Entity.csv'
+    people_counter_filename = core_test__dir + 'People Counter Data.csv'
 
     def test_full_calculate_conversion_data(self):
         data = pd.read_csv(self.conversion_filename,
@@ -27,7 +29,6 @@ class CoreSummaryTestCase(TestCase):
     def test_full_calculate_offline_event_data(self):
         data = pd.read_csv(self.offline_event_filename, names=['No.', 'Type of Event', 'Start Date', 'End Date'])
         response = calculate_offline_event_data(data)
-
         self.assertEquals(len(response), 6)
         self.assertEquals(response['Event Record Count'], 3000)
         self.assertEquals(response['Average Event Period'], '84 Days')
@@ -42,3 +43,14 @@ class CoreSummaryTestCase(TestCase):
         self.assertEquals(response['Average Subscription per Day'], '88.7')
         self.assertEquals(response['First Record Start Date'], '2017-01-01')
         self.assertEquals(response['Last Record End Date'], '2017-06-19')
+
+    def test_full_people_counter_data(self):
+        data = pd.read_csv(self.people_counter_filename, names=['Timestamp', 'PeopleInflow', 'PeopleOutflow'])
+        response = calculate_people_counter_data(data)
+        self.assertEquals(len(response), 8)
+        self.assertEquals(response['Total Head Count'], 7524093)
+        self.assertEquals(response['First Record Start Date'], '2017-01-12')
+        self.assertEquals(response['Last Record End Date'], '2017-06-19')
+        self.assertEquals(response['Average Visitor Count per Day'], '47321.3')
+        self.assertEquals(response['Maximum Visitor Count by Day'], 52637)
+        self.assertEquals(response['Maximum Visitor Day'], '2017-02-10')

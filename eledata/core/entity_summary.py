@@ -2,26 +2,30 @@ import pandas as pd
 import datetime
 
 
-def calculate_transaction_data(data, create_date, last_update):
+def calculate_transaction_data(data, create_date=None, last_update=None):
+    data['Transaction_Date'] = pd.to_datetime(data['Transaction_Date'], format='%d/%m/%Y')
+
     return {
-        'Transaction Records': data.count + 1,
-        'First Conversion Start Date': data['Transaction_Date'].min,
-        'Last Conversion End Date': data['Transaction_Date'].max,
-        'Involved User': data.groupby(['User_ID']).count + 1,
-        'Average Transaction Value': data['Transaction_Value'].mean,
-        'Average Transaction Quantity': data['Transaction_Quantity'].mean,
+        'Transaction Records': data.count(),
+        'First Conversion Start Date': data['Transaction_Date'].min().strftime('%Y-%m-%d'),
+        'Last Conversion End Date': data['Transaction_Date'].max().strftime('%Y-%m-%d'),
+        'Involved User': data.groupby(['User_ID']).count(),
+        'Average Transaction Value': data['Transaction_Value'].mean(),
+        'Average Transaction Quantity': data['Transaction_Quantity'].mean(),
         'Create Date': create_date or datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'Last Update': last_update or datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
     }
 
 
-def calculate_customer_data(data, create_date, last_update):
+def calculate_customer_data(data, create_date=None, last_update=None):
+    data['Create_Date'] = pd.to_datetime(data['Create_Date'], format='%d/%m/%Y')
+
     return {
-        'Customer Records': data.count + 1,
-        'First Customer Join Date': data['Create_Date'].min,
-        'Latest Customer Join Date': data['Create_Date'].max,
-        'Involved Countries': data.groupby(['Country']).count + 1,
-        'Customer Age Range': str(data['Age'].min) + ' - ' + str(data['Age'].max),
+        'Customer Records': data.count(),
+        'First Customer Join Date': data['Create_Date'].min().strftime('%Y-%m-%d'),
+        'Latest Customer Join Date': data['Create_Date'].max().strftime('%Y-%m-%d'),
+        'Involved Countries': data.groupby(['Country']).count(),
+        'Customer Age Range': str(data['Age'].min()) + ' - ' + str(data['Age'].max()),
         'Create Date': create_date or datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'Last Update': last_update or datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
     }
@@ -35,6 +39,7 @@ def calculate_conversion_data(data, create_date=None, last_update=None):
     grouped = data.groupby(['User_ID']).count()
     test = data[(data.Response == 'Completed')].count()
     completed_rate = format(float(test['Conversion_ID']) / float(conversion_record), '.2f')
+
     return {
         'Involved User': grouped['Campaign_ID'].count(),
         'Conversion Records': conversion_record,
@@ -50,6 +55,7 @@ def calculate_offline_event_data(data, create_date=None, last_update=None):
     data['Start Date'] = pd.to_datetime(data['Start Date'], format='%d/%m/%Y')
     data['End Date'] = pd.to_datetime(data['End Date'], format='%d/%m/%Y')
     data['Event Period'] = data['End Date'].sub(data['Start Date'], axis=0)
+
     return {
         'Event Record Count': data['No.'].count(),
         'First Event Start Date': data['Start Date'].min().strftime('%Y-%m-%d'),
@@ -63,6 +69,7 @@ def calculate_offline_event_data(data, create_date=None, last_update=None):
 def calculate_subscription_data(data, create_date=None, last_update=None):
     data['Timestamp'] = pd.to_datetime(data['Timestamp'], format='%d/%m/%Y %H:%M')
     data['Date'] = data['Timestamp'].dt.date
+
     grouped = data[(data.Action == 'Subscribe')].count()
     grouped_by_day = data.groupby(['Date', 'Action']).count().reset_index()
     return {
@@ -76,52 +83,71 @@ def calculate_subscription_data(data, create_date=None, last_update=None):
     }
 
 
-def calculate_people_counter_data(data, create_date, last_update):
-    data['Timestamp'] = data['Timestamp'].apply(lambda x: x.split()[0])
+def calculate_people_counter_data(data, create_date=None, last_update=None):
+    data['Timestamp'] = pd.to_datetime(data['Timestamp'], format='%d/%m/%Y %H:%M:%S')
+    data['Date'] = data['Timestamp'].dt.date
+
+    grouped = data.groupby(['Date']).sum()
+    average_visitor_counter_day = grouped['PeopleInflow'].mean()
+
+    return {
+        'Total Head Count': data['PeopleInflow'].sum(),
+        'First Record Start Date': data['Date'].min().strftime('%Y-%m-%d'),
+        'Last Record End Date': data['Date'].max().strftime('%Y-%m-%d'),
+        'Average Visitor Count per Day': format(average_visitor_counter_day, '.1f'),
+        'Maximum Visitor Count by Day': grouped['PeopleInflow'].max(),
+        'Maximum Visitor Day': grouped.sort_values('PeopleInflow', ascending=0).index[0].strftime('%Y-%m-%d'),
+        'Create Date': create_date or datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'Last Update': last_update or datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+    }
+
+
+def calculate_service_logs_data(data, create_date=None, last_update=None):
     data['Timestamp'] = pd.to_datetime(data['Timestamp'], format='%d/%m/%Y')
-    grouped = data.groupby(['Timestamp']).sum
-    average_visitor_counter_day = grouped['PeopleInflow'].mean
-
     return {
-        'Total Visitor': data['PeopleInflow'].sum,
-        'First Record Start Date': data['Timestamp'].min,
-        'Last Record End Date': data['Timestamp'].max,
-        'Average Visitor Count Per Day': round(average_visitor_counter_day, 0),
-        'Maximum Visitor Count': grouped['PeopleInflow'].max,
+        'Total Record': data['Transaction ID'].count(),
+        'First Record Start Date': data['Timestamp'].min(),
+        'Last Record End Date': data['Timestamp'].max(),
         'Create Date': create_date or datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'Last Update': last_update or datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
     }
 
 
-def calculate_service_logs_data(data, create_date, last_update):
-    data['Timestamp'] = data['Timestamp'].apply(lambda x: x.split()[0])
-    data['Timestamp'] = pd.to_datetime(data['Timestamp'], format='%d/%m/%Y')
+def calculate_my_facebook_data(data, create_date=None, last_update=None):
     return {
-        'Total Record': data['Transaction ID'].count + 1,
-        'First Record Start Date': data['Timestamp'].min,
-        'Last Record End Date': data['Timestamp'].max,
+        'TotalViews': data['Views'].max(),
+        'TotalLikes': data['Likes'].max(),
+        'TotalFollowers': data['Followers'].max(),
+        'First Record Start Date': data['Timestamp'].min(),
+        'Last Record End Date': data['Timestamp'].max(),
         'Create Date': create_date or datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'Last Update': last_update or datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
     }
 
 
-def calculate_my_facebook_data(data, create_date, last_update):
+def calculate_ga_data(data, create_date=None, last_update=None):
+    grouped = data[(data.TypeofVisitor == 'Returning  visitor')].count()
     return {
-        'TotalViews': data['Views'].max,
-        'TotalLikes': data['Likes'].max,
-        'TotalFollowers': data['Followers'].max,
-        'First Record Start Date': data['Timestamp'].min,
-        'Last Record End Date': data['Timestamp'].max,
+        'Total Visitor': data['Users City'].count(),
+        'Returning Visitor': grouped['TypeofVisitor'].count(),
         'Create Date': create_date or datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'Last Update': last_update or datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
     }
 
 
-def calculate_ga_data(data, create_date, last_update):
-    grouped = data[(data.TypeofVisitor == 'Returning  visitor')]
-    return {
-        'Total Visitor': data['Users City'].count + 1,
-        'Returning Visitor': grouped['TypeofVisitor'].count + 1,
-        'Create Date': create_date or datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-        'Last Update': last_update or datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+def get_single_data_summary(data, data_type, create_date=None, last_update=None):
+    mapping = {
+        'transaction': calculate_transaction_data,
+        'customer': calculate_customer_data,
+        'conversion': calculate_conversion_data,
+        'offlineEvent': calculate_offline_event_data,
+        'googleAnalytics': calculate_my_facebook_data,
+        'serviceLogs': calculate_service_logs_data,
+        'subscription': calculate_subscription_data,
+        'peopleCounterData': calculate_people_counter_data,
+        # 'openDataWeather':
+        # 'openDataHolidays':
+        # 'openDataHumanTraffic':
+        # 'competitorFacebook':
     }
+    return mapping[data_type](data, create_date, last_update)

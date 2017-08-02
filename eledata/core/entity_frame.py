@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 from eledata.models.entity import *
 import entity_summary
 
@@ -31,5 +30,9 @@ class EntityFrame(object):
 
     def get_summary(self, entity_type):
         # if data_frame has more than 1 item, use entity_type to help
+        key = self.data_frame.keys()[0] if self.data_frame.keys() == 1 else entity_type
 
-        return 0
+        return entity_summary.get_single_data_summary(
+            data=self.data_frame[key],
+            data_type=key,
+        )
