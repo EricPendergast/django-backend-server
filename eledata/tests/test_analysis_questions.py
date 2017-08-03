@@ -150,6 +150,10 @@ class AnalysisQuestionTestCase(TestCase):
         self.assertTrue(not _same_elements([5,6,7,4], [3,6,7,5]))
         self.assertTrue(not _same_elements([3,6,7,5], [5,6,7,3,8]))
         
+    # TODO: Write a test that accounts for multiple groups
+    # def test_multiple_groups(self):
+    #     admin2 = User.create_admin(username="admin2", password="pass", group_name="dummy_group2")
+        
     def _create_default_user(self):
         assert len(User.objects) == 1
         assert len(Group.objects) == 1
@@ -181,7 +185,6 @@ class AnalysisQuestionTestCase(TestCase):
         self.admin_client = Client()
         self.admin_client.post("/users/login/", {"username":"admin", "password":"pass"})
     
-# TODO: Write a test that accounts for multiple groups
         
 # Checks whether list1 and list2 have the same elements, regardless of order
 def _same_elements(list1, list2):

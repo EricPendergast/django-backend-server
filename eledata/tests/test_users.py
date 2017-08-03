@@ -27,12 +27,14 @@ class UsersTestCase(TestCase):
         admin_clients[usr_info[1]] = None
     
     def test_create_user(self):
-        self._test_create_and_login(*self.users[0])
+        c = self._create_and_login(*self.users[0])
         
+        response = c.get("/users/index/")
+        self.assertTrue(response.status_code == 200)
         
     def test_create_multiple_user(self):
         for user in self.users:
-            self._test_create_and_login(*user)
+            self._create_and_login(*user)
 
         first_group = User.objects(group=Group.objects.get(name="grp"))
         # There should be three users, including the admin
@@ -92,7 +94,7 @@ class UsersTestCase(TestCase):
     
     def test_logout(self):
         user = self.users[0]
-        c = self._test_create_and_login(*user)
+        c = self._create_and_login(*user)
         
         # response = c.get("/analysis_questions/get_all_existing_analysis_questions/")
         # self.assertEquals(response.status_code, 200)
@@ -113,7 +115,7 @@ class UsersTestCase(TestCase):
         
         
     def test_change_password(self):
-        c = self._test_create_and_login(*self.users[0])
+        c = self._create_and_login(*self.users[0])
         user_info = self.users[0][0]
         
         
@@ -128,8 +130,8 @@ class UsersTestCase(TestCase):
         
     
     def test_change_password_invalid_input(self):
-        c = self._test_create_and_login(*self.users[0])
-        self._test_create_and_login(*self.users[1])
+        c = self._create_and_login(*self.users[0])
+        self._create_and_login(*self.users[1])
         username = self.users[0][0]['username']
         password = self.users[0][0]['password']
         def assertInvalid(client, data):
@@ -149,7 +151,7 @@ class UsersTestCase(TestCase):
     for a non-admin signed in user, as well as an anonymous user.
     '''
     def test_non_admin_create_user(self):
-        c = self._test_create_and_login(*self.users[0])
+        c = self._create_and_login(*self.users[0])
         response = c.post("/users/create_user/", {"username":"something", "password":"asdf"})
         self.assertIn('error', from_json(response.content))
         
@@ -158,7 +160,12 @@ class UsersTestCase(TestCase):
         self.assertIn('error', from_json(response.content))
         
         
-    def _test_create_and_login(self, data, group_name):
+    '''
+    Creates a user with login data 'data', in group 'group_name'. Logs in to
+    that user and returns the logged in client. Performs some asserts to make
+    sure everything works and allow for easier debugging.
+    '''
+    def _create_and_login(self, data, group_name):
         c = Client()
         
         response = self.admin_clients[group_name].post("/users/create_user/", data)
@@ -171,8 +178,6 @@ class UsersTestCase(TestCase):
         response = c.post("/users/login/", data)
         self.assertTrue(response.status_code == 200)
         
-        response = c.get("/users/index/")
-        self.assertTrue(response.status_code == 200)
         
         return c
         
@@ -184,6 +189,7 @@ class UsersTestCase(TestCase):
             self.admins[group_name].group = Group.create_group(name=group_name)
             self.admins[group_name].save()
         
+        # Creating a signed in admin client for each group
         for group_name in self.admin_clients:
             self.admin_clients[group_name] = Client()
             self.admin_clients[group_name].post("/users/login/", {"username":"admin"+group_name, "password":"pass"})
