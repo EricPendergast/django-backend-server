@@ -1,11 +1,12 @@
 import os.path
 import uuid
 
+from eledata import util
 from eledata.serializers.entity import EntityDetailedSerializer
 from eledata.models.entity import Entity
-
-from eledata import util
 from eledata.util import string_caster
+
+from project import settings
 
 
 class EntityViewSetHandler():
@@ -31,6 +32,15 @@ class EntityViewSetHandler():
         entity_dict['state'] = 1
         verifier.verify(2, entity_dict)
 
+        # TODO: calculate draft of data summary here?
+        entity_data = util.file_to_list_of_dictionaries(
+                open(entity_dict["source"]["file"]["filename"]),
+                numLines=100,
+                is_header_included=util.string_caster["bool"](
+                    entity_dict["source"]["file"]["is_header_included"]))
+        # entity_frame = EntityFrame.frame_from_file(entity=entity_data, entity_type=entity_dict['type'])
+        # entity_summary = entity_frame.get_summary()
+
         serializer = EntityDetailedSerializer(data=entity_dict)
         verifier.verify(3, serializer)
 
@@ -42,12 +52,11 @@ class EntityViewSetHandler():
         # Saving the serializer while also adding its id to the response
         response_data['entity_id'] = str(entity.id)
         # Loading the first 100 lines of data from the request file
-        response_data['data'] = util.file_to_list_of_dictionaries(
-            open(entity_dict["source"]["file"]["filename"]),
-            numLines=101,
-            is_header_included=util.string_caster["bool"](
-                entity_dict["source"]["file"]["is_header_included"]))
-        
+        response_data['data'] = entity_data
+        # Passing header option from constants file
+        response_data['header_option'] = \
+            settings.CONSTANTS['entity']['header_option'][entity_dict["type"]]
+
         return response_data
             
     
