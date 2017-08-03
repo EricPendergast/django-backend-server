@@ -1,10 +1,11 @@
+import os.path
+import uuid
+
 from eledata.serializers.entity import EntityDetailedSerializer
 from eledata.models.entity import Entity
 
 from eledata import util
 from eledata.util import string_caster
-import os.path
-import uuid
 
 
 class EntityViewSetHandler():
@@ -18,14 +19,14 @@ class EntityViewSetHandler():
         # more recognizable.
         filename = "temp/" + str(uuid.uuid4()) + "." + str(request_file)
         
-        with open(filename, "w") as file:
-            file.write(request_file.read())
+        with open(filename, "w") as fi:
+            fi.write(request_file.read())
         # Parsing the entity JSON passed in into a dictionary
         entity_dict = util.from_json(request_data["entity"])
 
-        entity_dict["source"] = {"file":
-               {"filename":filename,
-                "is_header_included":request_data["isHeaderIncluded"]}}
+        entity_dict["source"] = {
+            "file": {"filename":filename,
+                     "is_header_included":request_data["isHeaderIncluded"]}}
                
         entity_dict['state'] = 1
         verifier.verify(2, entity_dict)
@@ -42,10 +43,10 @@ class EntityViewSetHandler():
         response_data['entity_id'] = str(entity.id)
         # Loading the first 100 lines of data from the request file
         response_data['data'] = util.file_to_list_of_dictionaries(
-                open(entity_dict["source"]["file"]["filename"]),
-                numLines=100,
-                is_header_included=util.string_caster["bool"](
-                    entity_dict["source"]["file"]["is_header_included"]))
+            open(entity_dict["source"]["file"]["filename"]),
+            numLines=101,
+            is_header_included=util.string_caster["bool"](
+                entity_dict["source"]["file"]["is_header_included"]))
         
         return response_data
             

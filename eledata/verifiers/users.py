@@ -5,7 +5,7 @@ from eledata.util import InvalidInputError
 
 class CreateUserVerifier(Verifier):
     def stage0(self, request_data):
-        self.ver_dict(request_data, required={"username","password","group"})
+        self.ver_dict(request_data, required={"username","password"})
         
     stages = [stage0,]
 

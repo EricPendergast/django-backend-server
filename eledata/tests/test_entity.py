@@ -10,6 +10,7 @@ from eledata.util import from_json, to_json
 
 import datetime
 import platform
+import time
 # Create your tests here.
 
 class EntityTestCase(TestCase):
@@ -33,19 +34,19 @@ class EntityTestCase(TestCase):
         assert len(Group.objects) == 0
         assert len(User.objects) == 0
         
-        #Create admin manually
-        self.admin = User.create_user(username="admin", password="pass")
-        self.admin.is_group_admin = True
-        self.admin.save()
+        admin = User.create_admin(username="admin", password="pass", group_name="dummy_group")
+        admin2 = User.create_admin(username="admin2", password="pass", group_name="different_dummy_group")
         
         self.client = Client()
-        self.client.post("/users/login/", {"username":"admin", "password":"pass"})
+        response = self.client.post("/users/login/", {"username":"admin", "password":"pass"})
+        self.client.post("/users/create_user/", {"username":"dummy", "password":"asdf"})
+        self.client.post("/users/create_user/", {"username":"dummy3", "password":"asdf"})
         
-        self.client.post("/users/create_user/", {"username":"dummy", "password":"asdf", "group":"dummy_group"})
-        self.client.post("/users/create_user/", {"username":"dummy2", "password":"asdf", "group":"different_dummy_group"})
-        self.client.post("/users/create_user/", {"username":"dummy3", "password":"asdf", "group":"dummy_group"})
+        self.client.post("/users/login/", {"username":"admin2", "password":"pass"})
+        self.client.post("/users/create_user/", {"username":"dummy2", "password":"asdf"})
         
         self.client.post("/users/login/", {"username":"dummy", "password":"asdf"})
+    
     
     '''
     Sending a get request to get_all_entity and testing that it sends back all
@@ -335,9 +336,6 @@ class EntityTestCase(TestCase):
         
         response = self._create_entity_final(client3, id, self.entityDataHeaderJSON1)
         self.assertNotIn('error', from_json(response.content))
-    
-    # TODO: test that create_entity and create_entity_mapped send back 100
-    # lines of data
     
     
     # TODO: Handle this case

@@ -152,7 +152,7 @@ class AnalysisQuestionTestCase(TestCase):
         
     def _create_default_user(self):
         assert len(User.objects) == 1
-        assert len(Group.objects) == 0
+        assert len(Group.objects) == 1
 
         c = Client()
         self.admin_client.post("/users/create_user/", {"username":"dummy1", "password":"asdf", "group":"dummy_group"})
@@ -176,10 +176,7 @@ class AnalysisQuestionTestCase(TestCase):
     
     
     def setUp(self):
-        #Create admin manually
-        self.admin = User.create_user(username="admin", password="pass")
-        self.admin.is_group_admin = True
-        self.admin.save()
+        self.admin = User.create_admin(username="admin", password="pass", group_name="dummy_group")
         
         self.admin_client = Client()
         self.admin_client.post("/users/login/", {"username":"admin", "password":"pass"})

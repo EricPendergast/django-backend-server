@@ -63,7 +63,6 @@ class UserActions(CustomLoginRequiredMixin, viewsets.ViewSet):
     
 class GroupAdminActions(GroupAdminRequiredMixin, viewsets.ViewSet):
     #Maybe TODO: Create update_questions method. Looks at the json questions file and updates all user groups to match the file.
-    #TODO: Should creating a user with a nonexistant group create a new group or throw an error?
     
     @list_route(methods=['post'])
     def create_user(self, request):
@@ -72,7 +71,8 @@ class GroupAdminActions(GroupAdminRequiredMixin, viewsets.ViewSet):
         
         username = request.data['username']
         password = request.data['password']
-        group_name = request.data['group']
+        # group_name = request.data['group']
+        group_name = request.user.group.name
         
         if User.objects(username=username).only('username').limit(1):
             raise InvalidInputError("A user with this name already exists")
@@ -81,10 +81,8 @@ class GroupAdminActions(GroupAdminRequiredMixin, viewsets.ViewSet):
         try:
             group = Group.objects.get(name=group_name)
         except mongoengine.DoesNotExist:
-            group = Group(name=group_name)
-            group.analysis_settings = \
-                    GroupAnalysisSettings(**settings.CONSTANTS['analysis_settings'])
-            group.save()
+            raise InvalidInputError('No group with name "' + group_name + '"')
+            # group = Group.create_group(name=group_name)
         
         user.group = group
         user.save()
