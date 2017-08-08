@@ -79,6 +79,7 @@ class EntityViewSetHandler():
                 open(entity.source.file.filename, 'r'),
                 is_header_included=entity.source.file.is_header_included)
         
+        # Changing the user created field names in data to the new mapped names
         for item in data:
             for mapping in dummy['data_header']:
                 item[mapping["mapped"]] = item[mapping["source"]]

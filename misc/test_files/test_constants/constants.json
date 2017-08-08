@@ -20,6 +20,10 @@
             "restful",
             "manual"
         ],
+        "header_id_field": {
+            "transaction": "Transaction_ID",
+            "conversion": "Conversion_ID"
+        },
         "header_option": {
             "transaction": [
                 "ID",

@@ -1,6 +1,6 @@
 mongo django_test --eval "db.dropDatabase();"
 source venv/bin/activate
-python manage.py test
+python manage.py test eledata.tests.test_entity_rollback
 
 if [ $? -eq 0 ]
 then
