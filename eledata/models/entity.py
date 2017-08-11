@@ -54,7 +54,7 @@ class DataSource(EmbeddedDocument):
         self.save()
         return self
     
-class Change(EmbeddedDocument):
+class Change(Document):
     # The final state of all changed or added rows
     new_rows = ListField()
     # TODO: I think old_rows is re-populated each time. This could be fixed by making Change be a non-embedded document, or by jumping throug some hoops with saving.
@@ -73,14 +73,21 @@ class Change(EmbeddedDocument):
         # 1. Remove old_rows from data
         # 2. Add new_rows to data
         
-        self.old_rows += self._add_remove_rows(
+        removed_rows = self._add_remove_rows(
                 add=self.new_rows,
                 remove=self.old_rows,
                 entity=entity,
                 return_replaced_rows=not self.enacted)
         
-        self.enacted = True
-        
+        if not self.enacted:
+            # Note the use of extend() and not +=. This is because of a (most
+            # likely) bug in mongoengine where using += does not tell the
+            # model that the field has been updated.
+            self.old_rows.extend(removed_rows)
+            
+            self.enacted = True
+            self.save()
+            
         
     def revert(self, entity):
         assert self.enacted
@@ -121,7 +128,7 @@ class Change(EmbeddedDocument):
         
     
     def __str__(self):
-        return "(new_rows: " + str(self.new_rows) + ", old_rows: " + str(self.old_rows) +")"
+        return "(new_rows: " + str(self.new_rows) + ", old_rows: " + (str(self.old_rows) if self.enacted else "Not generated") + ")"
 
 
 
@@ -184,7 +191,7 @@ class Entity(Document):
     # TODO: make it so that 'changes' isn't retrieved all at once
     # TODO: may need to make changes be an array of references
     # See EntityRollbackTestCase.test_concurrency_5()
-    changes = EmbeddedDocumentListField(Change)
+    changes = ListField(ReferenceField(Change))
     
     def __init__(self, *args, **kwargs):
         # Contains the most recent time this entities changes were synched with
@@ -261,6 +268,7 @@ class Entity(Document):
         # change.enact() is called.
         change.old_rows = []
         change.remove_all = replace
+        change.save()
     
         if self.change_index < len(self.changes)-1:
             self.changes = self.changes[:self.change_index+1] + [change,]
