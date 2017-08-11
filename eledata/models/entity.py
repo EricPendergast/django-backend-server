@@ -289,7 +289,8 @@ class Entity(Document):
     
     def add_change(self, data, replace=False):
         '''
-        A way to modify 'changes', avoiding race conditions.
+        A way to modify 'changes', avoiding race conditions. If replace is
+        true, all data will be deleted before the new data is added.
         '''
         self._check_invariants_fast()
         change = Change()
