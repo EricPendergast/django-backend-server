@@ -55,6 +55,6 @@ class CreateEntityMappedVerifier(Verifier):
 
     def stage3(self, serializer):
         if not serializer.is_valid():
-            raise InvalidInputError("Invalid serializer")
+            raise InvalidInputError("Invalid serializer: " + str(serializer.errors))
 
     stages = [stage0, stage1, stage2, stage3]

@@ -7,6 +7,7 @@ import project.settings
 
 import datetime
 import sys
+import eledata.util
 
 # Create your models here.
 
@@ -56,6 +57,7 @@ class DataSource(EmbeddedDocument):
 class Change(EmbeddedDocument):
     # The final state of all changed or added rows
     new_rows = ListField()
+    # TODO: I think old_rows is re-populated each time. This could be fixed by making Change be a non-embedded document, or by jumping throug some hoops with saving.
     # The original state of all rows that were changed or removed by calling the enact() method
     old_rows = ListField()
     # 'enact' says whether the enact() method has been called on this object.
@@ -122,7 +124,24 @@ class Change(EmbeddedDocument):
         return "(new_rows: " + str(self.new_rows) + ", old_rows: " + str(self.old_rows) +")"
 
 
+
 class Entity(Document):
+    '''
+    Holds arbitrary data, as well as its change history. Each entity is
+    associated with a group, represented by its 'group' field.
+    
+    Some notes about editing data:
+    - 'data' should never be modified directly. It should only be modified
+      through applying/reverting changes. Modifying 'data' directly will mean
+      rollbacks will have incorrect behavior, and _check_invariants_long() will
+      fail.
+    
+    - Changes made to 'data' are not saved through the standard save() method.
+      In order to save these, you must call save_data_changes(). It is done
+      this way because data changes need to be saved in a way that prevents
+      race conditions.
+    '''
+    
     state = IntField()
     type = StringField(max_length=20)
     source_type = StringField(max_length=15)
@@ -137,35 +156,54 @@ class Entity(Document):
     updated_at = DateTimeField(default=datetime.datetime.now)
     group = ReferenceField(Group)
     
-    '''
-    Here is an explanation of the control flow of adding changes to and rolling
-    back 'data':
-
-    The only ways the user can change data is by adding a list of rows
-    (replacing any rows that share a row id with a row in the given list), or
-    clearing all the data and adding a list of rows.
-
-    Every change to 'data' is expressed through a Change object in 'changes'.
-    Each change object contains a list of rows to remove, and a list of rows to
-    add. This design makes Change objects easy to reverse. One added
-    complication is that the list of rows to remove isn't populated until the
-    first time the change object is enacted. This is to fix race conditions.
-    See test_concurrency() in eledata/tests/test_entity_rollback. Since a
-    change could be added from anywhere at the same time, there is no way of
-    knowing that the local 'data' is the same as what is in the database.
-
-    There is an array of Change objects, 'changes', which contains all changes
-    users have created, in the order they should be enacted. The current state
-    of 'data' is the result of applying, in order, changes[0] to
-    changes[change_index] to an empty list. Or data is empty if
-    change_index==-1
-
-    Since each change is reversible, a rollback can be performed by undoing
-    each change one by one.
-    '''
+    # Here is an explanation of the control flow of adding changes to and rolling
+    # back 'data':
+    #
+    # The only ways the user can change data is by adding a list of rows
+    # (replacing any rows that share a row id with a row in the given list),
+    # choosing whether to remove all previous data, or not to.
+    #
+    # Every change to 'data' is expressed through a Change object in 'changes'.
+    # Each change object contains a list of rows to remove, and a list of rows to
+    # add. This design makes Change objects easy to reverse. One added
+    # complication is that the list of rows to remove isn't populated until the
+    # first time the change object is enacted. This is to fix race conditions;
+    # Since a change could be applied and saved from anywhere at the same time,
+    # there is no way of knowing that the local 'data' is the same as what is in
+    # the database.
+    #
+    # There is an array of Change objects, 'changes', which contains all changes
+    # users have created, in the order they should be enacted. The current state
+    # of 'data' is the result of applying, in order, changes[0] to
+    # changes[change_index] to an empty list.
+    #
+    # Since each change is reversible, a rollback can be performed by undoing
+    # each change one by one.
     
     change_index = IntField(default=-1)
+    # TODO: make it so that 'changes' isn't retrieved all at once
+    # TODO: may need to make changes be an array of references
+    # See EntityRollbackTestCase.test_concurrency_5()
     changes = EmbeddedDocumentListField(Change)
+    
+    def __init__(self, *args, **kwargs):
+        # Contains the most recent time this entities changes were synched with
+        # the database. This is used to determine if the user can save changes
+        # in save_data_changes().
+        # self.time_last_changes_sync is not a database field; it is being
+        # initialized here.
+        self.time_last_changes_sync = 0
+        self.on_changes_sync()
+        return super(Entity, self).__init__(*args, **kwargs)
+    
+    # Contains the most recent time the user reverted changes and then added
+    # changes. This can be thought of as keeping track of the most recent time
+    # 'changes' was changed in a way besides pushing to the end.
+    time_last_revert_overwrite = FloatField(default=0)
+    
+    # To be called whenever this users changes are synced with the database
+    def on_changes_sync(self):
+        self.time_last_changes_sync = eledata.util.get_time()
     
         
     # Applies changes 'num_changes' times, stopping once no more changes can be
@@ -175,8 +213,8 @@ class Entity(Document):
             num_changes -= 1
             
             
-    # Reverts one change, returning False if there are no more changes to be
-    # reverted, True otherwise.
+    # Returns False if there are no more changes to be reverted, otherwise,
+    # reverts one change and returns true
     def revert_one(self):
         assert self.change_index < len(self.changes)
         if self.change_index < 0:
@@ -194,8 +232,8 @@ class Entity(Document):
             num_changes -= 1
             
         
-    # Applies one change, returning False if there are no more changes to be
-    # applied, True otherwise.
+    # Returns False if there are no more changes to be applied, otherwise,
+    # applies one change and returns true
     def apply_one(self):
         if self.change_index+1 >= len(self.changes):
             return False
@@ -206,7 +244,16 @@ class Entity(Document):
         return True
         
     
-    def add_data(self, data, replace=False):
+    def reload(self, *fields, **kwargs):
+        if not fields or set(self.do_not_save).issubset(fields):
+            self.on_changes_sync()
+            
+        return super(Entity, self).reload(*fields, **kwargs)
+            
+    
+    # A way to modify 'changes', avoiding race conditions.
+    def add_change(self, data, replace=False):
+        self._check_invariants()
         change = Change()
         change.new_rows = data
         # Because of concurrency issues, we don't yet know what data we will be
@@ -215,12 +262,8 @@ class Entity(Document):
         change.old_rows = []
         change.remove_all = replace
     
-        assert self.change_index >= -1
         if self.change_index < len(self.changes)-1:
-            if self.change_index == -1:
-                self.changes = [change,]
-            else:
-                self.changes = self.changes[:self.change_index+1] + [change,]
+            self.changes = self.changes[:self.change_index+1] + [change,]
             
             # Must save everything (as opposed to just self.changes) to ensure
             # that self.changes, self.change_index, and self.data are all in
@@ -228,39 +271,62 @@ class Entity(Document):
             # method, self.change_index could point to an index outside the
             # range of self.changes, which violates an invariant of this class.
             # See EntityRollbackTestCase.test_concurrency_1()
-            Entity.objects(pk=self.pk).update(changes=self.changes, data=self.data, change_index=self.change_index)
+            Entity.objects(pk=self.pk).update(changes=self.changes, data=self.data, change_index=self.change_index, time_last_revert_overwrite=eledata.util.get_time())
         else:
             # Must push to database to ensure no changes made by other users
             # are overwritten.
             Entity.objects(pk=self.pk).update(push__changes=change)
             
-            
+        # This line is here because this method does not update 'changes',
+        # 'data', or 'change_index' locally.
         self.reload()
         self.apply_changes()
         
+        self._check_invariants()
         
-    do_not_save = ['changes']
-    # Prevents saving of 'changes' so that 'changes' is guaranteed to only be
-    # added to through the push method in 'add_data'. This prevents the
-    # condition where two users create changes at the same time, and one
-    # overwrites the other's changes when they both save.
+        
+    # Since 'changes', 'change_index', and 'data' must be in sync according to
+    # _check_invariants_long() saving only one or two of them (as opposed to
+    # all three) could lead to invariants being false. This is why the save
+    # method does not save these three fields. There is a special method that
+    # saves all three of these fields at once, save_data_changes()
+    do_not_save = ['changes','change_index', 'data']
     def save(self, *args, **kwargs):
         # HACK: We are probably not supposed to modify _changed_fields
         # directly, but there is no other way I've found to exclude a field
-        # from saving
+        # from saving.
+        # Removing each field in self.do_not_save from self._changed_fields. This
+        # has the effect of not saving these fields when we call super.save()
         if hasattr(self, '_changed_fields'):
             for to_remove in self.do_not_save:
                 assert hasattr(self, to_remove)
                 if to_remove in self._changed_fields:
                     self._changed_fields.remove(to_remove)
-                
+
         super(Entity, self).save(*args, **kwargs)
+
+    
+    # Saves the data and change_index of this entity, failing if the database
+    # entity has been reverted since the last database sync.
+    def save_data_changes(self):
+        # This will only exist if the time of the last db sync is more recent
+        # than the time of the last revert.
+        db_entity = Entity.objects(
+                pk=self.pk, 
+                time_last_revert_overwrite__lt=self.time_last_changes_sync)
+        # If 'db_entity' doesn't exist, this line  won't update anything, and
+        # 'ret' will contain an error code.
+        ret = db_entity.update(change_index=self.change_index, data=self.data)
+        
+        
+        return ret != 0
         
     
     def _check_invariants(self):
         assert self.change_index >= -1
         assert self.change_index < len(self.changes)
     
+    # Only run for tests; this function does a lot of processing
     def _check_invariants_long(self):
         self._check_invariants()
         
@@ -270,6 +336,7 @@ class Entity(Document):
         dummy.data = []
         dummy.type = self.type
         for i in range(self.change_index+1):
+            # assert self.changes[i].enacted
             self.changes[i].enact(dummy)
         
         for item in self.data:

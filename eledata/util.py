@@ -131,6 +131,8 @@ def from_json(json_string):
     ret = JSONParser().parse(BytesIO(str(json_string)))
     return ret
 
+def get_time():
+    return (datetime.datetime.utcnow() - datetime.datetime(1970, 1, 1)).total_seconds()
 
 def debug_deep_compare(param1, param2):
     if dir(param1) != dir(param2):

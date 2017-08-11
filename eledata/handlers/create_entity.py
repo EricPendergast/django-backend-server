@@ -58,7 +58,6 @@ class EntityViewSetHandler():
             settings.CONSTANTS['entity']['header_option'][entity_dict["type"]]
 
         return response_data
-            
     
     
     @staticmethod
@@ -91,9 +90,7 @@ class EntityViewSetHandler():
             for mapping in dummy['data_header']:
                 item[mapping["mapped"]] = \
                     string_caster[mapping["data_type"]](item[mapping["mapped"]])
-            
         
-        dummy['data'] = data
         dummySerializer = EntityDetailedSerializer(data=dummy)
         
         verifier.verify(3, dummySerializer)
@@ -102,11 +99,13 @@ class EntityViewSetHandler():
         
         # Adding the dummy's fields to the actual entity
         entity.data_header = dummy.data_header
-        entity.data = dummy.data
+        
+        entity.add_change(data)
         os.remove(entity.source.file.filename)
         entity.source.file = None
         entity.state = 2
         entity.save()
+        entity.save_data_changes()
         
-        return entity.data[:100]
+        return data[:100]
             
