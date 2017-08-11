@@ -31,7 +31,6 @@ class UserActions(CustomLoginRequiredMixin, viewsets.ViewSet):
                 (request.user.counter, request.user.group.counter))
 
 
-    # TODO: Should the user have to be logged in to change their password?
     '''
     Lets the user change their password. The user must be logged in.
     

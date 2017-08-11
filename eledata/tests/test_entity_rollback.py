@@ -147,6 +147,7 @@ class EntityRollbackTestCase(TestCase):
         entity.reload()
         # After calling save_data_changes(), the state of 'data' should be
         # saved to the database
+        entity._check_invariants_long()
         self.assertSameElements(entity.data, self.data_2)
         self.assertEqual(len(entity.changes), 2)
         
@@ -279,7 +280,6 @@ class EntityRollbackTestCase(TestCase):
             alt_entity.apply_changes()
             success = alt_entity.save_data_changes()
             self.assertFalse(success)
-
 
         alt_entity.reload(*reload_params)
         alt_entity.apply_changes()

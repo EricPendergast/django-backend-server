@@ -361,7 +361,6 @@ class Entity(Document):
         # 'ret' will contain an error code.
         ret = db_entity.update(change_index=self.change_index, data=self.data)
         
-        
         return ret != 0
         
     
@@ -389,7 +388,7 @@ class Entity(Document):
             assert self.changes[i].enacted
             # Copying because calling enact() on a Change object has side
             # effects
-            copy.copy(self.changes[i]).enact(dummy)
+            copy.deepcopy(self.changes[i]).enact(dummy)
         
         for item in self.data:
             assert item in dummy.data
