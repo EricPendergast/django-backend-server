@@ -57,7 +57,6 @@ class DataSource(EmbeddedDocument):
 class Change(Document):
     # The final state of all changed or added rows
     new_rows = ListField()
-    # TODO: I think old_rows is re-populated each time. This could be fixed by making Change be a non-embedded document, or by jumping throug some hoops with saving.
     # The original state of all rows that were changed or removed by calling the enact() method
     old_rows = ListField()
     # 'enact' says whether the enact() method has been called on this object.
@@ -68,6 +67,9 @@ class Change(Document):
     remove_all = BooleanField(required=True)
     
     def enact(self, entity):
+        '''
+        Performs this change on the given entity.
+        '''
         if not self.enacted and self.remove_all:
             self.old_rows = list(entity.data)
         # 1. Remove old_rows from data
@@ -90,6 +92,9 @@ class Change(Document):
             
         
     def revert(self, entity):
+        '''
+        Undos this change on the given entity.
+        '''
         assert self.enacted
         # 1. Remove new_rows from data
         # 2. Add old_rows to data
@@ -100,6 +105,12 @@ class Change(Document):
         
     
     def _add_remove_rows(self, add, remove, entity, return_replaced_rows=False):
+        '''
+        Removes all the rows in 'remove' from 'entity', then adds all the rows
+        in 'add' to 'entity'. If 'return_replaced_rows' is true, this method
+        will return all the rows that were replaced when the rows in 'add' were
+        added to the entity.
+        '''
         replaced_rows = []
         id_field = project.settings.CONSTANTS['entity']['header_id_field'][entity.type]
         
@@ -115,7 +126,7 @@ class Change(Document):
                 row_id = row[id_field]
                 del data_dict[row_id]
             
-        # Adding all the new rows, saving the replaced rows 
+        # Adding all the new rows while saving the replaced rows 
         for row in add:
             row_id = row[id_field]
             if return_replaced_rows and row_id in data_dict:
@@ -134,16 +145,16 @@ class Change(Document):
 
 class Entity(Document):
     '''
-    Holds arbitrary data, as well as its change history. Each entity is
-    associated with a group, represented by its 'group' field.
+    Holds arbitrary data, as well as the change history of that data. Each
+    entity is associated with a group, represented by its 'group' field.
     
     Some notes about editing data:
-    - 'data' should never be modified directly. It should only be modified
-      through applying/reverting changes. Modifying 'data' directly will mean
-      rollbacks will have incorrect behavior, and _check_invariants_long() will
-      fail.
+    - 'data', 'changes', and 'change_index' should never be modified directly.
+      It should only be modified through applying/reverting changes. Modifying
+      'data' directly will mean rollbacks will have incorrect behavior, and
+      _check_invariants_long() will fail.
     
-    - Changes made to 'data' are not saved through the standard save() method.
+    - Data changes are not saved through the standard save() method.
       In order to save these, you must call save_data_changes(). It is done
       this way because data changes need to be saved in a way that prevents
       race conditions.
@@ -156,12 +167,31 @@ class Entity(Document):
     data_summary = EmbeddedDocumentListField(DataSummary)
     data_summary_chart = EmbeddedDocumentListField(DataSummary)
     # Maybe TODO: make this a dict field
-    data = ListField()
     data_header = EmbeddedDocumentListField(DataHeader)
     allowed_user = ListField()
     created_at = DateTimeField(default=datetime.datetime.now)
     updated_at = DateTimeField(default=datetime.datetime.now)
     group = ReferenceField(Group)
+    
+    data = ListField()
+    change_index = IntField(default=-1)
+    changes = ListField(ReferenceField(Change))
+    
+    # Contains the most recent time the user reverted changes and then added
+    # changes. This can be thought of as keeping track of the most recent time
+    # 'changes' was changed in a way besides pushing to the end.
+    time_last_revert_overwrite = FloatField(default=0)
+    
+    def __init__(self, *args, **kwargs):
+        # Contains the most recent time this entities changes were synched with
+        # the database. This is used to determine if the user can save changes
+        # in save_data_changes().
+        # self.time_last_changes_sync is not a database field; it is being
+        # initialized here.
+        self.time_last_changes_sync = 0
+        self.on_changes_sync()
+        return super(Entity, self).__init__(*args, **kwargs)
+    
     
     # Here is an explanation of the control flow of adding changes to and rolling
     # back 'data':
@@ -186,43 +216,31 @@ class Entity(Document):
     #
     # Since each change is reversible, a rollback can be performed by undoing
     # each change one by one.
-    
-    change_index = IntField(default=-1)
-    # TODO: make it so that 'changes' isn't retrieved all at once
-    # TODO: may need to make changes be an array of references
-    # See EntityRollbackTestCase.test_concurrency_5()
-    changes = ListField(ReferenceField(Change))
-    
-    def __init__(self, *args, **kwargs):
-        # Contains the most recent time this entities changes were synched with
-        # the database. This is used to determine if the user can save changes
-        # in save_data_changes().
-        # self.time_last_changes_sync is not a database field; it is being
-        # initialized here.
-        self.time_last_changes_sync = 0
-        self.on_changes_sync()
-        return super(Entity, self).__init__(*args, **kwargs)
-    
-    # Contains the most recent time the user reverted changes and then added
-    # changes. This can be thought of as keeping track of the most recent time
-    # 'changes' was changed in a way besides pushing to the end.
-    time_last_revert_overwrite = FloatField(default=0)
-    
     # To be called whenever this users changes are synced with the database
+    
+    
     def on_changes_sync(self):
+        '''
+        To be called whenever this entities changes and data are synced with
+        the database.
+        '''
         self.time_last_changes_sync = eledata.util.get_time()
     
         
-    # Applies changes 'num_changes' times, stopping once no more changes can be
-    # applied. If called with no arguments, reverts all changes.
     def revert_changes(self, num_changes=float('inf')):
+        '''
+        Applies changes 'num_changes' times, stopping once no more changes can
+        be applied. If called with no arguments, reverts all changes.
+        '''
         while num_changes > 0 and self.revert_one():
             num_changes -= 1
             
             
-    # Returns False if there are no more changes to be reverted, otherwise,
-    # reverts one change and returns true
     def revert_one(self):
+        '''
+        Returns False if there are no more changes to be reverted, otherwise,
+        reverts one change and returns true
+        '''
         assert self.change_index < len(self.changes)
         if self.change_index < 0:
             return False
@@ -232,16 +250,20 @@ class Entity(Document):
         return True
     
     
-    # Applies changes 'num_changes' times, stopping once no more changes can be
-    # applied. If called with no arguments, applies all changes.
     def apply_changes(self, num_changes=float('inf')):
+        '''
+        Applies changes 'num_changes' times, stopping once no more changes can be
+        applied. If called with no arguments, applies all changes.
+        '''
         while num_changes > 0 and self.apply_one():
             num_changes -= 1
             
         
-    # Returns False if there are no more changes to be applied, otherwise,
-    # applies one change and returns true
     def apply_one(self):
+        '''
+        Returns False if there are no more changes to be applied, otherwise,
+        applies one change and returns true
+        '''
         if self.change_index+1 >= len(self.changes):
             return False
         
@@ -252,15 +274,23 @@ class Entity(Document):
         
     
     def reload(self, *fields, **kwargs):
+        '''
+        We overload the reload() function because we need to know when the
+        users changes have been synced with the database. We check if the
+        passed in fields will cause the changes to be synched, and if they do,
+        we call on_changes_sync().
+        '''
         if not fields or set(self.do_not_save).issubset(fields):
             self.on_changes_sync()
             
         return super(Entity, self).reload(*fields, **kwargs)
             
     
-    # A way to modify 'changes', avoiding race conditions.
     def add_change(self, data, replace=False):
-        self._check_invariants()
+        '''
+        A way to modify 'changes', avoiding race conditions.
+        '''
+        self._check_invariants_fast()
         change = Change()
         change.new_rows = data
         # Because of concurrency issues, we don't yet know what data we will be
@@ -290,16 +320,18 @@ class Entity(Document):
         self.reload()
         self.apply_changes()
         
-        self._check_invariants()
+        self._check_invariants_fast()
         
         
-    # Since 'changes', 'change_index', and 'data' must be in sync according to
-    # _check_invariants_long() saving only one or two of them (as opposed to
-    # all three) could lead to invariants being false. This is why the save
-    # method does not save these three fields. There is a special method that
-    # saves all three of these fields at once, save_data_changes()
     do_not_save = ['changes','change_index', 'data']
     def save(self, *args, **kwargs):
+        '''
+        Since 'changes', 'change_index', and 'data' must be in sync according
+        to _check_invariants_long() saving only one or two of them (as opposed
+        to all three) could lead to invariants being false. This is why the
+        save method does not save these three fields. There is a special method
+        that saves all three of these fields at once, save_data_changes()
+        '''
         # HACK: We are probably not supposed to modify _changed_fields
         # directly, but there is no other way I've found to exclude a field
         # from saving.
@@ -314,10 +346,12 @@ class Entity(Document):
         super(Entity, self).save(*args, **kwargs)
 
     
-    # Saves the data and change_index of this entity, failing if the database
-    # entity has been reverted since the last database sync.
     def save_data_changes(self):
-        # This will only exist if the time of the last db sync is more recent
+        '''
+        Saves the data and change_index of this entity, failing if the database
+        entity has been reverted since the last database sync.
+        '''
+        # db_entity will only exist if the time of the last db sync is more recent
         # than the time of the last revert.
         db_entity = Entity.objects(
                 pk=self.pk, 
@@ -330,13 +364,20 @@ class Entity(Document):
         return ret != 0
         
     
-    def _check_invariants(self):
+    def _check_invariants_fast(self):
+        '''
+        Runs asserts for the invariants of this class that are simple to
+        compute.
+        '''
         assert self.change_index >= -1
         assert self.change_index < len(self.changes)
     
-    # Only run for tests; this function does a lot of processing
     def _check_invariants_long(self):
-        self._check_invariants()
+        '''
+        Runs asserts for all invariants of this class. This only should be run
+        for tests since this function does a lot of processing.
+        '''
+        self._check_invariants_fast()
         
         # Enacting changes[0] to changes[change_index] on a dummy object and
         # seeing if its data is the same as the data of this object.
@@ -344,7 +385,7 @@ class Entity(Document):
         dummy.data = []
         dummy.type = self.type
         for i in range(self.change_index+1):
-            # assert self.changes[i].enacted
+            assert self.changes[i].enacted
             self.changes[i].enact(dummy)
         
         for item in self.data:
