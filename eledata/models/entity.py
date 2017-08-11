@@ -8,6 +8,7 @@ import project.settings
 import datetime
 import sys
 import eledata.util
+import copy
 
 # Create your models here.
 
@@ -386,7 +387,9 @@ class Entity(Document):
         dummy.type = self.type
         for i in range(self.change_index+1):
             assert self.changes[i].enacted
-            self.changes[i].enact(dummy)
+            # Copying because calling enact() on a Change object has side
+            # effects
+            copy.copy(self.changes[i]).enact(dummy)
         
         for item in self.data:
             assert item in dummy.data
