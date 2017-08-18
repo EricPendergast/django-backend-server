@@ -11,11 +11,13 @@ class EntitySummarySerializer(DocumentSerializer):
         )
         fields = '__all__'
 
+
 class DataHeaderSerializer(DocumentSerializer):
     class Meta:
         model = DataHeader
         depth = 2
         fields = '__all__'
+
 
 class EntityDetailedSerializer(DocumentSerializer):
     class Meta:

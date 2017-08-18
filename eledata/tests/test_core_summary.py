@@ -18,8 +18,9 @@ class CoreSummaryTestCase(TestCase):
     people_counter_filename = core_test__dir + 'People Counter Data.csv'
 
     def test_full_calculate_transaction_data(self):
+        header = settings.CONSTANTS['entity']['header_option']['transaction']
         data = pd.read_csv(self.transaction_filename,
-                           names=settings.CONSTANTS['entity']['header_option']['transaction'])
+                           names=header)
         response = calculate_transaction_data(data)
         self.assertEquals(len(response), 8)
         self.assertEquals(response['Transaction Records'], 120000)
@@ -30,8 +31,9 @@ class CoreSummaryTestCase(TestCase):
         self.assertEquals(response['Average Transaction Quantity'], '1.5')
 
     def test_full_calculate_customer_data(self):
+        header = settings.CONSTANTS['entity']['header_option']['customer']
         data = pd.read_csv(self.customer_filename,
-                           names=settings.CONSTANTS['entity']['header_option']['customer'])
+                           names=header)
         response = calculate_customer_data(data)
         self.assertEquals(len(response), 7)
         self.assertEquals(response['Customer Records'], 30000)

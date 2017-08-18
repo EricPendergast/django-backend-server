@@ -5,7 +5,7 @@ from eledata import util
 from eledata.serializers.entity import EntityDetailedSerializer
 from eledata.models.entity import Entity
 from eledata.util import string_caster
-# from eledata.core.entity_frame import EntityFrame
+from eledata.core.entity_frame import EntityFrame
 
 from project import settings
 
@@ -38,8 +38,6 @@ class EntityViewSetHandler():
             numLines=100,
             is_header_included=util.string_caster["bool"](
                 entity_dict["source"]["file"]["is_header_included"]))
-        # entity_frame = EntityFrame.frame_from_file(entity=entity_data, entity_type=entity_dict['type'])
-        # entity_summary = entity_frame.get_summary()
 
         serializer = EntityDetailedSerializer(data=entity_dict)
         verifier.verify(3, serializer)
@@ -90,6 +88,10 @@ class EntityViewSetHandler():
                 item[mapping["mapped"]] = \
                     string_caster[mapping["data_type"]](item[mapping["mapped"]])
 
+        # Generating Entity Summary after mapping is confirmed.
+        entity_frame = EntityFrame.frame_from_file(entity_data=data, entity_type=entity.type)
+        dummy['data_summary'] = entity_frame.get_summary()
+
         dummySerializer = EntityDetailedSerializer(data=dummy)
 
         verifier.verify(3, dummySerializer)
@@ -97,13 +99,14 @@ class EntityViewSetHandler():
         dummy = Entity(**dummySerializer.validated_data)
 
         # Adding the dummy's fields to the actual entity
-        entity.data_header = dummy.data_header
 
         entity.add_change(data)
+        entity.data_header = dummy.data_header
+        entity.data_summary = dummy.data_summary
+
         os.remove(entity.source.file.filename)
         entity.source.file = None
         entity.state = 2
         entity.save()
         entity.save_data_changes()
-
         return data[:100]
