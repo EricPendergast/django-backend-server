@@ -6,12 +6,12 @@ def calculate_transaction_data(data, create_date=None, last_update=None):
     data['Transaction_Date'] = pd.to_datetime(data['Transaction_Date'], format='%d/%m/%Y')
 
     return {
-        'Transaction Records': data.count(),
-        'First Conversion Start Date': data['Transaction_Date'].min().strftime('%Y-%m-%d'),
-        'Last Conversion End Date': data['Transaction_Date'].max().strftime('%Y-%m-%d'),
-        'Involved User': data.groupby(['User_ID']).count(),
-        'Average Transaction Value': data['Transaction_Value'].mean(),
-        'Average Transaction Quantity': data['Transaction_Quantity'].mean(),
+        'Transaction Records': len(data.index),
+        'First Transaction Start Date': data['Transaction_Date'].min().strftime('%Y-%m-%d'),
+        'Last Transaction End Date': data['Transaction_Date'].max().strftime('%Y-%m-%d'),
+        'Involved User': len(data.groupby(['User_ID']).count().index),
+        'Average Transaction Value': format(data['Transaction_Value'].mean(), '.2f'),
+        'Average Transaction Quantity': format(data['Transaction_Quantity'].mean(), '.1f'),
         'Create Date': create_date or datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'Last Update': last_update or datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
     }
@@ -21,10 +21,10 @@ def calculate_customer_data(data, create_date=None, last_update=None):
     data['Create_Date'] = pd.to_datetime(data['Create_Date'], format='%d/%m/%Y')
 
     return {
-        'Customer Records': data.count(),
+        'Customer Records': len(data.index),
         'First Customer Join Date': data['Create_Date'].min().strftime('%Y-%m-%d'),
         'Latest Customer Join Date': data['Create_Date'].max().strftime('%Y-%m-%d'),
-        'Involved Countries': data.groupby(['Country']).count(),
+        'Involved Countries': len(data.groupby(['Country']).count().index),
         'Customer Age Range': str(data['Age'].min()) + ' - ' + str(data['Age'].max()),
         'Create Date': create_date or datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'Last Update': last_update or datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
@@ -41,7 +41,8 @@ def calculate_conversion_data(data, create_date=None, last_update=None):
     completed_rate = format(float(test['Conversion_ID']) / float(conversion_record), '.2f')
 
     return {
-        'Involved User': grouped['Campaign_ID'].count(),
+        'Involved Campaigns': len(data.groupby(['Campaign_ID']).count().index),
+        'Involved Users': grouped['Campaign_ID'].count(),
         'Conversion Records': conversion_record,
         'Completed Rate': completed_rate,
         'First Record Start Date': data['Start_Date'].min().strftime('%Y-%m-%d'),
@@ -141,10 +142,11 @@ def get_single_data_summary(data, data_type, create_date=None, last_update=None)
         'customer': calculate_customer_data,
         'conversion': calculate_conversion_data,
         'offlineEvent': calculate_offline_event_data,
-        'googleAnalytics': calculate_my_facebook_data,
+        'googleAnalytics': calculate_ga_data,
         'serviceLogs': calculate_service_logs_data,
         'subscription': calculate_subscription_data,
         'peopleCounterData': calculate_people_counter_data,
+        'myFacebook': calculate_my_facebook_data,
         # 'openDataWeather':
         # 'openDataHolidays':
         # 'openDataHumanTraffic':

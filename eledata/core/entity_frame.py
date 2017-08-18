@@ -17,7 +17,16 @@ class EntityFrame(object):
     def frame_from_file(cls, entity, entity_type):
         # TODO: verify if entity type is missing
         # TODO: verify if data header has been set properly
-        cls.data_frame.update({entity_type: pd.DataFrame(entity)})
+        df = pd.DataFrame(entity)
+
+        data_header = [{"source": x} for x in df.keys()]
+
+        cls.data_frame.update({
+            entity_type: {
+                "data": df,
+                "data_header": data_header,
+            }
+        })
         return cls
 
     @classmethod
