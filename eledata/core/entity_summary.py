@@ -53,15 +53,15 @@ def calculate_conversion_data(data, create_date=None, last_update=None):
 
 
 def calculate_offline_event_data(data, create_date=None, last_update=None):
-    data['Start Date'] = pd.to_datetime(data['Start Date'], format='%d/%m/%Y')
-    data['End Date'] = pd.to_datetime(data['End Date'], format='%d/%m/%Y')
-    data['Event Period'] = data['End Date'].sub(data['Start Date'], axis=0)
+    data['Start_Date'] = pd.to_datetime(data['Start_Date'], format='%d/%m/%Y')
+    data['End_Date'] = pd.to_datetime(data['End_Date'], format='%d/%m/%Y')
+    data['Event_Period'] = data['End_Date'].sub(data['Start_Date'], axis=0)
 
     return [
-        {'key': 'Event Record Count', 'value': data['No.'].count()},
-        {'key': 'First Event Start Date', 'value': data['Start Date'].min().strftime('%Y-%m-%d')},
-        {'key': 'Last Event End Date', 'value': data['End Date'].max().strftime('%Y-%m-%d')},
-        {'key': 'Average Event Period', 'value': str(data['Event Period'].mean().days) + ' Days'},
+        {'key': 'Event Record Count', 'value': data['Event_ID'].count()},
+        {'key': 'First Event Start Date', 'value': data['Start_Date'].min().strftime('%Y-%m-%d')},
+        {'key': 'Last Event End Date', 'value': data['End_Date'].max().strftime('%Y-%m-%d')},
+        {'key': 'Average Event Period', 'value': str(data['Event_Period'].mean().days) + ' Days'},
         {'key': 'Create Date', 'value': create_date or datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')},
         {'key': 'Last Update', 'value': last_update or datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')},
     ]
@@ -89,16 +89,16 @@ def calculate_people_counter_data(data, create_date=None, last_update=None):
     data['Date'] = data['Timestamp'].dt.date
 
     grouped = data.groupby(['Date']).sum()
-    average_visitor_counter_day = grouped['PeopleInflow'].mean()
+    average_visitor_counter_day = grouped['Number_People_In'].mean()
 
     return [
-        {'key': 'Total Head Count', 'value': data['PeopleInflow'].sum()},
+        {'key': 'Total Head Count', 'value': data['Number_People_In'].sum()},
         {'key': 'First Record Start Date', 'value': data['Date'].min().strftime('%Y-%m-%d')},
         {'key': 'Last Record End Date', 'value': data['Date'].max().strftime('%Y-%m-%d')},
         {'key': 'Average Visitor Count per Day', 'value': format(average_visitor_counter_day, '.1f')},
-        {'key': 'Maximum Visitor Count by Day', 'value': grouped['PeopleInflow'].max()},
+        {'key': 'Maximum Visitor Count by Day', 'value': grouped['Number_People_In'].max()},
         {'key': 'Maximum Visitor Day',
-         'value': grouped.sort_values('PeopleInflow', ascending=0).index[0].strftime('%Y-%m-%d')},
+         'value': grouped.sort_values('Number_People_In', ascending=0).index[0].strftime('%Y-%m-%d')},
         {'key': 'Create Date', 'value': create_date or datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')},
         {'key': 'Last Update', 'value': last_update or datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')},
     ]

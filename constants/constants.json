@@ -64,8 +64,7 @@
                 "Event_ID",
                 "Event Type",
                 "Start_Date",
-                "End_Date",
-                "Event Cost"
+                "End_Date"
             ],
             "googleAnalytics": [
                 "User_City",
