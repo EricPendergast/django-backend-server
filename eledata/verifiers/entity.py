@@ -17,7 +17,7 @@ class CreateEntityVerifier(Verifier):
         pass
 
     def stage2(self, entity_dict):
-        options = {"type": settings.CONSTANTS['entity']['type'],
+        options = {"type": [x['value'] for x in settings.CONSTANTS['entity']['type']],
                    "source_type": settings.CONSTANTS['entity']['source_type'],
                    "state": {1}}
 

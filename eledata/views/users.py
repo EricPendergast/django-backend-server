@@ -50,7 +50,7 @@ class UserActions(CustomLoginRequiredMixin, viewsets.ViewSet):
         
         request.user.set_password(request.data['new_password'])
         
-        return Response({"message":"Password changed"}, status=200)
+        return Response({"message": "Password changed"}, status=200)
     
     
     @list_route(methods=['post'])
@@ -110,4 +110,4 @@ class UserLogin(viewsets.ViewSet):
             return Response({"username": user.username, "message": "Login successful"})
 
         else:
-            return Response({"error": "Login failed"}, status=403)
+            return Response({"error": "Incorrect username or password."}, status=403)

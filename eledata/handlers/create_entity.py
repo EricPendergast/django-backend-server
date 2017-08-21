@@ -12,6 +12,18 @@ from project import settings
 
 class EntityViewSetHandler():
     @staticmethod
+    def get_entity_list(entity_list):
+
+        # retrieving list of active entity
+        active_list = [x.type for x in entity_list]
+
+        # retrieving list of constant entity
+        constant_list = settings.CONSTANTS['entity']['type']
+        for x in constant_list:
+            x[u'status'] = u'Ready' if x['value'] in active_list else u'Pending'
+        return constant_list
+
+    @staticmethod
     def create_entity(request_data, request_file, group, verifier):
         verifier.verify(1, request_data)
         # The dir that the uploaded data file will be saved to.
