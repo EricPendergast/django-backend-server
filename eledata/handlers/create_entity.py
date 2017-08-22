@@ -14,10 +14,11 @@ class EntityViewSetHandler():
     @staticmethod
     def get_entity_list(entity_list):
 
-        # retrieving list of active entity
-        active_list = [x.type for x in entity_list]
+        # retrieving list of active entity'
+        active_list = [x.type for x in entity_list if x.is_completed]
 
         # retrieving list of constant entity
+        # TODO: move status to constant/ utils, add the intermediate status
         constant_list = settings.CONSTANTS['entity']['type']
         for x in constant_list:
             x[u'status'] = u'Ready' if x['value'] in active_list else u'Pending'
@@ -102,6 +103,9 @@ class EntityViewSetHandler():
 
         # Generating Entity Summary after mapping is confirmed.
         entity_frame = EntityFrame.frame_from_file(entity_data=data, entity_type=entity.type)
+        # TODO: Generate Data_Chart_Summary by EntityFrame class
+        # TODO: Update group analysis status to see if questions are allowed
+
         dummy['data_summary'] = entity_frame.get_summary()
 
         dummySerializer = EntityDetailedSerializer(data=dummy)
@@ -121,4 +125,5 @@ class EntityViewSetHandler():
         entity.state = 2
         entity.save()
         entity.save_data_changes()
+        group.update_analysis_question_enable()
         return data[:100]

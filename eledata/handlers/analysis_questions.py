@@ -11,6 +11,7 @@ def get_analysis_questions_settings(settings):
         entry = AnalysisQuestionSerializer(question).data
 
         del entry['parameter_labels']
+        del entry['required_entities']
 
         ret_data["analysis_questions"] += [entry, ]
 

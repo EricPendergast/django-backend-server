@@ -25,13 +25,15 @@ class AnalysisQuestionTestCase(TestCase):
 
     analysis_questions_init = [
         {"content": "Which customers will likely be leaving in the coming time?", "label": "leaving",
-         "icon": "maps/directionsRun", "type": "predictive", "orientation": "customer", "parameter_labels": []},
+         "icon": "maps/directionsRun", "type": "predictive", "orientation": "customer", "parameter_labels": [],
+         "required_entities": ["transaction", "customer"]},
         {"content": "Which products will be the most popular in the future?", "label": "popularity",
          "icon": "action/trendingUp", "type": "predictive", "orientation": "product",
-         "parameter_labels": [analysis_params_init[0]['label']]},
+         "parameter_labels": [analysis_params_init[0]['label']], "required_entities": ["transaction"]},
         {"content": "What has caused the most customers to leave?", "label": "cause of leave",
          "icon": "maps/directionsRun", "type": "descriptive", "orientation": "hiddenInsight",
-         "parameter_labels": [a['label'] for a in analysis_params_init]}, ]
+         "parameter_labels": [a['label'] for a in analysis_params_init],
+         "required_entities": ["transaction", "customer"]}, ]
 
     analysis_questions_init_objs = [AnalysisQuestion(**item) for item in analysis_questions_init]
 
@@ -45,7 +47,6 @@ class AnalysisQuestionTestCase(TestCase):
         ret_data = from_json(response.content)
 
         self.assertEqual(response.status_code, 200)
-
         for item in ret_data:
             self.assertIn(item, self.analysis_questions_init)
 
@@ -71,7 +72,6 @@ class AnalysisQuestionTestCase(TestCase):
                                          u'floating_label': u'Income', u'choice_input': None}]))
 
         del data['analysis_params']
-
         self.assertEquals(data, {
             u'analysis_questions': [
                 {u'orientation': u'hiddenInsight', u'selected': True, u'enabled': True, u'label': u'cause of leave',

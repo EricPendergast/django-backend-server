@@ -79,26 +79,6 @@ class EntityTestCase(TestCase):
         for key in dataComp:
             self.assertEquals(data[key], dataComp[key])
 
-    '''
-    Sending a get request to get_entity_list and testing that it sends back all
-    entity list with status
-    '''
-
-    def test_get_entity_list(self):
-        Entity.objects.delete()
-        c = self.client
-        response = c.get('/entity/get_entity_list/')
-
-        self.assertEquals(response.status_code, 200)
-        self.assertEquals(from_json(response.content),
-                          [{str(a): str(b) for a, b in x.items()} for x in settings.CONSTANTS['entity']['type']])
-
-        self._create_entity_init(c, 'misc/test_files/entity_data_1.csv')
-        response = c.get('/entity/get_entity_list/')
-
-        self.assertEquals(response.status_code, 200)
-        self.assertEquals((from_json(response.content)[0][u'status']), 'Ready')
-
     def test_get_all_entity_multiple_groups(self):
         Entity.objects.delete()
         c = self.client
@@ -126,31 +106,6 @@ class EntityTestCase(TestCase):
         self.assertEquals(response.status_code, 200)
         self.assertEquals(len(Entity.objects.filter(pk=id)), 1)
 
-    # Pretty sure this test does the exact same thing as the
-    # test_create_entity_second_stage_csv test
-    # def test_create_entity_second_stage(self):
-    #     c = self.client
-    #
-    #     Entity.objects.delete()
-    #     response = self._create_entity_init(c, 'misc/test_files/entity_data_1.csv')
-    #
-    #     id = Entity.objects.first().id
-    #     c.post('/entity/%s/create_entity_mapped/' % id,
-    #             data=self.entityDataHeaderJSON1, content_type="application/json",
-    #             HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-    #
-    #     entity = Entity.objects.first()
-    #
-    #     self.assertEquals(entity.data[0], {u'User_ID': u'751-23-2405',
-    #         u'Transaction_Date': datetime.datetime(2017, 1, 9, 0, 0),
-    #         u'Transaction_Quantity': 8.0, u'Transaction_ID': u'228-08-3254',
-    #         u'Transaction_Value': 86.17})
-    #
-    #     self.assertEquals(entity.data[-1], {u'User_ID': u'988-90-7620',
-    #         u'Transaction_Date': datetime.datetime(2017, 4, 25, 0, 0),
-    #         u'Transaction_Quantity': 14.0, u'Transaction_ID': u'293-64-2300',
-    #         u'Transaction_Value': 320.89})
-
 
     '''
     Testing that sending a second stage entity creation post request (to
@@ -176,6 +131,32 @@ class EntityTestCase(TestCase):
                        u'Transaction_Date': datetime.datetime(2017, 4, 25, 0, 0),
                        u'Transaction_Quantity': 14.0, u'Transaction_ID': u'293-64-2300',
                        u'Transaction_Value': 320.89}, entity.data)
+
+    '''
+    Sending a get request to get_entity_list and testing that it sends back all
+    entity list with status
+    '''
+
+    def test_get_entity_list(self):
+        Entity.objects.delete()
+        c = self.client
+        response = c.get('/entity/get_entity_list/')
+
+        self.assertEquals(response.status_code, 200)
+        self.assertEquals(from_json(response.content),
+                          [{str(a): str(b) for a, b in x.items()} for x in settings.CONSTANTS['entity']['type']])
+
+        self._create_entity_init(c, 'misc/test_files/entity_data_1.csv')
+        response = c.get('/entity/get_entity_list/')
+
+        self.assertEquals(response.status_code, 200)
+        self.assertEquals((from_json(response.content)[0][u'status']), 'Pending')
+
+        self._create_mapped_entity(c, self.entityDataHeaderJSON1, 'misc/test_files/entity_data_1.csv')
+        response = c.get('/entity/get_entity_list/')
+
+        self.assertEquals(response.status_code, 200)
+        self.assertEquals((from_json(response.content)[0][u'status']), 'Ready')
 
     '''
     The same as 'test_create_entity_second_stage_csv' (above), except using a

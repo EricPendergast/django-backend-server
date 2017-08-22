@@ -394,3 +394,8 @@ class Entity(Document):
             assert item in dummy.data
         for item in dummy.data:
             assert item in self.data
+
+    @property
+    def is_completed(self):
+        # bit dirty to check if entity object is completed stage2
+        return self.data_header is not None and self.data_header is not [] and len(self.data_header) > 0

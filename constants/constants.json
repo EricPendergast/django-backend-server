@@ -225,7 +225,11 @@
         "orientation": "customer",
         "selected": false,
         "type": "predictive",
-        "parameter_labels": []
+        "parameter_labels": [],
+        "required_entities": [
+          "transaction",
+          "customer"
+        ]
       },
       {
         "content": "Which products will be the most popular in the future?",
@@ -237,6 +241,9 @@
         "type": "predictive",
         "parameter_labels": [
           "clv"
+        ],
+        "required_entities": [
+          "transaction"
         ]
       },
       {
@@ -250,6 +257,10 @@
         "parameter_labels": [
           "clv",
           "income"
+        ],
+        "required_entities": [
+          "transaction",
+          "customer"
         ]
       }
     ]
