@@ -74,11 +74,12 @@
     ],
     "header_id_field": {
       "transaction": "Transaction_ID",
+      "customer": "User_ID",
       "conversion": "Conversion_ID"
     },
     "header_option": {
       "transaction": [
-        "ID",
+        "Transaction_ID",
         "User_ID",
         "Transaction_Date",
         "Transaction_Quantity",
@@ -90,7 +91,7 @@
         "Chain"
       ],
       "customer": [
-        "ID",
+        "User_ID",
         "Contact_Number",
         "Contact_Email",
         "Last_Name",
