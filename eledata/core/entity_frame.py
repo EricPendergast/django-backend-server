@@ -1,6 +1,7 @@
 import pandas as pd
 from eledata.models.entity import *
 import entity_summary
+import entity_chart_summary
 
 
 # TODO: To be renamed most likely
@@ -45,6 +46,17 @@ class EntityFrame(object):
         key = cls.data_frame.keys()[0] if len(cls.data_frame.keys()) == 1 else entity_type
 
         return entity_summary.get_single_data_summary(
+            data=cls.data_frame[key]['data'],
+            data_type=key,
+        )
+
+    @classmethod
+    def get_summary_chart(cls, entity_type=None):
+        # if data_frame has more than 1 item, use entity_type to help
+
+        key = cls.data_frame.keys()[0] if len(cls.data_frame.keys()) == 1 else entity_type
+
+        return entity_chart_summary.get_single_data_summary_chart(
             data=cls.data_frame[key]['data'],
             data_type=key,
         )

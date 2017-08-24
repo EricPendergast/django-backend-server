@@ -70,6 +70,7 @@ class EntityTestCase(TestCase):
         data = from_json(response.content)[0]
         dataComp = from_json(self.entityJSON1)
         # don't compare their id's
+
         del data["id"]
         del dataComp["id"]
 

@@ -101,12 +101,11 @@ class EntityViewSetHandler():
                 item[mapping["mapped"]] = \
                     string_caster[mapping["data_type"]](item[mapping["mapped"]])
 
-        # Generating Entity Summary after mapping is confirmed.
+        # Generating Entity Summary and Chart Summary after mapping is confirmed.
         entity_frame = EntityFrame.frame_from_file(entity_data=data, entity_type=entity.type)
-        # TODO: Generate Data_Chart_Summary by EntityFrame class
-        # TODO: Update group analysis status to see if questions are allowed
 
         dummy['data_summary'] = entity_frame.get_summary()
+        dummy['data_summary_chart'] = entity_frame.get_summary_chart()
 
         dummySerializer = EntityDetailedSerializer(data=dummy)
 
@@ -119,6 +118,7 @@ class EntityViewSetHandler():
         entity.add_change(data)
         entity.data_header = dummy.data_header
         entity.data_summary = dummy.data_summary
+        entity.data_summary_chart = dummy.data_summary_chart
 
         os.remove(entity.source.file.filename)
         entity.source.file = None

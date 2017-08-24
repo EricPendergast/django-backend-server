@@ -165,7 +165,7 @@ class Entity(Document):
     source_type = StringField(max_length=15)
     source = EmbeddedDocumentField(DataSource)
     data_summary = EmbeddedDocumentListField(DataSummary)
-    data_summary_chart = EmbeddedDocumentListField(DataSummary)
+    data_summary_chart = DictField()
     # Maybe TODO: make this a dict field
     data_header = EmbeddedDocumentListField(DataHeader)
     allowed_user = ListField()

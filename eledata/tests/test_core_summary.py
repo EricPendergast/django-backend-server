@@ -4,6 +4,7 @@ from django.test import TestCase
 # from django.test import Client
 from project import settings
 from eledata.core.entity_summary import *
+from eledata.core.entity_chart_summary import *
 import pandas as pd
 
 
@@ -11,7 +12,7 @@ class CoreSummaryTestCase(TestCase):
     # TODO: test for service logs, facebook and ga
     core_test__dir = 'misc/test_files/core_test/'
     transaction_filename = core_test__dir + 'Transaction Entity.csv'
-    customer_filename = core_test__dir + 'Customer Entity.csv'
+    customer_filename = core_test__dir + 'Cutomers.csv'
     conversion_filename = core_test__dir + 'Conversion.csv'
     offline_event_filename = core_test__dir + 'Offline_Event_Entity.csv'
     subscription_filename = core_test__dir + 'Subscription Entity.csv'
@@ -38,10 +39,10 @@ class CoreSummaryTestCase(TestCase):
         response = calculate_customer_data(data)
         self.assertEquals(len(response), 7)
         self.assertEquals(filter(lambda x: x['key'] == 'Customer Records', response)[0]['value'], 30000)
-        self.assertEquals(filter(lambda x: x['key'] == 'Involved Countries', response)[0]['value'], 150)
-        self.assertEquals(filter(lambda x: x['key'] == 'First Customer Join Date', response)[0]['value'], '2017-01-13')
-        self.assertEquals(filter(lambda x: x['key'] == 'Latest Customer Join Date', response)[0]['value'], '2017-06-19')
-        self.assertEquals(filter(lambda x: x['key'] == 'Customer Age Range', response)[0]['value'], '18 - 80')
+        self.assertEquals(filter(lambda x: x['key'] == 'Involved Countries', response)[0]['value'], 30000)
+        self.assertEquals(filter(lambda x: x['key'] == 'First Customer Join Date', response)[0]['value'], '2016-12-01')
+        self.assertEquals(filter(lambda x: x['key'] == 'Latest Customer Join Date', response)[0]['value'], '2017-02-28')
+        self.assertEquals(filter(lambda x: x['key'] == 'Customer Age Range', response)[0]['value'], '18 - 70')
 
     def test_full_calculate_conversion_data(self):
         header = settings.CONSTANTS['entity']['header_option']['conversion']
@@ -90,3 +91,21 @@ class CoreSummaryTestCase(TestCase):
                           '47321.3')
         self.assertEquals(filter(lambda x: x['key'] == 'Maximum Visitor Count by Day', response)[0]['value'], 52637)
         self.assertEquals(filter(lambda x: x['key'] == 'Maximum Visitor Day', response)[0]['value'], '2017-02-10')
+
+    def test_full_calculate_transaction_chart_data(self):
+        header = settings.CONSTANTS['entity']['header_option']['transaction']
+        data = pd.read_csv(self.transaction_filename,
+                           names=header)
+        response = calculate_transaction_chart_data(data)
+
+        self.assertEquals(response.keys(), ['labels', 'datasets'])
+        self.assertEquals([len(x) for x in response.values()], [20, 20])
+
+    def test_full_calculate_customer_chart_data(self):
+        header = settings.CONSTANTS['entity']['header_option']['customer']
+        data = pd.read_csv(self.customer_filename,
+                           names=header)
+        response = calculate_customer_chart_data(data)
+
+        self.assertEquals(response.keys(), ['labels', 'datasets'])
+        self.assertEquals([len(x) for x in response.values()], [20, 20])
