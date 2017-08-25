@@ -2,18 +2,20 @@ from __future__ import unicode_literals
 
 from django.test import TestCase
 # from django.test import Client
-from project import settings
 from eledata.core.entity_summary import *
 from eledata.core.entity_chart_summary import *
 import pandas as pd
+from project import settings
 
 
 class CoreSummaryTestCase(TestCase):
     # TODO: test for service logs, facebook and ga
     core_test__dir = 'misc/test_files/core_test/'
     transaction_filename = core_test__dir + 'Transaction Entity.csv'
-    customer_filename = core_test__dir + 'Cutomers.csv'
+    big_transaction_filename = core_test__dir + 'big_transaction.csv'
+    customer_filename = core_test__dir + 'Customers.csv'
     conversion_filename = core_test__dir + 'Conversion.csv'
+    ga_filename = core_test__dir + 'GA Entity.csv'
     offline_event_filename = core_test__dir + 'Offline_Event_Entity.csv'
     subscription_filename = core_test__dir + 'Subscription Entity.csv'
     people_counter_filename = core_test__dir + 'People Counter Data.csv'
@@ -31,6 +33,12 @@ class CoreSummaryTestCase(TestCase):
         self.assertEquals(filter(lambda x: x['key'] == 'Last Transaction End Date', response)[0]['value'], '2017-06-18')
         self.assertEquals(filter(lambda x: x['key'] == 'Average Transaction Value', response)[0]['value'], '999.42')
         self.assertEquals(filter(lambda x: x['key'] == 'Average Transaction Quantity', response)[0]['value'], '1.5')
+
+    def test_full_calculate_large_transaction_data(self):
+        header = [u'User_ID', u'Transaction_Date', u'Transaction_Quantity', u'Transaction_Value']
+        data = pd.read_csv(self.big_transaction_filename, names=header)
+        response = calculate_transaction_data(data)
+        self.assertEquals(len(response), 8)
 
     def test_full_calculate_customer_data(self):
         header = settings.CONSTANTS['entity']['header_option']['customer']
@@ -109,3 +117,20 @@ class CoreSummaryTestCase(TestCase):
 
         self.assertEquals(response.keys(), ['labels', 'datasets'])
         self.assertEquals([len(x) for x in response.values()], [20, 20])
+
+    def test_full_calculate_conversion_chart_data(self):
+        header = settings.CONSTANTS['entity']['header_option']['conversion']
+        data = pd.read_csv(self.conversion_filename,
+                           names=header)
+        response = calculate_conversion_chart_data(data)
+
+        self.assertEquals(response.keys(), ['labels', 'datasets'])
+        self.assertEquals([len(x) for x in response.values()], [13, 13])
+
+    def test_full_calculate_ga_chart_data(self):
+        header = settings.CONSTANTS['entity']['header_option']['googleAnalytics']
+        data = pd.read_csv(self.ga_filename, names=header)
+        response = calculate_ga_chart_data(data)
+
+        self.assertEquals(response.keys(), ['labels', 'datasets'])
+        self.assertEquals([len(x) for x in response.values()], [5, 2])

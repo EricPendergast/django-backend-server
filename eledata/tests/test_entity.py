@@ -17,7 +17,7 @@ import time
 # Create your tests here.
 
 class EntityTestCase(TestCase):
-    entityJSON1 = '''{ "id": "59560d779a4c0e4abaa1b6a8", "type": "transaction", "source_type": "local", "allowed_user": [], "created_at": "2017-06-28T14:08:10.276000", "updated_at": "2017-06-28T14:08:10.276000"}'''
+    entityJSON1 = '''{ "id": "59560d779a4c0e4abaa1b6a8", "type": "transaction", "source_type": "local", "created_at": "2017-06-28T14:08:10.276000", "updated_at": "2017-06-28T14:08:10.276000"}'''
 
     entityDataHeaderJSON1 = '''{"data_header":[{"source":"transaction_quantity","mapped":"Transaction_Quantity","data_type":"number"},{"source":"transaction_date","mapped":"Transaction_Date","data_type":"date"},{"source":"transaction_id","mapped":"Transaction_ID","data_type":"string"},{"source":"user_id","mapped":"User_ID","data_type":"string"},{"source":"transaction_value","mapped":"Transaction_Value","data_type":"number"}]}'''
     entityDataHeaderNoFileHeader = '''{"data_header":[{"source":"column 1", "mapped":"Transaction_Quantity", "data_type":"number"}, {"source":"column 2", "mapped":"Transaction_Date", "data_type":"date"}, {"source":"column 3", "mapped":"Transaction_ID", "data_type":"string"}, {"source":"column 4", "mapped":"User_ID", "data_type":"string"}, {"source":"column 5", "mapped":"Transaction_Value", "data_type":"number"}]}'''
@@ -36,11 +36,11 @@ class EntityTestCase(TestCase):
         assert len(Group.objects) == 0
         assert len(User.objects) == 0
 
-        admin = User.create_admin(username="admin", password="pass", group_name="dummy_group")
-        admin2 = User.create_admin(username="admin2", password="pass", group_name="different_dummy_group")
+        User.create_admin(username="admin", password="pass", group_name="dummy_group")
+        User.create_admin(username="admin2", password="pass", group_name="different_dummy_group")
 
         self.client = Client()
-        response = self.client.post("/users/login/", {"username": "admin", "password": "pass"})
+        self.client.post("/users/login/", {"username": "admin", "password": "pass"})
         self.client.post("/users/create_user/", {"username": "dummy", "password": "asdf"})
         self.client.post("/users/create_user/", {"username": "dummy3", "password": "asdf"})
 
@@ -107,7 +107,6 @@ class EntityTestCase(TestCase):
         self.assertEquals(response.status_code, 200)
         self.assertEquals(len(Entity.objects.filter(pk=id)), 1)
 
-
     '''
     Testing that sending a second stage entity creation post request (to
     entity/create_entity_mapped) creates and puts an entity with the csv data
@@ -117,7 +116,8 @@ class EntityTestCase(TestCase):
     def test_create_entity_second_stage_csv(self):
         c = self.client
 
-        # entity = self._create_mapped_entity(c, self.entityDataHeaderJSON1, 'misc/test_files/entity_data_1.csv')['entity']
+        # entity = self._create_mapped_entity(c, self.entityDataHeaderJSON1, 'misc/test_files/entity_data_1.csv')[
+        #     'entity']
         info = self._create_mapped_entity(c, self.entityDataHeaderJSON1, 'misc/test_files/entity_data_1.csv')
 
         entity = info['entity']

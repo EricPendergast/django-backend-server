@@ -125,7 +125,8 @@
         "Source",
         "Last_Seen_Sessions",
         "Mobile_Device_Branding",
-        "Browser"
+        "Browser",
+        "Date"
       ],
       "serviceLogs": [
         "Transaction_ID",

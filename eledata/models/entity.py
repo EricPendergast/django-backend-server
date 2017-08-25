@@ -10,6 +10,7 @@ import sys
 import eledata.util
 import copy
 
+
 # Create your models here.
 
 # example entity document
@@ -25,9 +26,11 @@ class DataSummary(EmbeddedDocument):
     key = StringField()
     value = StringField()
 
+
 class File(EmbeddedDocument):
     filename = StringField()
     is_header_included = BooleanField()
+
 
 class DataSource(EmbeddedDocument):
     file = EmbeddedDocumentField(File)
@@ -54,6 +57,7 @@ class DataSource(EmbeddedDocument):
         self.save()
         return self
 
+
 class Change(Document):
     # The final state of all changed or added rows
     new_rows = ListField()
@@ -76,10 +80,10 @@ class Change(Document):
         # 2. Add new_rows to data
 
         removed_rows = self._add_remove_rows(
-                add=self.new_rows,
-                remove=self.old_rows,
-                entity=entity,
-                return_replaced_rows=not self.enacted)
+            add=self.new_rows,
+            remove=self.old_rows,
+            entity=entity,
+            return_replaced_rows=not self.enacted)
 
         if not self.enacted:
             # Note the use of extend() and not +=. This is because of a (most
@@ -90,7 +94,6 @@ class Change(Document):
             self.enacted = True
             self.save()
 
-
     def revert(self, entity):
         '''
         Undos this change on the given entity.
@@ -99,10 +102,9 @@ class Change(Document):
         # 1. Remove new_rows from data
         # 2. Add old_rows to data
         self._add_remove_rows(
-                add=self.old_rows,
-                remove=self.new_rows,
-                entity=entity)
-
+            add=self.old_rows,
+            remove=self.new_rows,
+            entity=entity)
 
     def _add_remove_rows(self, add, remove, entity, return_replaced_rows=False):
         '''
@@ -130,17 +132,16 @@ class Change(Document):
         for row in add:
             row_id = row[id_field]
             if return_replaced_rows and row_id in data_dict:
-                replaced_rows += [data_dict[row_id],]
+                replaced_rows += [data_dict[row_id], ]
             data_dict[row_id] = row
 
         entity.data = list(data_dict.values())
 
         return replaced_rows
 
-
     def __str__(self):
-        return "(new_rows: " + str(self.new_rows) + ", old_rows: " + (str(self.old_rows) if self.enacted else "Not generated") + ")"
-
+        return "(new_rows: " + str(self.new_rows) + ", old_rows: " + (
+        str(self.old_rows) if self.enacted else "Not generated") + ")"
 
 
 class Entity(Document):
@@ -168,7 +169,6 @@ class Entity(Document):
     data_summary_chart = DictField()
     # Maybe TODO: make this a dict field
     data_header = EmbeddedDocumentListField(DataHeader)
-    allowed_user = ListField()
     created_at = DateTimeField(default=datetime.datetime.now)
     updated_at = DateTimeField(default=datetime.datetime.now)
     group = ReferenceField(Group)
@@ -191,7 +191,6 @@ class Entity(Document):
         self.time_last_changes_sync = 0
         self.on_changes_sync()
         return super(Entity, self).__init__(*args, **kwargs)
-
 
     # Here is an explanation of the control flow of adding changes to and rolling
     # back 'data':
@@ -226,7 +225,6 @@ class Entity(Document):
         '''
         self.time_last_changes_sync = eledata.util.get_time()
 
-
     def revert_changes(self, num_changes=float('inf')):
         '''
         Applies changes 'num_changes' times, stopping once no more changes can
@@ -234,7 +232,6 @@ class Entity(Document):
         '''
         while num_changes > 0 and self.revert_one():
             num_changes -= 1
-
 
     def revert_one(self):
         '''
@@ -249,7 +246,6 @@ class Entity(Document):
 
         return True
 
-
     def apply_changes(self, num_changes=float('inf')):
         '''
         Applies changes 'num_changes' times, stopping once no more changes can be
@@ -258,20 +254,18 @@ class Entity(Document):
         while num_changes > 0 and self.apply_one():
             num_changes -= 1
 
-
     def apply_one(self):
         '''
         Returns False if there are no more changes to be applied, otherwise,
         applies one change and returns true
         '''
-        if self.change_index+1 >= len(self.changes):
+        if self.change_index + 1 >= len(self.changes):
             return False
 
         self.change_index += 1
         self.changes[self.change_index].enact(self)
 
         return True
-
 
     def reload(self, *fields, **kwargs):
         '''
@@ -284,7 +278,6 @@ class Entity(Document):
             self.on_changes_sync()
 
         return super(Entity, self).reload(*fields, **kwargs)
-
 
     def add_change(self, data, replace=False):
         '''
@@ -301,8 +294,8 @@ class Entity(Document):
         change.remove_all = replace
         change.save()
 
-        if self.change_index < len(self.changes)-1:
-            self.changes = self.changes[:self.change_index+1] + [change,]
+        if self.change_index < len(self.changes) - 1:
+            self.changes = self.changes[:self.change_index + 1] + [change, ]
 
             # Must save everything (as opposed to just self.changes) to ensure
             # that self.changes, self.change_index, and self.data are all in
@@ -310,7 +303,8 @@ class Entity(Document):
             # method, self.change_index could point to an index outside the
             # range of self.changes, which violates an invariant of this class.
             # See EntityRollbackTestCase.test_concurrency_1()
-            Entity.objects(pk=self.pk).update(changes=self.changes, data=self.data, change_index=self.change_index, time_last_revert_overwrite=eledata.util.get_time())
+            Entity.objects(pk=self.pk).update(changes=self.changes, data=self.data, change_index=self.change_index,
+                                              time_last_revert_overwrite=eledata.util.get_time())
         else:
             # Must push to database to ensure no changes made by other users
             # are overwritten.
@@ -323,8 +317,8 @@ class Entity(Document):
 
         self._check_invariants_fast()
 
+    do_not_save = ['changes', 'change_index', 'data']
 
-    do_not_save = ['changes','change_index', 'data']
     def save(self, *args, **kwargs):
         '''
         Since 'changes', 'change_index', and 'data' must be in sync according
@@ -346,7 +340,6 @@ class Entity(Document):
 
         super(Entity, self).save(*args, **kwargs)
 
-
     def save_data_changes(self):
         '''
         Saves the data and change_index of this entity, failing if the database
@@ -355,14 +348,13 @@ class Entity(Document):
         # db_entity will only exist if the time of the last db sync is more recent
         # than the time of the last revert.
         db_entity = Entity.objects(
-                pk=self.pk,
-                time_last_revert_overwrite__lt=self.time_last_changes_sync)
+            pk=self.pk,
+            time_last_revert_overwrite__lt=self.time_last_changes_sync)
         # If 'db_entity' doesn't exist, this line  won't update anything, and
         # 'ret' will contain an error code.
         ret = db_entity.update(change_index=self.change_index, data=self.data)
 
         return ret != 0
-
 
     def _check_invariants_fast(self):
         '''
@@ -384,7 +376,7 @@ class Entity(Document):
         dummy = Entity()
         dummy.data = []
         dummy.type = self.type
-        for i in range(self.change_index+1):
+        for i in range(self.change_index + 1):
             assert self.changes[i].enacted
             # Copying because calling enact() on a Change object has side
             # effects

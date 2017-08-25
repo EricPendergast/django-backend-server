@@ -1,6 +1,6 @@
 import os.path
 import uuid
-
+import datetime
 from eledata import util
 from eledata.serializers.entity import EntityDetailedSerializer
 from eledata.models.entity import Entity
@@ -104,17 +104,17 @@ class EntityViewSetHandler():
         # Generating Entity Summary and Chart Summary after mapping is confirmed.
         entity_frame = EntityFrame.frame_from_file(entity_data=data, entity_type=entity.type)
 
+
+        # TODO: generate create entity audit
+        # TODO: use mongoengine aggrate to do data_summary
         dummy['data_summary'] = entity_frame.get_summary()
         dummy['data_summary_chart'] = entity_frame.get_summary_chart()
 
         dummySerializer = EntityDetailedSerializer(data=dummy)
-
         verifier.verify(3, dummySerializer)
-
         dummy = Entity(**dummySerializer.validated_data)
 
         # Adding the dummy's fields to the actual entity
-
         entity.add_change(data)
         entity.data_header = dummy.data_header
         entity.data_summary = dummy.data_summary
@@ -124,6 +124,7 @@ class EntityViewSetHandler():
         entity.source.file = None
         entity.state = 2
         entity.save()
+        # TODO: this is the pain point for h2o testing to be extremely slow
         entity.save_data_changes()
         group.update_analysis_question_enable()
         return data[:100]
