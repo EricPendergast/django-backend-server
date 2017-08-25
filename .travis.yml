@@ -11,7 +11,7 @@ install:
 
 
 before_script:
-  - mongo django_test --eval 'db.createUser({user:"admin",pwd:"password",roles:["userAdminAnyDatabase", "admin"]});'
+  - mongo django_test --eval 'db.createUser({user:"admin",pwd:"password",roles:["readWrite"]});'
 
 # command to run tests
 script:
