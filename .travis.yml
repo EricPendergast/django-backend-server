@@ -2,17 +2,33 @@ language: python
 python:
   - 2.7
 
+env:
+  matrix:
+    - MONGODB=3.4.3
+    - MONGODB=3.5.5
+
+matrix:
+  fast_finish: true
+
 services:
   - mongodb
 
 # command to install dependencies
 install:
   - pip install -r requirements.txt
+  - wget http://fastdl.mongodb.org/linux/mongodb-linux-x86_64-${MONGODB}.tgz
+  - tar xzf mongodb-linux-x86_64-${MONGODB}.tgz
+  - ${PWD}/mongodb-linux-x86_64-${MONGODB}/bin/mongod --version
 
 
 before_script:
+  - mkdir ${PWD}/mongodb-linux-x86_64-${MONGODB}/data
+  - ${PWD}/mongodb-linux-x86_64-${MONGODB}/bin/mongod --dbpath ${PWD}/mongodb-linux-x86_64-${MONGODB}/data --logpath ${PWD}/mongodb-linux-x86_64-${MONGODB}/mongodb.log --fork
   - mongo django_test --eval 'db.createUser({user:"admin",pwd:"password",roles:["readWrite"]});'
 
 # command to run tests
 script:
   - python manage.py test
+
+after_script:
+  - pkill mongod

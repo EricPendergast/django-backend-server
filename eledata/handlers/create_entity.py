@@ -1,6 +1,5 @@
 import os.path
 import uuid
-import datetime
 from eledata import util
 from eledata.serializers.entity import EntityDetailedSerializer
 from eledata.models.entity import Entity
@@ -10,7 +9,10 @@ from eledata.core.entity_frame import EntityFrame
 from project import settings
 
 
-class EntityViewSetHandler():
+class EntityViewSetHandler(object):
+    def __init__(self):
+        pass
+
     @staticmethod
     def get_entity_list(entity_list):
 
@@ -59,14 +61,14 @@ class EntityViewSetHandler():
         entity.group = group
         entity.save()
 
-        response_data = {}
+        response_data = {
+            'entity_id': str(entity.id),
+            'data': entity_data,
+            'header_option': settings.CONSTANTS['entity']['header_option'][entity_dict["type"]]
+        }
         # Saving the serializer while also adding its id to the response
-        response_data['entity_id'] = str(entity.id)
         # Loading the first 100 lines of data from the request file
-        response_data['data'] = entity_data
         # Passing header option from constants file
-        response_data['header_option'] = \
-            settings.CONSTANTS['entity']['header_option'][entity_dict["type"]]
 
         return response_data
 
@@ -80,8 +82,7 @@ class EntityViewSetHandler():
         # We will create a dummy entity whose only purpose is to serialize the
         # two fields we give it, so we can add them to the actual entity. The
         # dummy starts as a dictionary and then becomes an Entity.
-        dummy = {}
-        dummy['data_header'] = request_data['data_header']
+        dummy = {'data_header': request_data['data_header']}
 
         assert os.path.isfile(entity.source.file.filename)
         data = util.file_to_list_of_dictionaries(
@@ -104,15 +105,14 @@ class EntityViewSetHandler():
         # Generating Entity Summary and Chart Summary after mapping is confirmed.
         entity_frame = EntityFrame(entity_data=data, entity_type=entity.type)
 
-
         # TODO: generate create entity audit
         # TODO: use mongoengine aggrate to do data_summary
         dummy['data_summary'] = entity_frame.get_summary()
         dummy['data_summary_chart'] = entity_frame.get_summary_chart()
 
-        dummySerializer = EntityDetailedSerializer(data=dummy)
-        verifier.verify(3, dummySerializer)
-        dummy = Entity(**dummySerializer.validated_data)
+        dummy_serializer = EntityDetailedSerializer(data=dummy)
+        verifier.verify(3, dummy_serializer)
+        dummy = Entity(**dummy_serializer.validated_data)
 
         # Adding the dummy's fields to the actual entity
         entity.add_change(data)
