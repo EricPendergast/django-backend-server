@@ -40,64 +40,70 @@ def calculate_conversion_chart_data(data):
         'datasets': data.groupby(['Campaign_Name'])['Campaign_Name'].count().tolist(),
         'labels': grouped.keys().tolist()
     }
-
+    del grouped
     return response
 
 
 def calculate_ga_chart_data(data):
-    data['Date'] = pd.to_datetime(data['Date'], format='%d/%m/%Y')
-    data['Date'] = pd.DatetimeIndex(data['Date']).year.astype(str).str.cat(
-        pd.DatetimeIndex(data['Date']).month.astype(str), sep='-')
-    data = data.groupby(['Date', 'User_Type'])['Date'].count()
-    data = data.unstack(level=-1)
-    data['Total visitor'] = data['New visitor'] + data['Returning  visitor']
-
+    data['Temp_Date'] = pd.to_datetime(data['Date'], format='%d/%m/%Y')
+    data['Temp_Date'] = pd.DatetimeIndex(data['Temp_Date']).year.astype(str).str.cat(
+        pd.DatetimeIndex(data['Temp_Date']).month.astype(str), sep='-')
+    gdata = data.groupby(['Temp_Date', 'User_Type'])['Temp_Date'].count()
+    tdata = gdata.unstack(level=-1)
+    tdata['Total visitor'] = tdata['New visitor'] + tdata['Returning  visitor']
     response = {
         'datasets': {
-            'returning_visitor': data['New visitor'].tolist(),
-            'total_visitor': data['Total visitor'].tolist()
+            'returning_visitor': tdata['New visitor'].tolist(),
+            'total_visitor': tdata['Total visitor'].tolist()
         },
-        'labels': data.index.get_level_values('Date').unique().tolist()
+        'labels': tdata.index.get_level_values('Temp_Date').unique().tolist()
     }
-
-    del data['Total visitor']
+    del data['Temp_Date']
+    del tdata, gdata
     return response
 
 
-# def calculate_offline_event_chart_data(data):
-#     number_of_group = 20 if len(data.index) >= 2000 else 10
-#     data['groups'] = pd.cut(data['Transaction_Value'], number_of_group)
-#     response = {
-#         'datasets': data.groupby(['groups'])['Transaction_Value'].count().cumsum().tolist(),
-#         'labels': [''] * number_of_group
-#     }
-#
-#     del data['groups']
-#     return response
-#
-#
-# def calculate_subscription_chart_data(data):
-#     number_of_group = 20 if len(data.index) >= 2000 else 10
-#     data['groups'] = pd.cut(data['Transaction_Value'], number_of_group)
-#     response = {
-#         'datasets': data.groupby(['groups'])['Transaction_Value'].count().cumsum().tolist(),
-#         'labels': [''] * number_of_group
-#     }
-#
-#     del data['groups']
-#     return response
-#
-#
-# def calculate_people_counter_chart_data(data):
-#     number_of_group = 20 if len(data.index) >= 2000 else 10
-#     data['groups'] = pd.cut(data['Transaction_Value'], number_of_group)
-#     response = {
-#         'datasets': data.groupby(['groups'])['Transaction_Value'].count().cumsum().tolist(),
-#         'labels': [''] * number_of_group
-#     }
-#
-#     del data['groups']
-#     return response
+# TODO: simple offline event chart like this for large data set may not work :o)
+def calculate_offline_event_chart_data(df):
+    return {
+        'datasets': {
+            'start_date': df['Start_Date'].tolist(),
+            'end_date': df['End_Date'].tolist(),
+        },
+        'labels': df['Event_Type'].tolist()
+    }
+
+
+def calculate_subscription_chart_data(df):
+    df['Temp_Timestamp'] = df['Timestamp'].apply(lambda x: x.split()[0])
+    df['Temp_Timestamp'] = pd.to_datetime(df['Temp_Timestamp'], format='%d/%m/%Y')
+    gdf = df.groupby(['Temp_Timestamp', 'Action'])['Subscription'].count()
+    tdf = gdf.unstack(level=-1)
+    del gdf
+    del df['Temp_Timestamp']
+    return {
+        'datasets': {
+            'subscribe_count': tdf['Subscribe'].tolist(),
+            'unsubscribe_count': tdf['Unsubscribe'].tolist(),
+        },
+        'labels': tdf.index.tolist()
+    }
+
+
+def calculate_people_counter_chart_data(df):
+    df['Temp_Timestamp'] = df['Timestamp'].apply(lambda x: x.split()[0])
+    df['Temp_Timestamp'] = pd.to_datetime(df['Temp_Timestamp'], format='%d/%m/%Y')
+    grouped = df.groupby(['Temp_Timestamp']).sum()
+    del df['Temp_Timestamp']
+    return {
+        'datasets': {
+            'datasets_inflow': grouped['Number_People_In'].tolist(),
+            'datasets_outflow': grouped['Number_People_Out'].tolist(),
+        },
+        'labels': grouped.index.tolist()
+    }
+
+
 #
 #
 # def calculate_service_logs_chart_data(data):
@@ -109,13 +115,17 @@ def calculate_ga_chart_data(data):
 #     }
 #
 #
-# def calculate_my_facebook_chart_data(data):
-#     number_of_group = 20 if len(data.index) >= 2000 else 10
-#     data['groups'] = pd.cut(data['Transaction_Value'], number_of_group)
-#     return {
-#         'datasets': data.groupby(['groups'])['Transaction_Value'].count().cumsum().tolist(),
-#         'labels': [''] * number_of_group
-#     }
+def calculate_my_facebook_chart_data(df):
+    df['Timestamp'] = df['Timestamp'].apply(lambda x: x.split()[0])
+    df['Timestamp'] = pd.to_datetime(df['Timestamp'], format='%d/%m/%Y')
+    df = df.groupby(['Timestamp']).max()
+    df = df.loc[df.index.is_month_end]
+    return {
+        'datasets_views': df['Views'].tolist(),
+        'datasets_likes': df['Likes'].tolist(),
+        'datasets_followers': df['Followers'].tolist(),
+        'labels': df.index.tolist()
+    }
 
 
 def get_single_data_summary_chart(data, data_type):

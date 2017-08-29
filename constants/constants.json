@@ -115,7 +115,7 @@
       ],
       "offlineEvent": [
         "Event_ID",
-        "Event Type",
+        "Event_Type",
         "Start_Date",
         "End_Date"
       ],

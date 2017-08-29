@@ -33,12 +33,14 @@ class CoreSummaryTestCase(TestCase):
         self.assertEquals(filter(lambda x: x['key'] == 'Last Transaction End Date', response)[0]['value'], '2017-06-18')
         self.assertEquals(filter(lambda x: x['key'] == 'Average Transaction Value', response)[0]['value'], '999.42')
         self.assertEquals(filter(lambda x: x['key'] == 'Average Transaction Quantity', response)[0]['value'], '1.5')
+        assert data.equals(pd.read_csv(self.transaction_filename, names=header))
 
     def test_full_calculate_large_transaction_data(self):
         header = [u'User_ID', u'Transaction_Date', u'Transaction_Quantity', u'Transaction_Value']
         data = pd.read_csv(self.big_transaction_filename, names=header)
         response = calculate_transaction_data(data)
         self.assertEquals(len(response), 8)
+        assert data.equals(pd.read_csv(self.big_transaction_filename, names=header))
 
     def test_full_calculate_customer_data(self):
         header = settings.CONSTANTS['entity']['header_option']['customer']
@@ -51,6 +53,7 @@ class CoreSummaryTestCase(TestCase):
         self.assertEquals(filter(lambda x: x['key'] == 'First Customer Join Date', response)[0]['value'], '2016-12-01')
         self.assertEquals(filter(lambda x: x['key'] == 'Latest Customer Join Date', response)[0]['value'], '2017-02-28')
         self.assertEquals(filter(lambda x: x['key'] == 'Customer Age Range', response)[0]['value'], '18 - 70')
+        assert data.equals(pd.read_csv(self.customer_filename, names=header))
 
     def test_full_calculate_conversion_data(self):
         header = settings.CONSTANTS['entity']['header_option']['conversion']
@@ -65,6 +68,7 @@ class CoreSummaryTestCase(TestCase):
         self.assertEquals(float(filter(lambda x: x['key'] == 'Completed Rate', response)[0]['value']), 0.56)
         self.assertEquals(filter(lambda x: x['key'] == 'First Record Start Date', response)[0]['value'], '2017-04-01')
         self.assertEquals(filter(lambda x: x['key'] == 'Last Record End Date', response)[0]['value'], '2017-08-27')
+        assert data.equals(pd.read_csv(self.conversion_filename, names=header))
 
     # TODO: Update offline event data schema
     def test_full_calculate_offline_event_data(self):
@@ -76,6 +80,7 @@ class CoreSummaryTestCase(TestCase):
         self.assertEquals(filter(lambda x: x['key'] == 'Average Event Period', response)[0]['value'], '84 Days')
         self.assertEquals(filter(lambda x: x['key'] == 'First Event Start Date', response)[0]['value'], '2017-01-01')
         self.assertEquals(filter(lambda x: x['key'] == 'Last Event End Date', response)[0]['value'], '2017-06-18')
+        assert data.equals(pd.read_csv(self.offline_event_filename, names=header))
 
     def test_full_calculate_subscription_data(self):
         header = settings.CONSTANTS['entity']['header_option']['subscription']
@@ -86,6 +91,7 @@ class CoreSummaryTestCase(TestCase):
         self.assertEquals(filter(lambda x: x['key'] == 'Average Subscription per Day', response)[0]['value'], '88.7')
         self.assertEquals(filter(lambda x: x['key'] == 'First Record Start Date', response)[0]['value'], '2017-01-01')
         self.assertEquals(filter(lambda x: x['key'] == 'Last Record End Date', response)[0]['value'], '2017-06-19')
+        assert data.equals(pd.read_csv(self.subscription_filename, names=header))
 
     def test_full_people_counter_data(self):
         header = settings.CONSTANTS['entity']['header_option']['peopleCounterData']
@@ -99,6 +105,7 @@ class CoreSummaryTestCase(TestCase):
                           '47321.3')
         self.assertEquals(filter(lambda x: x['key'] == 'Maximum Visitor Count by Day', response)[0]['value'], 52637)
         self.assertEquals(filter(lambda x: x['key'] == 'Maximum Visitor Day', response)[0]['value'], '2017-02-10')
+        assert data.equals(pd.read_csv(self.people_counter_filename, names=header))
 
     def test_full_calculate_transaction_chart_data(self):
         header = settings.CONSTANTS['entity']['header_option']['transaction']
@@ -108,6 +115,7 @@ class CoreSummaryTestCase(TestCase):
 
         self.assertEquals(response.keys(), ['labels', 'datasets'])
         self.assertEquals([len(x) for x in response.values()], [20, 20])
+        assert data.equals(pd.read_csv(self.transaction_filename, names=header))
 
     def test_full_calculate_customer_chart_data(self):
         header = settings.CONSTANTS['entity']['header_option']['customer']
@@ -117,6 +125,7 @@ class CoreSummaryTestCase(TestCase):
 
         self.assertEquals(response.keys(), ['labels', 'datasets'])
         self.assertEquals([len(x) for x in response.values()], [20, 20])
+        assert data.equals(pd.read_csv(self.customer_filename, names=header))
 
     def test_full_calculate_conversion_chart_data(self):
         header = settings.CONSTANTS['entity']['header_option']['conversion']
@@ -126,11 +135,39 @@ class CoreSummaryTestCase(TestCase):
 
         self.assertEquals(response.keys(), ['labels', 'datasets'])
         self.assertEquals([len(x) for x in response.values()], [13, 13])
+        assert data.equals(pd.read_csv(self.conversion_filename, names=header))
 
     def test_full_calculate_ga_chart_data(self):
         header = settings.CONSTANTS['entity']['header_option']['googleAnalytics']
         data = pd.read_csv(self.ga_filename, names=header)
         response = calculate_ga_chart_data(data)
-
         self.assertEquals(response.keys(), ['labels', 'datasets'])
         self.assertEquals([len(x) for x in response.values()], [5, 2])
+        assert data.equals(pd.read_csv(self.ga_filename, names=header))
+
+    def test_full_calculate_offline_event_chart_data(self):
+        header = settings.CONSTANTS['entity']['header_option']['offlineEvent']
+        data = pd.read_csv(self.offline_event_filename, names=header)
+        response = calculate_offline_event_chart_data(data)
+
+        self.assertEquals(response.keys(), ['labels', 'datasets'])
+        self.assertEquals([len(x) for x in response.values()], [3000, 2])
+        assert data.equals(pd.read_csv(self.offline_event_filename, names=header))
+
+    def test_full_calculate_subscription_chart_data(self):
+        header = settings.CONSTANTS['entity']['header_option']['subscription']
+        data = pd.read_csv(self.subscription_filename, names=header)
+        response = calculate_subscription_chart_data(data)
+
+        self.assertEquals(response.keys(), ['labels', 'datasets'])
+        self.assertEquals([len(x) for x in response.values()], [170, 2])
+        assert data.equals(pd.read_csv(self.subscription_filename, names=header))
+
+    def test_full_calculate_people_counter_chart_data(self):
+        header = settings.CONSTANTS['entity']['header_option']['peopleCounterData']
+        data = pd.read_csv(self.people_counter_filename, names=header)
+        response = calculate_people_counter_chart_data(data)
+
+        self.assertEquals(response.keys(), ['labels', 'datasets'])
+        self.assertEquals([len(x) for x in response.values()], [159, 2])
+        assert data.equals(pd.read_csv(self.people_counter_filename, names=header))

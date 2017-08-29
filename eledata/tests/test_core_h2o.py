@@ -124,7 +124,8 @@ class CoreH2OTestCase(TestCase):
         # ha3 = h2o.H2OFrame(python_obj=pd.DataFrame(response))
         # print(response)
 
-        print(entity_h2o_engine.get_dynamic_rmf_in_window(start_date=first_date, end_date=last_date))
+        # print(entity_h2o_engine.get_dynamic_rmf_in_window(start_date=first_date, end_date=last_date))
+
         # from h2o.estimators.random_forest import H2ORandomForestEstimator
         # model = H2ORandomForestEstimator(
         #     model_id="rf_covType_v2",

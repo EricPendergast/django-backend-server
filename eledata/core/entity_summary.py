@@ -74,6 +74,7 @@ def calculate_offline_event_data(data, create_date=None, last_update=None):
         {'key': 'Create Date', 'value': create_date or datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')},
         {'key': 'Last Update', 'value': last_update or datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')},
     ]
+    del data['Event_Period']
     del data['Temp_Start_Date']
     del data['Temp_End_Date']
     return response
