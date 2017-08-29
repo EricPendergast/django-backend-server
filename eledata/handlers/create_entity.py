@@ -102,7 +102,7 @@ class EntityViewSetHandler():
                     string_caster[mapping["data_type"]](item[mapping["mapped"]])
 
         # Generating Entity Summary and Chart Summary after mapping is confirmed.
-        entity_frame = EntityFrame.frame_from_file(entity_data=data, entity_type=entity.type)
+        entity_frame = EntityFrame(entity_data=data, entity_type=entity.type)
 
 
         # TODO: generate create entity audit

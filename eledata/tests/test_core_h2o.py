@@ -11,6 +11,7 @@ from eledata.models.users import User, Group
 from eledata.util import from_json
 import h2o
 
+
 # from project import settings
 # from eledata.util import to_json
 # from project import settings
@@ -64,9 +65,20 @@ class CoreH2OTestCase(TestCase):
         assert len(User.objects) == 0
 
         User.create_admin(username="admin", password="pass", group_name="dummy_group")
+        User.create_admin(username="admin2", password="pass", group_name="different_dummy_group")
 
         self.client = Client()
         self.client.post("/users/login/", {"username": "admin", "password": "pass"})
+
+    def test_h2o_engine_multithreading(self):
+        user_group_1 = Group.objects(name="dummy_group").get()
+        user_group_2 = Group.objects(name="different_dummy_group").get()
+
+        entity_h2o_engine_1 = EntityH2OEngine(user_group_1)
+        entity_h2o_engine_2 = EntityH2OEngine(user_group_2)
+
+        self.assertEquals(entity_h2o_engine_1.group.name, "dummy_group")
+        self.assertEquals(entity_h2o_engine_2.group.name, "different_dummy_group")
 
     def test_first_clv_analysis(self):
         # h2o.init()
@@ -81,7 +93,7 @@ class CoreH2OTestCase(TestCase):
                          HTTP_X_REQUESTED_WITH='XMLHttpRequest')
 
         user_group = Group.objects(name="dummy_group").get()
-        entity_h2o_engine = EntityH2OEngine.init_engine(user_group)
+        entity_h2o_engine = EntityH2OEngine(user_group)
 
         # testing get_user_list
         response = entity_h2o_engine.get_transaction_based_user_list()
@@ -129,8 +141,8 @@ class CoreH2OTestCase(TestCase):
         # ha3 = h2o.H2OFrame(python_obj=pd.DataFrame(response))
         # print(response)
 
-        # print(entity_h2o_engine.get_dynamic_rmf_in_window(start_date=first_date, end_date=last_date))
-
+        response = entity_h2o_engine.get_dynamic_rmf_in_window(start_date=first_date, end_date=last_date)
+        assert (len(response) >= len(entity_h2o_engine.get_transaction_based_user_list()))
         # from h2o.estimators.random_forest import H2ORandomForestEstimator
         # model = H2ORandomForestEstimator(
         #     model_id="rf_covType_v2",
@@ -150,57 +162,57 @@ class CoreH2OTestCase(TestCase):
         # print(len(h2o.frames()['frames']))
         # h2o.cluster().shutdown()
 
-    # Test take 2 mins (atm) so i am not running this (atm) YOLO
-    # def test_big_clv_analysis(self):
-    #     print ("--------" + str(datetime.datetime.now()) + "-------------")
-    #     print(
-    #         self.WARNING + "Following test \"test_big_clv_analysis\" takes a relatively long time, please wait."
-    #         + self.ENDC)
-    #
-    #     with open(self.bigTransactionFilename) as fp:
-    #         ret = self.client.post('/entity/create_entity/',
-    #                                {'file': fp, 'entity': self.entityJSON1, 'isHeaderIncluded': False})
-    #
-    #     rid = from_json(ret.content)['entity_id']
-    #     self.client.post('/entity/%s/create_entity_mapped/' % rid,
-    #                      data=self.entityDataHeaderNoFileHeader, content_type="application/json",
-    #                      HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-    #
-    #     user_group = Group.objects(name="dummy_group").get()
-    #     entity_h2o_engine = EntityH2OEngine.init_engine(user_group)
-    #     # print("Length of user: " + str(len(entity_h2o_engine.get_user_list())))
-    #
-    #     # testing get_time_window
-    #     time_range_response = EntityH2OEngine.get_time_window()
-    #     # self.assertEquals(time_range_response.keys(), [u'last_date', u'_id', u'first_date'])
-    #     last_date, _id, first_date = [time_range_response[x] for x in list(time_range_response)]
-    #
-    #     # self.assertEquals(first_date, datetime.datetime(2016, 9, 4, 0, 0, 0))
-    #     # self.assertEquals(last_date, datetime.datetime(2017, 5, 3, 0, 0, 0))
-    #
-    #     # testing get_clv_in_window
-    #     # response = entity_h2o_engine.get_clv_in_window(start_date=first_date, end_date=last_date)
-    #     # print(response)
-    #     # self.assertEquals(list(response.keys()), [u'_id', u'sum_purchase_amount'])
-    #     # self.assertEquals(response['_id'].count(), 23570)
-    #     # self.assertEquals(response['sum_purchase_amount'].max(), 13990.93)
-    #     # self.assertEquals(response['sum_purchase_amount'].mean(), 106.08042554094187)
-    #     # self.assertEquals(response['sum_purchase_amount'].min(), 0.0)
-    #
-    #     # testing get_rmf_in_window
-    #     # response = entity_h2o_engine.get_rmf_in_window(start_date=first_date, end_date=last_date)
-    #     # print(response)
-    #     # self.assertEquals(list(response.keys()),
-    #     #                   [u'_id', u'frequency', u'monetary_amount', u'monetary_quantity', u'recency'])
-    #     # self.assertEquals(list(response['frequency']), [1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
-    #     # self.assertEquals([round(x, 2) for x in list(response['monetary_amount'])],
-    #     #                   [12.42, 9.57, 37.86, 9.92, 42.75, 20.85, 36.21, 21.92, 15.71, 35.65])
-    #     # self.assertEquals([round(x, 2) for x in list(response['monetary_quantity'])],
-    #     #                   [1.00, 0.89, 1.56, 0.22, 2.00, 1.56, 0.67, 0.33, 1.33, 1.56])
-    #     # self.assertEquals([round(x, 2) for x in list(response['recency'])],
-    #     #                   [138, 114, 175, 21, 241, 50, 40, 0, 108, 8])
-    #
-    #     response = entity_h2o_engine.get_dynamic_rmf_in_window(start_date=first_date, end_date=last_date)
-    #     print(response)
-    #     # self.assertEquals(list(response.keys()), [u'_id', u'sum_purchase_amount'])
-    #     print ("--------" + str(datetime.datetime.now()) + "-------------")
+        # Test take 2 mins (atm) so i am not running this (atm) YOLO
+        # def test_big_clv_analysis(self):
+        #     print ("--------" + str(datetime.datetime.now()) + "-------------")
+        #     print(
+        #         self.WARNING + "Following test \"test_big_clv_analysis\" takes a relatively long time, please wait."
+        #         + self.ENDC)
+        #
+        #     with open(self.bigTransactionFilename) as fp:
+        #         ret = self.client.post('/entity/create_entity/',
+        #                                {'file': fp, 'entity': self.entityJSON1, 'isHeaderIncluded': False})
+        #
+        #     rid = from_json(ret.content)['entity_id']
+        #     self.client.post('/entity/%s/create_entity_mapped/' % rid,
+        #                      data=self.entityDataHeaderNoFileHeader, content_type="application/json",
+        #                      HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        #
+        #     user_group = Group.objects(name="dummy_group").get()
+        #     entity_h2o_engine = EntityH2OEngine.init_engine(user_group)
+        #     # print("Length of user: " + str(len(entity_h2o_engine.get_user_list())))
+        #
+        #     # testing get_time_window
+        #     time_range_response = EntityH2OEngine.get_time_window()
+        #     # self.assertEquals(time_range_response.keys(), [u'last_date', u'_id', u'first_date'])
+        #     last_date, _id, first_date = [time_range_response[x] for x in list(time_range_response)]
+        #
+        #     # self.assertEquals(first_date, datetime.datetime(2016, 9, 4, 0, 0, 0))
+        #     # self.assertEquals(last_date, datetime.datetime(2017, 5, 3, 0, 0, 0))
+        #
+        #     # testing get_clv_in_window
+        #     # response = entity_h2o_engine.get_clv_in_window(start_date=first_date, end_date=last_date)
+        #     # print(response)
+        #     # self.assertEquals(list(response.keys()), [u'_id', u'sum_purchase_amount'])
+        #     # self.assertEquals(response['_id'].count(), 23570)
+        #     # self.assertEquals(response['sum_purchase_amount'].max(), 13990.93)
+        #     # self.assertEquals(response['sum_purchase_amount'].mean(), 106.08042554094187)
+        #     # self.assertEquals(response['sum_purchase_amount'].min(), 0.0)
+        #
+        #     # testing get_rmf_in_window
+        #     # response = entity_h2o_engine.get_rmf_in_window(start_date=first_date, end_date=last_date)
+        #     # print(response)
+        #     # self.assertEquals(list(response.keys()),
+        #     #                   [u'_id', u'frequency', u'monetary_amount', u'monetary_quantity', u'recency'])
+        #     # self.assertEquals(list(response['frequency']), [1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+        #     # self.assertEquals([round(x, 2) for x in list(response['monetary_amount'])],
+        #     #                   [12.42, 9.57, 37.86, 9.92, 42.75, 20.85, 36.21, 21.92, 15.71, 35.65])
+        #     # self.assertEquals([round(x, 2) for x in list(response['monetary_quantity'])],
+        #     #                   [1.00, 0.89, 1.56, 0.22, 2.00, 1.56, 0.67, 0.33, 1.33, 1.56])
+        #     # self.assertEquals([round(x, 2) for x in list(response['recency'])],
+        #     #                   [138, 114, 175, 21, 241, 50, 40, 0, 108, 8])
+        #
+        #     response = entity_h2o_engine.get_dynamic_rmf_in_window(start_date=first_date, end_date=last_date)
+        #     print(response)
+        #     # self.assertEquals(list(response.keys()), [u'_id', u'sum_purchase_amount'])
+        #     print ("--------" + str(datetime.datetime.now()) + "-------------")

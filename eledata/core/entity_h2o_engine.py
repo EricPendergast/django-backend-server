@@ -1,6 +1,8 @@
 import pandas as pd
 from eledata.models.entity import *
 from dateutil.relativedelta import relativedelta
+
+
 # from h2o.estimators.random_forest import H2ORandomForestEstimator
 
 
@@ -8,16 +10,13 @@ class EntityH2OEngine(object):
     group = None
     time_window = None
 
-    """  
-    """
+    def __init__(self, group):
+        self.group = group
 
-    @classmethod
-    def init_engine(cls, group):
-        cls.group = group
-        return cls
+    def get_status(self):
+        return self.group.name
 
-    @classmethod
-    def get_time_window(cls):
+    def get_time_window(self):
         # TODO for performance study: -
         # https://stackoverflow.com/questions/32076382/mongodb-how-to-get-max-value-from-collections
         pipeline = [
@@ -30,11 +29,10 @@ class EntityH2OEngine(object):
                 }
             }
         ]
-        response = list(Entity.objects(group=cls.group, type='transaction').aggregate(*pipeline))
+        response = list(Entity.objects(group=self.group, type='transaction').aggregate(*pipeline))
         return response[0]
 
-    @classmethod
-    def get_user_list(cls):
+    def get_transaction_based_user_list(self):
         pipeline = [
             {"$unwind": "$data"},
             {
@@ -43,11 +41,22 @@ class EntityH2OEngine(object):
                 }
             }
         ]
-        response = list(Entity.objects(group=cls.group, type='customer').aggregate(*pipeline))
+        response = list(Entity.objects(group=self.group, type='transaction').aggregate(*pipeline))
         return pd.DataFrame(response)
 
-    @classmethod
-    def get_clv_in_window(cls, user_list=None, start_date=None, end_date=None):
+    def get_customer_based_user_list(self):
+        pipeline = [
+            {"$unwind": "$data"},
+            {
+                "$group": {
+                    "_id": "$data.User_ID",
+                }
+            }
+        ]
+        response = list(Entity.objects(group=self.group, type='customer').aggregate(*pipeline))
+        return pd.DataFrame(response)
+
+    def get_clv_in_window(self, user_list=None, start_date=None, end_date=None):
         month_diff = (end_date.year - start_date.year) * 12 + (end_date.month - start_date.month) + 1 if (
             start_date and end_date) else 3
 
@@ -73,14 +82,13 @@ class EntityH2OEngine(object):
             }
         })
 
-        response = list(Entity.objects(group=cls.group, type='transaction').aggregate(*pipeline))
+        response = list(Entity.objects(group=self.group, type='transaction').aggregate(*pipeline))
         response = pd.DataFrame(response)
         # post handling month base amount
         response['clv'] = response['clv'] / month_diff
         return response
 
-    @classmethod
-    def get_rmf_in_window(cls, user_list=None, start_date=None, end_date=None):
+    def get_rmf_in_window(self, user_list=None, start_date=None, end_date=None):
         month_diff = (end_date.year - start_date.year) * 12 + (end_date.month - start_date.month) + 1 if (
             start_date and end_date) else 3
 
@@ -109,8 +117,8 @@ class EntityH2OEngine(object):
             }
         })
 
-        response = list(Entity.objects(group=cls.group, type='transaction').aggregate(*pipeline))
-        response = pd.DataFrame(response)
+        response = list(Entity.objects(group=self.group, type='transaction').aggregate(*pipeline))
+        response = pd.DataFrame(response).sort_values(['_id'], ascending=[1])
         # post handling month base amount
         response['monetary_amount'] = response['monetary_amount'] / month_diff
         response['monetary_quantity'] = response['monetary_quantity'] / month_diff
@@ -119,8 +127,7 @@ class EntityH2OEngine(object):
                                   map(lambda x: (datetime.datetime.now() - x).days, response['recency']))
         return response
 
-    @classmethod
-    def get_allowance_in_window(cls, user_list=None, start_date=None, end_date=None):
+    def get_allowance_in_window(self, user_list=None, start_date=None, end_date=None):
         pipeline = [
             {"$unwind": "$data"},
             {"$match": {}},
@@ -156,29 +163,27 @@ class EntityH2OEngine(object):
             }
         })
 
-        response = list(Entity.objects(group=cls.group, type='transaction').aggregate(*pipeline))
+        response = list(Entity.objects(group=self.group, type='transaction').aggregate(*pipeline))
         response = pd.DataFrame(response)
         return response
 
-    @classmethod
-    def mean_shift_standardize(cls, data):
+    @staticmethod
+    def mean_shift_standardize(data):
         for y in data.columns[1:]:
             data[y] = abs(data[y] - data[y].mean()[0]) / data[y].sd()[0]
         return data
 
-    @classmethod
-    def get_dynamic_rmf_in_window(cls, user_list=None, start_date=None, end_date=None, window_length=3):
+    def get_dynamic_rmf_in_window(self, user_list=None, start_date=None, end_date=None, window_length=3):
         month_diff = (end_date.year - start_date.year) * 12 + (end_date.month - start_date.month) + 1 if (
             start_date and end_date) else 3
         date_list = [end_date - relativedelta(months=i * window_length) for i in range(month_diff / window_length)]
         date_list.append(start_date)
         date_list = date_list[::-1]
-
         branches = [
             {"case": {"$and": [
                 {"$gte": [date_list[i + 1], "$data.Transaction_Date"]},
-                {"$lt": [date_list[i + 2], "$data.Transaction_Date"]},
-            ]}, "then": i} for i in range(len(date_list) - 2)
+                {"$lt": [date_list[i], "$data.Transaction_Date"]},
+            ]}, "then": i} for i in range(len(date_list) - 1)
         ]
         branches.insert(0,
                         {"case": {
@@ -188,9 +193,6 @@ class EntityH2OEngine(object):
             "lt": [end_date, "$data.Transaction_Date"]
         }, "then": len(date_list) - 2})
 
-        for i in branches:
-            print i
-        # print(date_list)
         pipeline = [
             {"$unwind": "$data"},
             {"$match": {}},
@@ -231,9 +233,12 @@ class EntityH2OEngine(object):
                 "$lte": end_date
             }
         })
-
-        response = list(Entity.objects(group=cls.group, type='transaction').aggregate(*pipeline))
+        response = list(Entity.objects(group=self.group, type='transaction').aggregate(*pipeline))
         response = pd.DataFrame(response)
+        # print(map(lambda x: x['transaction_date_group'], response['_id']))
+        # print(map(lambda x: x['user_id'], response['_id']))
+        # print([x[u'Transaction_Date'] for x in Entity.objects(group=self.group, type='transaction').as_pymongo()[0][u'data']])
+        # print([x[u'User_ID'] for x in Entity.objects(group=self.group, type='transaction').as_pymongo()[0][u'data']])
         # post handling month base amount
         # response['monetary_amount'] = response['monetary_amount'] / month_diff
         # response['monetary_quantity'] = response['monetary_quantity'] / month_diff
