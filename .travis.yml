@@ -10,9 +10,6 @@ env:
 matrix:
   fast_finish: true
 
-services:
-  - mongodb
-
 # command to install dependencies
 install:
   - pip install -r requirements.txt

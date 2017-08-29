@@ -235,14 +235,4 @@ class EntityH2OEngine(object):
         })
         response = list(Entity.objects(group=self.group, type='transaction').aggregate(*pipeline))
         response = pd.DataFrame(response)
-        # print(map(lambda x: x['transaction_date_group'], response['_id']))
-        # print(map(lambda x: x['user_id'], response['_id']))
-        # print([x[u'Transaction_Date'] for x in Entity.objects(group=self.group, type='transaction').as_pymongo()[0][u'data']])
-        # print([x[u'User_ID'] for x in Entity.objects(group=self.group, type='transaction').as_pymongo()[0][u'data']])
-        # post handling month base amount
-        # response['monetary_amount'] = response['monetary_amount'] / month_diff
-        # response['monetary_quantity'] = response['monetary_quantity'] / month_diff
-        # response['recency'] = end_date and (
-        #     map(lambda x: (end_date - x).days, response['recency'])) or (
-        #                           map(lambda x: (datetime.datetime.now() - x).days, response['recency']))
         return response
