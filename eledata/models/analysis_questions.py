@@ -17,7 +17,6 @@ class AnalysisParameter(EmbeddedDocument):
     label = StringField()
     floating_label = StringField()
     choices = EmbeddedDocumentListField(AnalysisParameterChoice)
-    enabled = BooleanField()
 
     choice_index = IntField(default=0)
     # The value the user inputted to the choice. This value may be null, since

@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from mongoengine import *
-from django.contrib.auth.hashers import check_password, make_password
+from django.contrib.auth.hashers import check_password
+from django.contrib.auth.hashers import make_password
 from .users import Group
 import project.settings
 
 import datetime
-import sys
 import eledata.util
 import copy
+# import sys
 
 
 # Create your models here.
@@ -71,9 +72,9 @@ class Change(Document):
     remove_all = BooleanField(required=True)
 
     def enact(self, entity):
-        '''
+        """
         Performs this change on the given entity.
-        '''
+        """
         if not self.enacted and self.remove_all:
             self.old_rows = list(entity.data)
         # 1. Remove old_rows from data
@@ -95,9 +96,9 @@ class Change(Document):
             self.save()
 
     def revert(self, entity):
-        '''
+        """
         Undos this change on the given entity.
-        '''
+        """
         assert self.enacted
         # 1. Remove new_rows from data
         # 2. Add old_rows to data
@@ -107,12 +108,12 @@ class Change(Document):
             entity=entity)
 
     def _add_remove_rows(self, add, remove, entity, return_replaced_rows=False):
-        '''
+        """
         Removes all the rows in 'remove' from 'entity', then adds all the rows
         in 'add' to 'entity'. If 'return_replaced_rows' is true, this method
         will return all the rows that were replaced when the rows in 'add' were
         added to the entity.
-        '''
+        """
         replaced_rows = []
         id_field = project.settings.CONSTANTS['entity']['header_id_field'][entity.type]
 
@@ -141,11 +142,11 @@ class Change(Document):
 
     def __str__(self):
         return "(new_rows: " + str(self.new_rows) + ", old_rows: " + (
-        str(self.old_rows) if self.enacted else "Not generated") + ")"
+            str(self.old_rows) if self.enacted else "Not generated") + ")"
 
 
 class Entity(Document):
-    '''
+    """
     Holds arbitrary data, as well as the change history of that data. Each
     entity is associated with a group, represented by its 'group' field.
     
@@ -159,7 +160,7 @@ class Entity(Document):
       In order to save these, you must call save_data_changes(). It is done
       this way because data changes need to be saved in a way that prevents
       race conditions.
-    '''
+    """
 
     state = IntField()
     type = StringField(max_length=20)
@@ -190,7 +191,8 @@ class Entity(Document):
         # initialized here.
         self.time_last_changes_sync = 0
         self.on_changes_sync()
-        return super(Entity, self).__init__(*args, **kwargs)
+        super(Entity, self).__init__(*args, **kwargs)
+        # return super(Entity, self).__init__(*args, **kwargs)
 
     # Here is an explanation of the control flow of adding changes to and rolling
     # back 'data':
@@ -217,27 +219,26 @@ class Entity(Document):
     # each change one by one.
     # To be called whenever this users changes are synced with the database
 
-
     def on_changes_sync(self):
-        '''
+        """
         To be called whenever this entities changes and data are synced with
         the database.
-        '''
+        """
         self.time_last_changes_sync = eledata.util.get_time()
 
     def revert_changes(self, num_changes=float('inf')):
-        '''
+        """
         Applies changes 'num_changes' times, stopping once no more changes can
         be applied. If called with no arguments, reverts all changes.
-        '''
+        """
         while num_changes > 0 and self.revert_one():
             num_changes -= 1
 
     def revert_one(self):
-        '''
+        """
         Returns False if there are no more changes to be reverted, otherwise,
         reverts one change and returns true
-        '''
+        """
         assert self.change_index < len(self.changes)
         if self.change_index < 0:
             return False
@@ -247,18 +248,18 @@ class Entity(Document):
         return True
 
     def apply_changes(self, num_changes=float('inf')):
-        '''
+        """
         Applies changes 'num_changes' times, stopping once no more changes can be
         applied. If called with no arguments, applies all changes.
-        '''
+        """
         while num_changes > 0 and self.apply_one():
             num_changes -= 1
 
     def apply_one(self):
-        '''
+        """
         Returns False if there are no more changes to be applied, otherwise,
         applies one change and returns true
-        '''
+        """
         if self.change_index + 1 >= len(self.changes):
             return False
 
@@ -267,23 +268,23 @@ class Entity(Document):
 
         return True
 
-    def reload(self, *fields, **kwargs):
-        '''
+    def reload(self, *args, **kwargs):
+        """
         We overload the reload() function because we need to know when the
         users changes have been synced with the database. We check if the
         passed in fields will cause the changes to be synched, and if they do,
         we call on_changes_sync().
-        '''
-        if not fields or set(self.do_not_save).issubset(fields):
+        """
+        if not args or set(self.do_not_save).issubset(args):
             self.on_changes_sync()
 
-        return super(Entity, self).reload(*fields, **kwargs)
+        return super(Entity, self).reload(*args, **kwargs)
 
     def add_change(self, data, replace=False):
-        '''
+        """
         A way to modify 'changes', avoiding race conditions. If replace is
         true, all data will be deleted before the new data is added.
-        '''
+        """
         self._check_invariants_fast()
         change = Change()
         change.new_rows = data
@@ -320,13 +321,13 @@ class Entity(Document):
     do_not_save = ['changes', 'change_index', 'data']
 
     def save(self, *args, **kwargs):
-        '''
+        """
         Since 'changes', 'change_index', and 'data' must be in sync according
         to _check_invariants_long() saving only one or two of them (as opposed
         to all three) could lead to invariants being false. This is why the
         save method does not save these three fields. There is a special method
         that saves all three of these fields at once, save_data_changes()
-        '''
+        """
         # HACK: We are probably not supposed to modify _changed_fields
         # directly, but there is no other way I've found to exclude a field
         # from saving.
@@ -341,10 +342,10 @@ class Entity(Document):
         super(Entity, self).save(*args, **kwargs)
 
     def save_data_changes(self):
-        '''
+        """
         Saves the data and change_index of this entity, failing if the database
         entity has been reverted since the last database sync.
-        '''
+        """
         # db_entity will only exist if the time of the last db sync is more recent
         # than the time of the last revert.
         db_entity = Entity.objects(
@@ -357,18 +358,18 @@ class Entity(Document):
         return ret != 0
 
     def _check_invariants_fast(self):
-        '''
+        """
         Runs asserts for the invariants of this class that are simple to
         compute.
-        '''
+        """
         assert self.change_index >= -1
         assert self.change_index < len(self.changes)
 
     def _check_invariants_long(self):
-        '''
+        """
         Runs asserts for all invariants of this class. This only should be run
         for tests since this function does a lot of processing.
-        '''
+        """
         self._check_invariants_fast()
 
         # Enacting changes[0] to changes[change_index] on a dummy object and

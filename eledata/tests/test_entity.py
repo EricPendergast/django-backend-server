@@ -7,22 +7,37 @@ from eledata.models.entity import Entity
 from eledata.models.users import User, Group
 from project import settings
 
-from eledata.util import from_json, to_json
+from eledata.util import from_json
 
 import datetime
 import platform
-import time
 
 
 # Create your tests here.
 
 class EntityTestCase(TestCase):
-    entityJSON1 = '''{ "id": "59560d779a4c0e4abaa1b6a8", "type": "transaction", "source_type": "local", "created_at": "2017-06-28T14:08:10.276000", "updated_at": "2017-06-28T14:08:10.276000"}'''
+    entityJSON1 = '''{"id": "59560d779a4c0e4abaa1b6a8", "type": "transaction", "source_type": "local",
+                   "created_at": "2017-06-28T14:08:10.276000", "updated_at": "2017-06-28T14:08:10.276000"}'''
 
-    entityDataHeaderJSON1 = '''{"data_header":[{"source":"transaction_quantity","mapped":"Transaction_Quantity","data_type":"number"},{"source":"transaction_date","mapped":"Transaction_Date","data_type":"date"},{"source":"transaction_id","mapped":"Transaction_ID","data_type":"string"},{"source":"user_id","mapped":"User_ID","data_type":"string"},{"source":"transaction_value","mapped":"Transaction_Value","data_type":"number"}]}'''
-    entityDataHeaderNoFileHeader = '''{"data_header":[{"source":"column 1", "mapped":"Transaction_Quantity", "data_type":"number"}, {"source":"column 2", "mapped":"Transaction_Date", "data_type":"date"}, {"source":"column 3", "mapped":"Transaction_ID", "data_type":"string"}, {"source":"column 4", "mapped":"User_ID", "data_type":"string"}, {"source":"column 5", "mapped":"Transaction_Value", "data_type":"number"}]}'''
+    entityDataHeaderJSON1 = '''{
+        "data_header": [{"source": "transaction_quantity", "mapped": "Transaction_Quantity", "data_type": "number"},
+                        {"source": "transaction_date", "mapped": "Transaction_Date", "data_type": "date"},
+                        {"source": "transaction_id", "mapped": "Transaction_ID", "data_type": "string"},
+                        {"source": "user_id", "mapped": "User_ID", "data_type": "string"},
+                        {"source": "transaction_value", "mapped": "Transaction_Value", "data_type": "number"}]}'''
+    entityDataHeaderNoFileHeader = '''{
+        "data_header": [{"source": "column 1", "mapped": "Transaction_Quantity", "data_type": "number"},
+                        {"source": "column 2", "mapped": "Transaction_Date", "data_type": "date"},
+                        {"source": "column 3", "mapped": "Transaction_ID", "data_type": "string"},
+                        {"source": "column 4", "mapped": "User_ID", "data_type": "string"},
+                        {"source": "column 5", "mapped": "Transaction_Value", "data_type": "number"}]}'''
     # Contains an invalid type
-    entityDataHeaderInvalidType = '''{"data_header":[{"source":"transaction_quantity","mapped":"Transaction_Quantity","data_type":"asdfasdf"},{"source":"transaction_date","mapped":"Transaction_Date","data_type":"date"},{"source":"transaction_id","mapped":"Transaction_ID","data_type":"string"},{"source":"user_id","mapped":"User_ID","data_type":"string"},{"source":"transaction_value","mapped":"Transaction_Value","data_type":"number"}]}'''
+    entityDataHeaderInvalidType = '''{
+        "data_header": [{"source": "transaction_quantity", "mapped": "Transaction_Quantity", "data_type": "asdfasdf"},
+                        {"source": "transaction_date", "mapped": "Transaction_Date", "data_type": "date"},
+                        {"source": "transaction_id", "mapped": "Transaction_ID", "data_type": "string"},
+                        {"source": "user_id", "mapped": "User_ID", "data_type": "string"},
+                        {"source": "transaction_value", "mapped": "Transaction_Value", "data_type": "number"}]}'''
 
     defaultFilename = 'misc/test_files/entity_data_1.csv'
     csvNoHeaderFilename = 'misc/test_files/entity_data_8_no_header.csv'
@@ -68,17 +83,17 @@ class EntityTestCase(TestCase):
 
         # Taking the first item from the list of entities sent back
         data = from_json(response.content)[0]
-        dataComp = from_json(self.entityJSON1)
+        data_comp = from_json(self.entityJSON1)
         # don't compare their id's
 
         del data["id"]
-        del dataComp["id"]
+        del data_comp["id"]
 
         # Don't compare all the fields because creating an entity object fills
         # in the blank fields with defaults. This is why it is not "for key in
         # data"
-        for key in dataComp:
-            self.assertEquals(data[key], dataComp[key])
+        for key in data_comp:
+            self.assertEquals(data[key], data_comp[key])
 
     def test_get_all_entity_multiple_groups(self):
         Entity.objects.delete()
@@ -103,9 +118,9 @@ class EntityTestCase(TestCase):
         Entity.objects.delete()
         response = self._create_entity_init_raw_response(c, 'misc/test_files/entity_data_1.csv')
 
-        id = from_json(response.content)['entity_id']
+        r_id = from_json(response.content)['entity_id']
         self.assertEquals(response.status_code, 200)
-        self.assertEquals(len(Entity.objects.filter(pk=id)), 1)
+        self.assertEquals(len(Entity.objects.filter(pk=r_id)), 1)
 
     '''
     Testing that sending a second stage entity creation post request (to
@@ -320,7 +335,7 @@ class EntityTestCase(TestCase):
     def test_create_entity_no_header(self):
         client = self.client
         resp = self._create_mapped_entity(client, self.entityDataHeaderNoFileHeader,
-                                          self.csvNoHeaderFilename, fileHeaderIncluded=False)
+                                          self.csvNoHeaderFilename, file_header_included=False)
 
         # checking that the returned data has an autogenerated header
         for dataEntry in resp["init_response"]["data"]:
@@ -338,23 +353,23 @@ class EntityTestCase(TestCase):
         client3 = Client()
         client3.post("/users/login/", {"username": "dummy3", "password": "asdf"})
 
-        id = self._create_entity_init(client1, filename=None)['entity_id']
-        response = self._create_entity_final(client2, id, self.entityDataHeaderJSON1)
+        r_id = self._create_entity_init(client1, filename=None)['entity_id']
+        response = self._create_entity_final(client2, r_id, self.entityDataHeaderJSON1)
         self.assertIn('error', from_json(response.content))
 
-        response = self._create_entity_final(client3, id, self.entityDataHeaderJSON1)
+        response = self._create_entity_final(client3, r_id, self.entityDataHeaderJSON1)
         self.assertNotIn('error', from_json(response.content))
 
-    # TODO: Handle this case
-    # Doesn't work yet because of the way excel files measure line width
-    # def test_create_entity_invalid_xlsx(self):
-    #     c = self.client
-    #
-    #     response = self._create_entity_init(c, json=self.entityDataHeaderJSON1, filename= 'misc/test_files/entity_data_7_invalid.xlsx')
-    #      self.assertTrue('error' in response)
+        # TODO: Handle this case
+        # Doesn't work yet because of the way excel files measure line width
+        # def test_create_entity_invalid_xlsx(self):
+        #     c = self.client
+        #
+        # response = self._create_entity_init(c, json=self.entityDataHeaderJSON1,
+        #                                    filename='misc/test_files/entity_data_7_invalid.xlsx')
+        # self.assertTrue('error' in response)
 
-
-    # # TODO: Handle this case by removing the entity from the
+    # TODO: Handle this case by removing the entity from the
     # # database
     # # Uploading a csv where the error is after line 100
     # def test_create_entity_invalid_csv_after_100(self):
@@ -368,22 +383,21 @@ class EntityTestCase(TestCase):
     #     response = _create_entity_final(client, response, id,
     #             entityDataHeaderJSON1)
 
-
-
     def _create_entity_init_raw_response(self, client,
-                                         filename, json=entityJSON1, fileHeaderIncluded=True):
+                                         filename, json=entityJSON1, file_header_included=True):
         filename = self.defaultFilename if filename is None else filename
 
         with open(filename) as fp:
             ret = client.post('/entity/create_entity/',
-                              {'file': fp, 'entity': json, 'isHeaderIncluded': fileHeaderIncluded})
+                              {'file': fp, 'entity': json, 'isHeaderIncluded': file_header_included})
             return ret
 
     def _create_entity_init(self, *args, **kwargs):
         return from_json(self._create_entity_init_raw_response(*args, **kwargs).content)
 
-    def _create_entity_final(self, client, id, data_header):
-        final_response = client.post('/entity/%s/create_entity_mapped/' % id,
+    @staticmethod
+    def _create_entity_final(client, r_id, data_header):
+        final_response = client.post('/entity/%s/create_entity_mapped/' % r_id,
                                      data=data_header, content_type="application/json",
                                      HTTP_X_REQUESTED_WITH='XMLHttpRequest')
 
@@ -392,11 +406,11 @@ class EntityTestCase(TestCase):
     # Performs the two stages to create an entity. Returns a dictionary with
     # the created entity in the "entity" index, and the initial and final
     # responses in indexes "init_response" and "final_response", respectively
-    def _create_mapped_entity(self, client, data_header, filename, fileHeaderIncluded=True):
-        init_response = self._create_entity_init(client, filename, fileHeaderIncluded=fileHeaderIncluded)
+    def _create_mapped_entity(self, client, data_header, filename, file_header_included=True):
+        init_response = self._create_entity_init(client, filename, file_header_included=file_header_included)
 
-        id = init_response['entity_id']
+        r_id = init_response['entity_id']
 
-        final_response = self._create_entity_final(client, id, data_header)
+        final_response = self._create_entity_final(client, r_id, data_header)
 
-        return {'entity': Entity.objects.get(pk=id), 'init_response': init_response, 'final_response': final_response}
+        return {'entity': Entity.objects.get(pk=r_id), 'init_response': init_response, 'final_response': final_response}
