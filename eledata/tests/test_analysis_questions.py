@@ -15,24 +15,25 @@ class AnalysisQuestionTestCase(TestCase):
     admin_client = None
 
     analysis_params_init = [
-        {u'content': u'What is your expected variation of CLV?', 'label': 'clv', 'floating_label': 'Variation',
-         u'choices': [{u'content': u'Default. Handled by Eledata', u'default_value': None}]},
-        {'content': "What is your company's average monthly income?", 'label': 'income', 'floating_label': 'Income',
-         'choices': [{'content': 'Default. Handled by Eledata'},
-                     {'content': 'Enter your value:', "default_value": "50,000"}]}, ]
+        {'content': 'What is your expected variation of CLV?', 'label': 'clv', 'required_question_labels': ['leaving'],
+         'floating_label': 'Variation',
+         'choices': [{u'content': u'Default. Handled by Eledata', u'default_value': None}]},
+        {'content': "What is your company's average monthly income?", 'label': 'income',
+         'required_question_labels': ['repeat', 'recommendedProduct', 'churn', 'growth', 'revenue'],
+         'floating_label': 'Income', 'choices': [{'content': 'Default. Handled by Eledata'},
+                                                 {'content': 'Enter your value:', "default_value": "50,000"}]}, ]
 
     analysis_params_init_objs = [AnalysisParameter(**item) for item in analysis_params_init]
 
     analysis_questions_init = [
         {"content": "Which customers will likely be leaving in the coming time?", "label": "leaving",
-         "icon": "maps/directionsRun", "type": "predictive", "orientation": "customer", "parameter_labels": [],
+         "icon": "maps/directionsRun", "type": "predictive", "orientation": "customer",
          "required_entities": ["transaction", "customer"]},
         {"content": "Which products will be the most popular in the future?", "label": "popularity",
          "icon": "action/trendingUp", "type": "predictive", "orientation": "product",
-         "parameter_labels": [analysis_params_init[0]['label']], "required_entities": ["transaction"]},
+         "required_entities": ["transaction"]},
         {"content": "What has caused the most customers to leave?", "label": "cause of leave",
          "icon": "maps/directionsRun", "type": "descriptive", "orientation": "hiddenInsight",
-         "parameter_labels": [a['label'] for a in analysis_params_init],
          "required_entities": ["transaction", "customer"]}, ]
 
     analysis_questions_init_objs = [AnalysisQuestion(**item) for item in analysis_questions_init]
@@ -60,16 +61,21 @@ class AnalysisQuestionTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         data = from_json(response.content)
 
-        self.assertTrue(_same_elements(data['analysis_params'],
-                                       [{u'choice_index': 0, u'label': u'clv', u'choices': [
-                                           {u'content': u'Default. Handled by Eledata', u'default_value': None}],
-                                         u'content': u'What is your expected variation of CLV?',
-                                         u'floating_label': u'Variation', u'choice_input': None},
-                                        {u'choice_index': 0, u'label': u'income', u'choices': [
-                                            {u'content': u'Default. Handled by Eledata', u'default_value': None},
-                                            {u'content': u'Enter your value:', u'default_value': u'50,000'}],
-                                         u'content': u"What is your company's average monthly income?",
-                                         u'floating_label': u'Income', u'choice_input': None}]))
+        self.assertTrue(
+            _same_elements(data['analysis_params'], [
+                {u'choice_index': 0, u'label': u'clv', u'required_question_labels': [u'leaving'], u'choices': [
+                    {u'content': u'Default. Handled by Eledata', u'default_value': None}],
+                 u'content': u'What is your expected variation of CLV?',
+                 u'floating_label': u'Variation', u'choice_input': None},
+                {u'choice_index': 0, u'label': u'income',
+                 u'required_question_labels': [u'repeat', u'recommendedProduct', u'churn', u'growth', u'revenue'],
+                 u'choices': [
+                     {u'content': u'Default. Handled by Eledata', u'default_value': None},
+                     {u'content': u'Enter your value:', u'default_value': u'50,000'}
+                 ], u'content': u"What is your company's average monthly income?", u'floating_label': u'Income',
+                 u'choice_input': None}
+            ])
+        )
 
         del data['analysis_params']
         self.assertEquals(data, {
@@ -156,6 +162,75 @@ class AnalysisQuestionTestCase(TestCase):
                           data={"label": "income",
                                 "choice_index": 2})
         self.assertIn("error", from_json(response.content))
+
+    def test_update_analysis_settings(self):
+        c, user = self._create_default_user()
+
+        def is_label_selected(_user, label):
+            for question in _user.group.analysis_settings.questions:
+                if question.label == label:
+                    return question.selected
+            return False
+
+        def assert_analysis_parameter_is(_user, label, choice_index, choice_input):
+            param = _user.group.analysis_settings.get_parameter(label=label)
+            self.assertTrue(param is not None)
+            self.assertEqual(param.choice_index, choice_index)
+            self.assertEqual(param.choice_input, choice_input)
+
+        # checking initial setup
+        assert_analysis_parameter_is(user, "income", 0, None)
+        self.assertFalse(is_label_selected(user, "leaving"))
+        self.assertTrue(is_label_selected(user, "cause of leave"))
+        self.assertFalse(is_label_selected(user, "popularity"))
+        self.assertFalse(is_label_selected(user, "invalid label"))
+
+        # first enabling leaving question, with new param setting
+        c.post('/analysis_questions/update_analysis_settings/',
+               data={
+                   "analysisQuestion": ["cause of leave", "leaving"],
+                   "analysisParams": [{
+                       "label": "clv",
+                       "choiceIndex": 0,
+                   }]
+               })
+        user.reload()
+        self.assertTrue(is_label_selected(user, "leaving"))
+        self.assertFalse(is_label_selected(user, "cause of leave"))
+
+        # enabling disabled question, expect an error
+        response = c.post('/analysis_questions/update_analysis_settings/',
+                          data={
+                              "analysisQuestion": ["popularity"],
+                              "analysisParams": []
+                          })
+        self.assertIn("error", from_json(response.content))
+
+        # simply changing parameter setting only
+        assert_analysis_parameter_is(user, "clv", 0, None)
+        c.post('/analysis_questions/update_analysis_settings/',
+               data={
+                   "analysisQuestion": [],
+                   "analysisParams": [{
+                       "label": "clv",
+                       "choiceIndex": 1,
+                   }]
+               })
+        user.reload()
+        assert_analysis_parameter_is(user, "clv", 1, None)
+
+        # changing other questions, updating choiceInput at the same request
+        c.post('/analysis_questions/update_analysis_settings/',
+               data={
+                   "analysisQuestion": ['cause of leave'],
+                   "analysisParams": [{
+                       "label": "clv",
+                       "choiceIndex": 0,
+                       "choiceInput": "Testing Without Validation"
+                   }]
+               })
+        user.reload()
+        assert_analysis_parameter_is(user, "clv", 0, "Testing Without Validation")
 
     def test_same_elements(self):
         self.assertTrue(_same_elements([5, 6, 7, 3], [3, 6, 7, 5]))

@@ -13,8 +13,9 @@ class AnalysisParameter(EmbeddedDocument):
         content = StringField()
         default_value = StringField()
 
-    content = StringField()
     label = StringField()
+    content = StringField()
+    required_question_labels = ListField(StringField())
     floating_label = StringField()
     choices = EmbeddedDocumentListField(AnalysisParameterChoice)
 
@@ -22,6 +23,9 @@ class AnalysisParameter(EmbeddedDocument):
     # The value the user inputted to the choice. This value may be null, since
     # not all choices take inputs.
     choice_input = StringField()
+
+    # TODO: (issue #1) Maybe we do not need this function, just returning all params for every user fetch
+    # ----> Maybe we keep the enabled flag to internal validation instead
     enabled = BooleanField()
 
     def __str__(self):
@@ -50,7 +54,7 @@ class AnalysisQuestion(EmbeddedDocument):
     selected = BooleanField()
     # The list of question parameters the user would need to fill out if they
     # select this question
-    parameter_labels = ListField(StringField())
+    # parameter_labels = ListField(StringField())
     required_entities = ListField(StringField())
 
     def __str__(self):
@@ -78,16 +82,17 @@ class GroupAnalysisSettings(EmbeddedDocument):
     Does not call self.save()
     '''
 
+    # TODO: (issue #1) Maybe we do not need this function, just returning all params for every user fetch
     def update_parameters(self):
         # Will contain the labels of all the parameters that should be enabled
         enabled_parameter_labels = set()
 
         for question in self.questions:
             if question.selected:
-                enabled_parameter_labels.update(question.parameter_labels)
+                enabled_parameter_labels.add(question.label)
 
         for parameter in self.parameters:
-            parameter.enabled = parameter.label in enabled_parameter_labels
+            parameter.enabled = any(i in set(parameter.required_question_labels) for i in enabled_parameter_labels)
 
     def get_question(self, label):
         # return getattr(self.questions, label, None)
@@ -99,6 +104,6 @@ class GroupAnalysisSettings(EmbeddedDocument):
     def get_parameter(self, label):
         # return getattr(self.parameters, label, None)
         for param in self.parameters:
-            if param.label == label:
+            if label == param.label:
                 return param
         return None

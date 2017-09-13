@@ -176,14 +176,42 @@ class EntityH2OEngine(object):
         return data
 
     def get_dynamic_rmf_in_window(self, user_list=None, start_date=None, end_date=None, window_length=3):
+        """
+        1. - Getting total time window length base on end_date and start_date
+
+        2. - We generate date_list as the points for different time window points, so that we have
+        end_date -> date_list[1] -> date_list[2] -> ... -> start_date, all different by window_length.
+
+        3. - loop_range will be the length of the date_list
+
+        4. - We generate the aggregation pipeline command for mongo_engine, based on the date_list
+
+        5. - Get response from querying
+
+        6. - Response should be list of grouped rmf aggregations from range:
+            from date_list[1] to end_date
+            from date_list[2] to date_list[1]
+            ....
+            from start_date to date_list[0]
+
+           - We further combined the group to form rmf aggregations from end_date to different date_list[i] (time point)
+
+        7. - We use transaction_date_group as the identifier
+           - transaction_date_group with smaller value indicates they are more far away from end_date
+        """
+
+        # 1.
         month_diff = (end_date.year - start_date.year) * 12 + (
             end_date.month - start_date.month) if (start_date and end_date) else 3
 
+        # 2, 3.
         loop_range = (month_diff + 1) / window_length if window_length > 1 else month_diff
 
         date_list = [end_date - relativedelta(months=i * window_length) for i in range(loop_range)]
         date_list.append(start_date)
         date_list = date_list[::-1]
+
+        # 4.
         branches = [
             {"case": {"$and": [
                 {"$gte": [date_list[i + 2], "$data.Transaction_Date"]},
@@ -237,18 +265,24 @@ class EntityH2OEngine(object):
                 "$lte": end_date
             }
         })
+
+        # 5.
         response = list(Entity.objects(group=self.group, type='transaction').aggregate(*pipeline))
         response = pd.DataFrame(response)
 
         final_response = []
+
+        # 6.
         for i in range(len(date_list) - 1):
             num_of_month = (len(date_list) - 1 - i) * window_length if i > 0 else month_diff
 
+            # 7.
             sub_response_group = response[response['_id'].apply(lambda x: x[u'transaction_date_group']) >= i - 1]
             sub_response_group['user_id'] = sub_response_group[u'_id'].apply(lambda x: x[u'user_id'])
             sub_response_group['transaction_date_group'] = sub_response_group[u'_id'].apply(
                 lambda x: x[u'transaction_date_group'])
             del sub_response_group[u'_id']
+
             sub_response_group = sub_response_group.groupby('user_id')
             t_response = {
                 'monetary_amount': sub_response_group['monetary_amount'].sum() / num_of_month,

@@ -198,9 +198,10 @@
             "content": "Default. Handled by Eledata"
           }
         ],
+        "label": "clv",
         "content": "What is your expected variation of CLV?",
         "floating_label": "Variation",
-        "label": "clv"
+        "required_question_labels": ["leaving"]
       },
       {
         "choices": [
@@ -212,9 +213,10 @@
             "default_value": "50,000"
           }
         ],
+        "label": "income",
         "content": "What is your company's average monthly income?",
         "floating_label": "Income",
-        "label": "income"
+        "required_question_labels": ["repeat", "recommendedProduct", "churn", "growth", "revenue"]
       }
     ],
     "questions": [
@@ -226,7 +228,6 @@
         "orientation": "customer",
         "selected": false,
         "type": "predictive",
-        "parameter_labels": [],
         "required_entities": [
           "transaction",
           "customer"
@@ -240,9 +241,6 @@
         "orientation": "product",
         "selected": false,
         "type": "predictive",
-        "parameter_labels": [
-          "clv"
-        ],
         "required_entities": [
           "transaction"
         ]
@@ -255,10 +253,6 @@
         "orientation": "hiddenInsight",
         "selected": false,
         "type": "descriptive",
-        "parameter_labels": [
-          "clv",
-          "income"
-        ],
         "required_entities": [
           "transaction",
           "customer"
