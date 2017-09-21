@@ -4,9 +4,9 @@ from eledata import util
 from eledata.serializers.entity import EntityDetailedSerializer
 from eledata.models.entity import Entity
 from eledata.util import string_caster
-from eledata.core.entity_frame import EntityFrame
-
+from eledata.core_engine.provider import EngineProvider
 from project import settings
+import datetime
 
 
 class EntityViewSetHandler(object):
@@ -101,14 +101,28 @@ class EntityViewSetHandler(object):
             for mapping in dummy['data_header']:
                 item[mapping["mapped"]] = \
                     string_caster[mapping["data_type"]](item[mapping["mapped"]])
-
         # Generating Entity Summary and Chart Summary after mapping is confirmed.
-        entity_frame = EntityFrame(entity_data=data, entity_type=entity.type)
+        summary_entity_stats_engine = EngineProvider \
+            .equip('EntityStats') \
+            .provide("Summary",
+                     group=group,
+                     entity_data=data,
+                     entity_type=entity.type)
+        chart_entity_stats_engine = EngineProvider \
+            .equip('EntityStats') \
+            .provide("Chart",
+                     group=group,
+                     entity_data=data,
+                     entity_type=entity.type)
+
+        summary_entity_stats_engine.execute()
+        chart_entity_stats_engine.execute()
 
         # TODO: generate create entity audit
         # TODO: use mongoengine aggrate to do data_summary
-        dummy['data_summary'] = entity_frame.get_summary()
-        dummy['data_summary_chart'] = entity_frame.get_summary_chart()
+
+        dummy['data_summary'] = summary_entity_stats_engine.get_processed()
+        dummy['data_summary_chart'] = chart_entity_stats_engine.get_processed()
 
         dummy_serializer = EntityDetailedSerializer(data=dummy)
         verifier.verify(3, dummy_serializer)

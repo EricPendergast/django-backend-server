@@ -61,9 +61,9 @@ class DataSource(EmbeddedDocument):
 
 class Change(Document):
     # The final state of all changed or added rows
-    new_rows = ListField()
+    new_rows = ListField(DictField())
     # The original state of all rows that were changed or removed by calling the enact() method
-    old_rows = ListField()
+    old_rows = ListField(DictField())
     # 'enact' says whether the enact() method has been called on this object.
     # This is used to determine whether to populate 'old_rows' with the rows
     # that were changed/removed when calling the enact() method.
@@ -168,13 +168,13 @@ class Entity(Document):
     source = EmbeddedDocumentField(DataSource)
     data_summary = EmbeddedDocumentListField(DataSummary)
     data_summary_chart = DictField()
-    # Maybe TODO: make this a dict field
+    # TODO: make this a dict field
     data_header = EmbeddedDocumentListField(DataHeader)
     created_at = DateTimeField(default=datetime.datetime.now)
     updated_at = DateTimeField(default=datetime.datetime.now)
     group = ReferenceField(Group)
 
-    data = ListField()
+    data = ListField(DictField())
     change_index = IntField(default=-1)
     changes = ListField(ReferenceField(Change))
 

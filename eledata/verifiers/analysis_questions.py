@@ -40,16 +40,16 @@ class UpdateAnalysisSettingsVerifier(Verifier):
             raise InvalidInputError("No request are submitted")
 
     def stage1(self, alter_analysis_questions, skipped=False):
-        if skipped:
-            return
-
-        if not alter_analysis_questions:
+        if not skipped and not alter_analysis_questions:
             raise InvalidInputError("No analysis questions are updated")
-        for _q in alter_analysis_questions:
-            if _q.enabled is False:
-                raise InvalidInputError("Disabled questions are toggling")
 
-    def stage2(self, request_analysis_params_index, setting_params, skipped=False):
+    def stage2(self, alter_analysis_questions, skipped=False):
+        if not skipped:
+            for _q in alter_analysis_questions:
+                if _q.enabled is False:
+                    raise InvalidInputError("Disabled questions are toggling")
+
+    def stage3(self, request_analysis_params_index, setting_params, skipped=False):
         if skipped:
             return
         for param in setting_params:
@@ -59,4 +59,4 @@ class UpdateAnalysisSettingsVerifier(Verifier):
             if param.label in request_analysis_params_index and param.enabled is False:
                 raise InvalidInputError("Received prohibited analysis parameter setting")
 
-    stages = [stage0, stage1, stage2]
+    stages = [stage0, stage1, stage2, stage3]

@@ -32,6 +32,9 @@ class Group(Document):
             question.enabled = set(question.required_entities).issubset(set(completed_entity))
         group.save()
 
+    # TODO: has_entity function from group model
+    # def has_entity(self, entity_name):
+
 
 class User(auth.User):
     # 'counter' is used for testing

@@ -2,13 +2,14 @@ from __future__ import unicode_literals
 
 from django.test import Client
 from django.test import TestCase
-from eledata.core.entity_h2o_engine import *
-from eledata.core.entity_summary import *
+from eledata.core_engine.entity_h2o_engine import *
 from eledata.models.entity import Entity
 from eledata.models.users import User
 from eledata.models.users import Group
 
 from eledata.util import from_json
+
+
 # import h2o
 # from project import settings
 # from eledata.util import to_json
@@ -68,7 +69,7 @@ class CoreH2OTestCase(TestCase):
         self.client = Client()
         self.client.post("/users/login/", {"username": "admin", "password": "pass"})
 
-    def test_h2o_engine_multithreading(self):
+    def test_h2o_engine_multi_threading(self):
         user_group_1 = Group.objects(name="dummy_group").get()
         user_group_2 = Group.objects(name="different_dummy_group").get()
 
@@ -77,6 +78,37 @@ class CoreH2OTestCase(TestCase):
 
         self.assertEquals(entity_h2o_engine_1.group.name, "dummy_group")
         self.assertEquals(entity_h2o_engine_2.group.name, "different_dummy_group")
+
+    def test_first_execute_flow(self):
+        print("======Data Uploading===========")
+        print(datetime.datetime.now())
+        # with open(self.defaultTransactionFilename) as fp:
+        #     ret = self.client.post('/entity/create_entity/',
+        #                            {'file': fp, 'entity': self.entityJSON1, 'isHeaderIncluded': True})
+        #
+        # rid = from_json(ret.content)['entity_id']
+        # self.client.post('/entity/%s/create_entity_mapped/' % rid,
+        #                  data=self.entityDataHeaderJSON1, content_type="application/json",
+        #                  HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        with open(self.bigTransactionFilename) as fp:
+            ret = self.client.post('/entity/create_entity/',
+                                   {'file': fp, 'entity': self.entityJSON1, 'isHeaderIncluded': False})
+
+        rid = from_json(ret.content)['entity_id']
+        self.client.post('/entity/%s/create_entity_mapped/' % rid,
+                         data=self.entityDataHeaderNoFileHeader, content_type="application/json",
+                         HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        print("======Data Uploaded===========")
+        print(datetime.datetime.now())
+
+        user_group = Group.objects(name="dummy_group").get()
+        entity_h2o_engine = EntityH2OEngine(group=user_group, questions=user_group.analysis_settings.questions,
+                                            params=user_group.analysis_settings.parameters)
+        entity_h2o_engine.execute()
+
+        print("======H2O Engine Executed===========")
+        print(datetime.datetime.now())
 
     def test_first_clv_analysis(self):
         # h2o.init()
@@ -94,8 +126,10 @@ class CoreH2OTestCase(TestCase):
         entity_h2o_engine = EntityH2OEngine(user_group)
 
         # testing get_user_list
-        response = entity_h2o_engine.get_transaction_based_user_list()
-        self.assertEquals(list(response), [u'_id'])
+        response = entity_h2o_engine.get_user_list()
+        self.assertEquals(list(response),
+                          [u'363-92-5456', u'751-23-2405', u'445-01-1147', u'732-68-8140', u'322-94-7646',
+                           u'973-40-5271', u'461-63-0012', u'821-55-2723', u'443-51-0606', u'988-90-7620'])
         self.assertEquals(len(response), 10)
 
         # testing get_time_window
@@ -106,10 +140,12 @@ class CoreH2OTestCase(TestCase):
         self.assertEquals(first_date, datetime.datetime(2016, 9, 4, 0, 0, 0))
         self.assertEquals(last_date, datetime.datetime(2017, 5, 3, 0, 0, 0))
 
+        month_diff = entity_h2o_engine.get_month_diff(first_date, last_date)
+
         # testing get_clv_in_window
-        response = entity_h2o_engine.get_clv_in_window(start_date=first_date, end_date=last_date)
-        self.assertEquals(list(response.keys()), [u'_id', u'clv'])
-        self.assertEquals(response['_id'].count(), 10)
+        response = entity_h2o_engine.get_clv_in_window(start_date=first_date, end_date=last_date, month_diff=month_diff)
+        self.assertEquals(list(response.keys()), [u'user_id', u'clv'])
+        self.assertEquals(response['user_id'].count(), 10)
         self.assertEquals(round(response['clv'].max(), 2), 42.75)
         self.assertEquals(round(response['clv'].mean(), 2), 24.29)
         self.assertEquals(round(response['clv'].min(), 2), 9.57)
@@ -118,7 +154,7 @@ class CoreH2OTestCase(TestCase):
         # print(response)
 
         # testing get_rmf_in_window
-        response = entity_h2o_engine.get_rmf_in_window(start_date=first_date, end_date=last_date)
+        response = entity_h2o_engine.get_rmf_in_window(start_date=first_date, end_date=last_date, month_diff=month_diff)
         self.assertEquals(list(response.keys()),
                           [u'_id', u'frequency', u'monetary_amount', u'monetary_quantity', u'recency'])
         self.assertEquals(list(response['frequency']), [1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
@@ -133,7 +169,7 @@ class CoreH2OTestCase(TestCase):
         # print(response)
 
         response = entity_h2o_engine.get_allowance_in_window(start_date=first_date, end_date=last_date)
-        self.assertEquals(list(response.keys()), [u'_id', u'std_monetary_amount'])
+        self.assertEquals(list(response.keys()), [u'user_id', u'std_monetary_amount'])
         self.assertEquals(list(response['std_monetary_amount']), [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
 
         # ha3 = h2o.H2OFrame(python_obj=pd.DataFrame(response))
@@ -142,8 +178,7 @@ class CoreH2OTestCase(TestCase):
         response = entity_h2o_engine.get_dynamic_rmf_in_window(start_date=first_date, end_date=last_date,
                                                                window_length=3)
         self.assertEquals(len(response[0]), 10)
-        # print(response)
-        # assert (len(response) >= len(entity_h2o_engine.get_transaction_based_user_list()))
+        # assert (len(response) >= len(entity_h2o_engine.get_user_list()))
         # from h2o.estimators.random_forest import H2ORandomForestEstimator
         # model = H2ORandomForestEstimator(
         #     model_id="rf_covType_v2",
@@ -180,7 +215,7 @@ class CoreH2OTestCase(TestCase):
 
         user_group = Group.objects(name="dummy_group").get()
         entity_h2o_engine = EntityH2OEngine(user_group)
-        self.assertEquals(len(entity_h2o_engine.get_transaction_based_user_list()), 23570)
+        self.assertEquals(len(entity_h2o_engine.get_user_list()), 23570)
 
         # testing get_time_window
         time_range_response = entity_h2o_engine.get_time_window()
@@ -190,20 +225,23 @@ class CoreH2OTestCase(TestCase):
         self.assertEquals(first_date, datetime.datetime(1997, 1, 1, 0, 0, 0))
         self.assertEquals(last_date, datetime.datetime(1998, 6, 30, 0, 0, 0))
 
+        month_diff = entity_h2o_engine.get_month_diff(first_date, last_date)
+
         # testing get_clv_in_window
-        response = entity_h2o_engine.get_clv_in_window(start_date=first_date, end_date=last_date)
-        self.assertEquals(list(response.keys()), [u'_id', u'clv'])
-        self.assertEquals(response['_id'].count(), 23570)
+        response = entity_h2o_engine.get_clv_in_window(start_date=first_date, end_date=last_date, month_diff=month_diff)
+        self.assertEquals(list(response.keys()), [u'user_id', u'clv'])
+        self.assertEquals(response['user_id'].count(), 23570)
         self.assertEquals(round(response['clv'].max(), 2), 777.27)
         self.assertEquals(round(response['clv'].mean(), 2), 5.89)
         self.assertEquals(round(response['clv'].min(), 2), 0.0)
 
         # testing dynamic rmf crawling, slightly faster than normal looping
-        response = entity_h2o_engine.get_dynamic_rmf_in_window(start_date=first_date, end_date=last_date)
+        response = entity_h2o_engine.get_dynamic_rmf_in_window(start_date=first_date, end_date=last_date,
+                                                               window_length=3, month_diff=month_diff)
         self.assertEquals(len(response), 6)
-        self.assertEquals(list(response[0]), ['frequency', 'monetary_amount', 'monetary_quantity', 'recency'])
+        self.assertEquals(list(response[0]), ['user_id', 'frequency', 'monetary_amount', 'monetary_quantity', 'recency'])
         # TODO: more asserting?
-
+        print(response)
         # normal looping approach for reference here
         # -----------------------------------------------------------------------------------------------------
         # date_list = [last_date - relativedelta(months=i * 3) for i in range(7)]

@@ -82,7 +82,6 @@ class GroupAnalysisSettings(EmbeddedDocument):
     Does not call self.save()
     '''
 
-    # TODO: (issue #1) Maybe we do not need this function, just returning all params for every user fetch
     def update_parameters(self):
         # Will contain the labels of all the parameters that should be enabled
         enabled_parameter_labels = set()
@@ -107,3 +106,11 @@ class GroupAnalysisSettings(EmbeddedDocument):
             if label == param.label:
                 return param
         return None
+
+    def get_parameter_from_question(self, q_label):
+        response_param = []
+        for param in self.parameters:
+            if q_label in param.required_question_labels:
+                response_param += [param, ]
+        return response_param
+

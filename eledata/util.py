@@ -115,6 +115,13 @@ class InvalidInputError(Exception):
         return self.msg
 
 
+class InvalidAnalysisParamError(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+
 # Takes a string representation of a type and returns a function that casts
 # strings to that type
 string_caster = {

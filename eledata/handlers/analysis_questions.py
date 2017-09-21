@@ -1,5 +1,6 @@
 from eledata.models.analysis_questions import GroupAnalysisSettings
 from eledata.serializers.analysis_questions import AnalysisQuestionSerializer, AnalysisParameterSerializer
+from eledata.core_engine.entity_h2o_engine import *
 import ast
 
 
@@ -15,20 +16,9 @@ def get_analysis_questions_settings(settings):
 
         ret_data["analysis_questions"] += [entry, ]
 
-    # TODO: (issue #1) Maybe we do not need this function, just returning all params for every user fetch
     # Make sure that the parameters are in sync with the analysis questions.
     settings.update_parameters()
 
-    # Load the parameters into ret_data
-    # TODO: (issue #1) Maybe we do not need this function, just returning all params for every user fetch
-    # for param in settings.parameters:
-    #     if param.enabled:
-    #         entry = AnalysisParameterSerializer(param).data
-    #         del entry['enabled']
-    #
-    #         ret_data["analysis_params"] += [entry, ]
-    # ----------------------------------------------------------------------------------------------------
-    # ----> Return every parameter regardless of the enabled status instead
     for param in settings.parameters:
         entry = AnalysisParameterSerializer(param).data
         del entry['enabled']
@@ -95,6 +85,7 @@ def update_analysis_settings(request_data, settings, verifier):
                 alter_analysis_questions += [_q, ]
 
         verifier.verify(1, alter_analysis_questions)
+        verifier.verify(2, alter_analysis_questions)
 
         for _aq in alter_analysis_questions:
             _aq.selected = not _aq.selected
@@ -106,11 +97,8 @@ def update_analysis_settings(request_data, settings, verifier):
             _settings=settings
         )
     else:
-        verifier.verify(
-            stage=1,
-            alter_analysis_questions=[],
-            skipped=True
-        )
+        verifier.verify(stage=1, alter_analysis_questions=[], skipped=True)
+        verifier.verify(stage=2, alter_analysis_questions=[], skipped=True)
 
     def update_analysis_parameter(_request_analysis_params, _settings):
         _request_analysis_params_labels = []
@@ -118,7 +106,7 @@ def update_analysis_settings(request_data, settings, verifier):
             p = ast.literal_eval(p)
             _request_analysis_params_labels += [p[u'label'], ]
 
-        verifier.verify(2, _request_analysis_params_labels, settings.parameters)
+        verifier.verify(3, _request_analysis_params_labels, settings.parameters)
 
         for p in _request_analysis_params:
 
@@ -134,10 +122,22 @@ def update_analysis_settings(request_data, settings, verifier):
             _settings=settings
         )
     else:
-        verifier.verify(
-            stage=2,
-            request_analysis_params_index=[],
-            setting_params=settings.parameters,
-        )
+        verifier.verify(stage=3, request_analysis_params_index=[], setting_params=settings.parameters, skipped=True)
 
     return {"msg": "Change successful"}
+
+
+def get_analysis_question_executed(group, settings):
+    ret_data = get_analysis_questions_settings(settings)
+
+    # TODO: move the hardcode list to constants file
+    H2O_questions = [x for x in ret_data["analysis_questions"] if x.label in ["revenue", "churn", "growth", "repeat"]]
+
+    Scraping_questions = [x for x in ret_data["analysis_questions"] if
+                          x.label in ["resellersProducts", "competitorsProducts", "extremeResellersProducts",
+                                      "extremeCompetitorProducts", "firstPageProducts", "firstPageCompetitorProducts",
+                                      "nonConformant", "resellersPriceRange", "competitorsPriceRange",
+                                      ]]
+
+    if H2O_questions:
+        engine = EntityH2OEngine(group)

@@ -62,19 +62,34 @@ class AnalysisQuestionTestCase(TestCase):
         data = from_json(response.content)
 
         self.assertTrue(
-            _same_elements(data['analysis_params'], [
-                {u'choice_index': 0, u'label': u'clv', u'required_question_labels': [u'leaving'], u'choices': [
-                    {u'content': u'Default. Handled by Eledata', u'default_value': None}],
-                 u'content': u'What is your expected variation of CLV?',
-                 u'floating_label': u'Variation', u'choice_input': None},
-                {u'choice_index': 0, u'label': u'income',
-                 u'required_question_labels': [u'repeat', u'recommendedProduct', u'churn', u'growth', u'revenue'],
-                 u'choices': [
-                     {u'content': u'Default. Handled by Eledata', u'default_value': None},
-                     {u'content': u'Enter your value:', u'default_value': u'50,000'}
-                 ], u'content': u"What is your company's average monthly income?", u'floating_label': u'Income',
-                 u'choice_input': None}
-            ])
+            _same_elements(
+                data['analysis_params'],
+                [{u'choice_index': 0, u'choice_input': None, u'label': u'clv',
+                  u'choices': [{u'content': u'Default. Handled by Eledata',
+                                u'default_value': None}],
+                  u'content': u'What is your expected variation of CLV?',
+                  u'floating_label': u'Variation',
+                  u'required_question_labels': [u'leaving']},
+                 {u'choice_index': 0, u'choice_input': None, u'label': u'income',
+                  u'choices': [{u'content': u'Default. Handled by Eledata',
+                                u'default_value': None},
+                               {u'content': u'Enter your value:',
+                                u'default_value': u'50,000'}],
+                  u'content': u"What is your company's average monthly income?",
+                  u'floating_label': u'Income',
+                  u'required_question_labels': [u'repeat', u'recommendedProduct',
+                                                u'churn', u'growth', u'revenue']},
+                 {u'choice_index': 0, u'choice_input': None,
+                  u'label': u'prediction_window', u'choices': [
+                     {u'content': u'Default. Handled by EleData',
+                      u'default_value': None}, {
+                         u'content': u'My expected prediction window (in month) would be: ',
+                         u'default_value': u'3'}],
+                  u'content': u'What is your expected prediction window among your predictive questions ?',
+                  u'floating_label': u'Prediction Window',
+                  u'required_question_labels': [u'repeat', u'recommendedProduct',
+                                                u'churn', u'growth', u'revenue']}]
+            )
         )
 
         del data['analysis_params']
