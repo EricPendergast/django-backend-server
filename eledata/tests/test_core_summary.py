@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 import pandas as pd
-from project import settings
+from project.settings import constants
 from django.test import TestCase
 from eledata.core_engine.entity_stats_engine.chart_entity_stats_engine import ChartEntityStatsEngine
 from eledata.core_engine.entity_stats_engine.summary_entity_stats_engine import SummaryEntityStatsEngine
@@ -19,7 +19,7 @@ class CoreSummaryTestCase(TestCase):
     people_counter_filename = core_test__dir + 'People Counter Data.csv'
 
     def test_full_calculate_transaction_data(self):
-        header = settings.CONSTANTS['entity']['header_option']['transaction']
+        header = constants()['entity']['header_option']['transaction']
         data = pd.read_csv(self.transaction_filename,
                            names=header)
         response = SummaryEntityStatsEngine.calculate_transaction_data(data)
@@ -41,7 +41,7 @@ class CoreSummaryTestCase(TestCase):
         assert data.equals(pd.read_csv(self.big_transaction_filename, names=header))
 
     def test_full_calculate_customer_data(self):
-        header = settings.CONSTANTS['entity']['header_option']['customer']
+        header = constants()['entity']['header_option']['customer']
         data = pd.read_csv(self.customer_filename,
                            names=header)
         response = SummaryEntityStatsEngine.calculate_customer_data(data)
@@ -54,7 +54,7 @@ class CoreSummaryTestCase(TestCase):
         assert data.equals(pd.read_csv(self.customer_filename, names=header))
 
     def test_full_calculate_conversion_data(self):
-        header = settings.CONSTANTS['entity']['header_option']['conversion']
+        header = constants()['entity']['header_option']['conversion']
         data = pd.read_csv(self.conversion_filename,
                            names=header)
         response = SummaryEntityStatsEngine.calculate_conversion_data(data)
@@ -70,7 +70,7 @@ class CoreSummaryTestCase(TestCase):
 
     # TODO: Update offline event data schema
     def test_full_calculate_offline_event_data(self):
-        header = settings.CONSTANTS['entity']['header_option']['offlineEvent']
+        header = constants()['entity']['header_option']['offlineEvent']
         data = pd.read_csv(self.offline_event_filename, names=header)
         response = SummaryEntityStatsEngine.calculate_offline_event_data(data)
         self.assertEquals(len(response), 6)
@@ -81,7 +81,7 @@ class CoreSummaryTestCase(TestCase):
         assert data.equals(pd.read_csv(self.offline_event_filename, names=header))
 
     def test_full_calculate_subscription_data(self):
-        header = settings.CONSTANTS['entity']['header_option']['subscription']
+        header = constants()['entity']['header_option']['subscription']
         data = pd.read_csv(self.subscription_filename, names=header)
         response = SummaryEntityStatsEngine.calculate_subscription_data(data)
         self.assertEquals(len(response), 6)
@@ -92,7 +92,7 @@ class CoreSummaryTestCase(TestCase):
         assert data.equals(pd.read_csv(self.subscription_filename, names=header))
 
     def test_full_people_counter_data(self):
-        header = settings.CONSTANTS['entity']['header_option']['peopleCounterData']
+        header = constants()['entity']['header_option']['peopleCounterData']
         data = pd.read_csv(self.people_counter_filename, names=header)
         response = SummaryEntityStatsEngine.calculate_people_counter_data(data)
         self.assertEquals(len(response), 8)
@@ -106,7 +106,7 @@ class CoreSummaryTestCase(TestCase):
         assert data.equals(pd.read_csv(self.people_counter_filename, names=header))
 
     def test_full_calculate_transaction_chart_data(self):
-        header = settings.CONSTANTS['entity']['header_option']['transaction']
+        header = constants()['entity']['header_option']['transaction']
         data = pd.read_csv(self.transaction_filename,
                            names=header)
         response = ChartEntityStatsEngine.calculate_transaction_chart_data(data)
@@ -116,7 +116,7 @@ class CoreSummaryTestCase(TestCase):
         assert data.equals(pd.read_csv(self.transaction_filename, names=header))
 
     def test_full_calculate_customer_chart_data(self):
-        header = settings.CONSTANTS['entity']['header_option']['customer']
+        header = constants()['entity']['header_option']['customer']
         data = pd.read_csv(self.customer_filename,
                            names=header)
         response = ChartEntityStatsEngine.calculate_customer_chart_data(data)
@@ -126,7 +126,7 @@ class CoreSummaryTestCase(TestCase):
         assert data.equals(pd.read_csv(self.customer_filename, names=header))
 
     def test_full_calculate_conversion_chart_data(self):
-        header = settings.CONSTANTS['entity']['header_option']['conversion']
+        header = constants()['entity']['header_option']['conversion']
         data = pd.read_csv(self.conversion_filename,
                            names=header)
         response = ChartEntityStatsEngine.calculate_conversion_chart_data(data)
@@ -136,7 +136,7 @@ class CoreSummaryTestCase(TestCase):
         assert data.equals(pd.read_csv(self.conversion_filename, names=header))
 
     def test_full_calculate_ga_chart_data(self):
-        header = settings.CONSTANTS['entity']['header_option']['googleAnalytics']
+        header = constants()['entity']['header_option']['googleAnalytics']
         data = pd.read_csv(self.ga_filename, names=header)
         response = ChartEntityStatsEngine.calculate_ga_chart_data(data)
         self.assertEquals(response.keys(), ['labels', 'datasets'])
@@ -144,7 +144,7 @@ class CoreSummaryTestCase(TestCase):
         assert data.equals(pd.read_csv(self.ga_filename, names=header))
 
     def test_full_calculate_offline_event_chart_data(self):
-        header = settings.CONSTANTS['entity']['header_option']['offlineEvent']
+        header = constants()['entity']['header_option']['offlineEvent']
         data = pd.read_csv(self.offline_event_filename, names=header)
         response = ChartEntityStatsEngine.calculate_offline_event_chart_data(data)
 
@@ -153,7 +153,7 @@ class CoreSummaryTestCase(TestCase):
         assert data.equals(pd.read_csv(self.offline_event_filename, names=header))
 
     def test_full_calculate_subscription_chart_data(self):
-        header = settings.CONSTANTS['entity']['header_option']['subscription']
+        header = constants()['entity']['header_option']['subscription']
         data = pd.read_csv(self.subscription_filename, names=header)
         response = ChartEntityStatsEngine.calculate_subscription_chart_data(data)
 
@@ -162,7 +162,7 @@ class CoreSummaryTestCase(TestCase):
         assert data.equals(pd.read_csv(self.subscription_filename, names=header))
 
     def test_full_calculate_people_counter_chart_data(self):
-        header = settings.CONSTANTS['entity']['header_option']['peopleCounterData']
+        header = constants()['entity']['header_option']['peopleCounterData']
         data = pd.read_csv(self.people_counter_filename, names=header)
         response = ChartEntityStatsEngine.calculate_people_counter_chart_data(data)
 

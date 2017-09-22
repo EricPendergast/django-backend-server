@@ -111,8 +111,9 @@ if not is_test():
 
     mongoengine.connect(db=_MONGODB_NAME, host=_MONGODB_DATABASE_HOST)
 
-    with open("constants/constants.json") as file:
-        CONSTANTS = json.load(file)
+    import constants
+
+    CONSTANTS = constants
 else:
     _MONGODB_USER = 'admin'
     _MONGODB_PASSWD = 'password'
@@ -124,12 +125,18 @@ else:
 
     mongoengine.connect(db=_MONGODB_NAME, host=_MONGODB_DATABASE_HOST)
 
-    with open("misc/test_files/test_constants/constants.json") as file:
-        CONSTANTS = json.load(file)
+    from misc.test_files.test_constants import constants
 
-    PASSWORD_HASHERS = [
-        'django.contrib.auth.hashers.MD5PasswordHasher',
-    ]
+    CONSTANTS = constants
+
+
+def constants():
+    return CONSTANTS
+
+
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.MD5PasswordHasher',
+]
 
 AUTHENTICATION_BACKENDS = (
     # 'eledata.auth.CustomAuthBackend',

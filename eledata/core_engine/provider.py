@@ -4,18 +4,19 @@ class EngineProvider(object):
     """
 
     @classmethod
-    def equip(cls, name):
+    def provide(cls, name, *args, **kwargs):
+        pre_name, post_name = name.split('.')
 
         from entity_stats_engine.provider import EntityStatsEngineProvider
 
         providers = {
-            "EntityStats": EntityStatsEngineProvider()
+            "EntityStats": EntityStatsEngineProvider
         }
 
-        p = providers.get(name)
+        p = providers.get(pre_name)
         if not p:
-            raise EngineProviderNotFound(name)
-        return p
+            raise EngineProviderNotFound(pre_name)
+        return p.provide(post_name, *args, **kwargs)
 
 
 class BaseEngineProvider(object):

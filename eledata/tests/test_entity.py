@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.test import Client
 from eledata.models.entity import Entity
 from eledata.models.users import User, Group
-from project import settings
+from project.settings import constants
 
 from eledata.util import from_json
 
@@ -160,7 +160,7 @@ class EntityTestCase(TestCase):
 
         self.assertEquals(response.status_code, 200)
         self.assertEquals(from_json(response.content),
-                          [{str(a): str(b) for a, b in x.items()} for x in settings.CONSTANTS['entity']['type']])
+                          [{str(a): str(b) for a, b in x.items()} for x in constants().get('entity').get('entity_type')])
 
         self._create_entity_init(c, 'misc/test_files/entity_data_1.csv')
         response = c.get('/entity/get_entity_list/')

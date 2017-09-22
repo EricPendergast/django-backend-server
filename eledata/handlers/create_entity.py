@@ -5,7 +5,7 @@ from eledata.serializers.entity import EntityDetailedSerializer
 from eledata.models.entity import Entity
 from eledata.util import string_caster
 from eledata.core_engine.provider import EngineProvider
-from project import settings
+from project.settings import constants
 import datetime
 
 
@@ -21,7 +21,7 @@ class EntityViewSetHandler(object):
 
         # retrieving list of constant entity
         # TODO: move status to constant/ utils, add the intermediate status
-        constant_list = settings.CONSTANTS['entity']['type']
+        constant_list = constants().get('entity').get('entity_type')
         for x in constant_list:
             x[u'status'] = u'Ready' if x['value'] in active_list else u'Pending'
         return constant_list
@@ -64,7 +64,7 @@ class EntityViewSetHandler(object):
         response_data = {
             'entity_id': str(entity.id),
             'data': entity_data,
-            'header_option': settings.CONSTANTS['entity']['header_option'][entity_dict["type"]]
+            'header_option': constants().get('entity').get('header_option').get(entity_dict["type"])
         }
         # Saving the serializer while also adding its id to the response
         # Loading the first 100 lines of data from the request file
@@ -102,15 +102,13 @@ class EntityViewSetHandler(object):
                 item[mapping["mapped"]] = \
                     string_caster[mapping["data_type"]](item[mapping["mapped"]])
         # Generating Entity Summary and Chart Summary after mapping is confirmed.
-        summary_entity_stats_engine = EngineProvider \
-            .equip('EntityStats') \
-            .provide("Summary",
+        summary_entity_stats_engine = EngineProvider\
+            .provide("EntityStats.Summary",
                      group=group,
                      entity_data=data,
                      entity_type=entity.type)
-        chart_entity_stats_engine = EngineProvider \
-            .equip('EntityStats') \
-            .provide("Chart",
+        chart_entity_stats_engine = EngineProvider\
+            .provide("EntityStats.Chart",
                      group=group,
                      entity_data=data,
                      entity_type=entity.type)

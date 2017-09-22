@@ -4,13 +4,12 @@ from mongoengine import *
 from django.contrib.auth.hashers import check_password
 from django.contrib.auth.hashers import make_password
 from .users import Group
-import project.settings
+from project.settings import constants
 
 import datetime
 import eledata.util
 import copy
 # import sys
-
 
 # Create your models here.
 
@@ -115,7 +114,7 @@ class Change(Document):
         added to the entity.
         """
         replaced_rows = []
-        id_field = project.settings.CONSTANTS['entity']['header_id_field'][entity.type]
+        id_field = constants().get('entity').get('header_id_field').get(entity.type)
 
         # Maps the transaction id of each transaction to the transaction data
         data_dict = {}

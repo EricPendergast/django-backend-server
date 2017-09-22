@@ -241,7 +241,7 @@ class CoreH2OTestCase(TestCase):
         self.assertEquals(len(response), 6)
         self.assertEquals(list(response[0]), ['user_id', 'frequency', 'monetary_amount', 'monetary_quantity', 'recency'])
         # TODO: more asserting?
-        print(response)
+        # print(response)
         # normal looping approach for reference here
         # -----------------------------------------------------------------------------------------------------
         # date_list = [last_date - relativedelta(months=i * 3) for i in range(7)]

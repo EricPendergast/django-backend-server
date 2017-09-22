@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 from mongoengine import *
 
 '''
-An analysis parameter is a question that the user answers that helps eledata
+An analysis parameter is a question that the user answers that helps EleData
 answer the analysis question. Each analysis parameter is a multiple choice
 question, where each choice may have additional typed input.
 '''
@@ -33,7 +33,7 @@ class AnalysisParameter(EmbeddedDocument):
 
 
 '''
-An analysis question is a question the user selects for Eledata to answer.
+An analysis question is a question the user selects for EleData to answer.
 Analysis questions can share parameters, so to avoid repetition, each analysis
 question contains a list of the only the labels of its parameters.
 '''
@@ -56,6 +56,7 @@ class AnalysisQuestion(EmbeddedDocument):
     # select this question
     # parameter_labels = ListField(StringField())
     required_entities = ListField(StringField())
+    analysis_engine = StringField()
 
     def __str__(self):
         return self.label

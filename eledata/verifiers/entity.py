@@ -1,7 +1,7 @@
 from eledata import util
 from eledata.util import InvalidInputError
 from verifier import Verifier
-from project import settings
+from project.settings import constants
 
 
 class CreateEntityVerifier(Verifier):
@@ -17,9 +17,11 @@ class CreateEntityVerifier(Verifier):
         pass
 
     def stage2(self, entity_dict):
-        options = {"type": [x['value'] for x in settings.CONSTANTS['entity']['type']],
-                   "source_type": settings.CONSTANTS['entity']['source_type'],
-                   "state": {1}}
+        options = {
+            "type": [x['value'] for x in constants().get('entity').get('entity_type')],
+            "source_type": constants().get('entity').get('source_type'),
+            "state": {1}
+        }
 
         required = {"type", "source_type", "state"}
 

@@ -443,21 +443,21 @@ class EntityH2OEngine(object):
         model.train(x=training_frame.columns, y='clv', training_frame=train)
         test['predict_clv'] = model.predict(test)
 
-        median = training_frame["clv"].median()[0]
-        low_med = training_frame[training_frame["clv"] <= median, "clv"].median()[0]
-        high_med = training_frame[training_frame["clv"] > median, "clv"].median()[0]
+        # median = training_frame["clv"].median()[0]
+        # low_med = training_frame[training_frame["clv"] <= median, "clv"].median()[0]
+        # high_med = training_frame[training_frame["clv"] > median, "clv"].median()[0]
 
-        print("----Hit Ratio----")
-        print (((test['clv'] > high_med) & (test['predict_clv'] > high_med)) |
-               (((high_med >= test['clv']) & (test['clv'] > median)) & (
-                   (high_med >= test['predict_clv']) & (test['clv'] > median))) |
-               (((median >= test['clv']) & (test['clv'] > low_med)) & (
-                   (median >= test['predict_clv']) & (test['clv'] > low_med))) |
-               (((test['clv'] <= low_med) & (test['predict_clv'] <= low_med)
-                 ))).sum() / len(test)
-
-        print("---- Dummy Accuracy----")
-        print (abs(test['clv'] - test['predict_clv']) <= test['std_monetary_amount']).sum() / len(test)
-        # print(model.auc(train=True))
-        print(model)
+        # print("----Hit Ratio----")
+        # print (((test['clv'] > high_med) & (test['predict_clv'] > high_med)) |
+        #        (((high_med >= test['clv']) & (test['clv'] > median)) & (
+        #            (high_med >= test['predict_clv']) & (test['clv'] > median))) |
+        #        (((median >= test['clv']) & (test['clv'] > low_med)) & (
+        #            (median >= test['predict_clv']) & (test['clv'] > low_med))) |
+        #        (((test['clv'] <= low_med) & (test['predict_clv'] <= low_med)
+        #          ))).sum() / len(test)
+        #
+        # print("---- Dummy Accuracy----")
+        # print (abs(test['clv'] - test['predict_clv']) <= test['std_monetary_amount']).sum() / len(test)
+        # # print(model.auc(train=True))
+        # print(model)
         # h2o.export_file(test, path='satou.csv')
