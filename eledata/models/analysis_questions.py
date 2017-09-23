@@ -17,15 +17,15 @@ class AnalysisParameter(EmbeddedDocument):
     content = StringField()
     required_question_labels = ListField(StringField())
     floating_label = StringField()
-    choices = EmbeddedDocumentListField(AnalysisParameterChoice)
 
+    choices = EmbeddedDocumentListField(AnalysisParameterChoice)
     choice_index = IntField(default=0)
+
     # The value the user inputted to the choice. This value may be null, since
     # not all choices take inputs.
     choice_input = StringField()
 
-    # TODO: (issue #1) Maybe we do not need this function, just returning all params for every user fetch
-    # ----> Maybe we keep the enabled flag to internal validation instead
+    # For internal validation
     enabled = BooleanField()
 
     def __str__(self):
@@ -58,6 +58,12 @@ class AnalysisQuestion(EmbeddedDocument):
     required_entities = ListField(StringField())
     analysis_engine = StringField()
 
+    # TODO: (issue #2) choose (A), (B)
+    # (A) save status in questions, run parallel engines;
+    # (B) save status / other info in JOBS, run let jobs engines run them.
+    # status = StringField()  # Initialized, Pending, Updating, Updated
+    # updated_at = DateTimeField(default=datetime.datetime.now)
+
     def __str__(self):
         return self.label
 
@@ -69,11 +75,9 @@ and the list of parameters to those questions, answers.
 
 
 class GroupAnalysisSettings(EmbeddedDocument):
-    # questions = DynamicEmbeddedDocument(AnalysisQuestion)
     questions = EmbeddedDocumentListField(AnalysisQuestion)
     # TODO: This should probably be changed to a dictionary
     parameters = EmbeddedDocumentListField(AnalysisParameter)
-    # parameters = DynamicEmbeddedDocument(AnalysisParameter)
 
     '''
     Each question has a list of parameters it needs, so this method figures out
@@ -114,4 +118,3 @@ class GroupAnalysisSettings(EmbeddedDocument):
             if q_label in param.required_question_labels:
                 response_param += [param, ]
         return response_param
-

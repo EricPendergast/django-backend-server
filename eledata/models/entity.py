@@ -167,7 +167,6 @@ class Entity(Document):
     source = EmbeddedDocumentField(DataSource)
     data_summary = EmbeddedDocumentListField(DataSummary)
     data_summary_chart = DictField()
-    # TODO: make this a dict field
     data_header = EmbeddedDocumentListField(DataHeader)
     created_at = DateTimeField(default=datetime.datetime.now)
     updated_at = DateTimeField(default=datetime.datetime.now)

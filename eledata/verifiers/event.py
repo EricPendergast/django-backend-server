@@ -21,7 +21,7 @@ class UpdateEventStatusVerifier(Verifier):
 
 class InitNewEventVerifier(Verifier):
     def stage0(self, event_obj):
-        # check event_obj if all tasks from event_spec is done
+        # print(event_obj)
         pass
 
     def stage1(self, serializer):

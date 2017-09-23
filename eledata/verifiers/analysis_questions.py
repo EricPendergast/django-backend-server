@@ -60,3 +60,15 @@ class UpdateAnalysisSettingsVerifier(Verifier):
                 raise InvalidInputError("Received prohibited analysis parameter setting")
 
     stages = [stage0, stage1, stage2, stage3]
+
+
+class StartAnalysisVerifier(Verifier):
+    def stage0(self, questions):
+        if not questions:
+            raise InvalidInputError("No question for request group")
+
+    def stage1(self, selected_questions):
+        if not selected_questions:
+            raise InvalidInputError("No selected question to be started")
+
+    stages = [stage0, stage1, ]

@@ -107,77 +107,6 @@ class AnalysisQuestionTestCase(TestCase):
 
         self.assertIn("analysis_questions", response.data)
 
-    def test_toggle_analysis_question(self):
-        c, user = self._create_default_user()
-
-        def is_label_selected(_user, label):
-            for question in _user.group.analysis_settings.questions:
-                if question.label == label:
-                    return question.selected
-            return False
-
-        c.post('/analysis_questions/toggle_analysis_question/', data={"toggled": "leaving"})
-        user.reload()
-        self.assertTrue(is_label_selected(user, "leaving"))
-        self.assertTrue(is_label_selected(user, "cause of leave"))
-        self.assertFalse(is_label_selected(user, "invalid label"))
-
-        c.post('/analysis_questions/toggle_analysis_question/', data={"toggled": "leaving"})
-        user.reload()
-        self.assertFalse(is_label_selected(user, "leaving"))
-
-        c.post('/analysis_questions/toggle_analysis_question/', data={"toggled": "cause of leave"})
-        user.reload()
-        self.assertFalse(is_label_selected(user, "leaving"))
-
-        # This analysis question is not enabled, so nothing should change, and
-        # an error should be generated
-        response = c.post('/analysis_questions/toggle_analysis_question/', data={"toggled": "popularity"})
-        self.assertTrue('error' in from_json(response.content))
-        user.reload()
-        self.assertFalse(is_label_selected(user, "popularity"))
-
-        response = c.post('/analysis_questions/toggle_analysis_question/', data={"something": "something else"})
-        self.assertIn("error", from_json(response.content))
-
-    def test_change_analysis_parameter(self):
-        c, user = self._create_default_user()
-
-        def assert_analysis_parameter_is(_user, label, choice_index, choice_input):
-            param = _user.group.analysis_settings.get_parameter(label=label)
-            self.assertTrue(param is not None)
-            self.assertEqual(param.choice_index, choice_index)
-            self.assertEqual(param.choice_input, choice_input)
-
-        assert_analysis_parameter_is(user, "income", 0, None)
-
-        c.post('/analysis_questions/change_analysis_parameter/',
-               data={"label": "income",
-                     "choice_index": 1, "choice_input": "30000"})
-        user.reload()
-        assert_analysis_parameter_is(user, "income", 1, "30000")
-
-        c.post('/analysis_questions/change_analysis_parameter/',
-               data={"label": "income",
-                     "choice_index": 1})
-        user.reload()
-        assert_analysis_parameter_is(user, "income", 1, None)
-
-        response = c.post('/analysis_questions/change_analysis_parameter/',
-                          data={"label": "not a label",
-                                "choice_index": 1})
-        self.assertIn("error", from_json(response.content))
-
-        response = c.post('/analysis_questions/change_analysis_parameter/',
-                          data={"label": "income",
-                                "choice_index": -1})
-        self.assertIn("error", from_json(response.content))
-
-        response = c.post('/analysis_questions/change_analysis_parameter/',
-                          data={"label": "income",
-                                "choice_index": 2})
-        self.assertIn("error", from_json(response.content))
-
     def test_update_analysis_settings(self):
         c, user = self._create_default_user()
 
@@ -246,6 +175,10 @@ class AnalysisQuestionTestCase(TestCase):
                })
         user.reload()
         assert_analysis_parameter_is(user, "clv", 0, "Testing Without Validation")
+
+    def test_start_analysis(self):
+        c, user = self._create_default_user()
+        c.put('/analysis_questions/start_analysis/')
 
     def test_same_elements(self):
         self.assertTrue(_same_elements([5, 6, 7, 3], [3, 6, 7, 5]))

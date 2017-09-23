@@ -198,56 +198,59 @@ class CoreH2OTestCase(TestCase):
         # print(len(h2o.frames()['frames']))
         # h2o.cluster().shutdown()
 
+    """
+    Performance Testing
+    """
     # Test take around 90 seconds so i am not running this every time 8-D
-    def test_big_clv_analysis(self):
-        print(
-            self.WARNING + "Following test \"test_big_clv_analysis\" takes around 90 seconds, please wait."
-            + self.ENDC)
-
-        with open(self.bigTransactionFilename) as fp:
-            ret = self.client.post('/entity/create_entity/',
-                                   {'file': fp, 'entity': self.entityJSON1, 'isHeaderIncluded': False})
-
-        rid = from_json(ret.content)['entity_id']
-        self.client.post('/entity/%s/create_entity_mapped/' % rid,
-                         data=self.entityDataHeaderNoFileHeader, content_type="application/json",
-                         HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-
-        user_group = Group.objects(name="dummy_group").get()
-        entity_h2o_engine = EntityH2OEngine(user_group)
-        self.assertEquals(len(entity_h2o_engine.get_user_list()), 23570)
-
-        # testing get_time_window
-        time_range_response = entity_h2o_engine.get_time_window()
-        # self.assertEquals(time_range_response.keys(), [u'last_date', u'_id', u'first_date'])
-        last_date, _id, first_date = [time_range_response[x] for x in list(time_range_response)]
-
-        self.assertEquals(first_date, datetime.datetime(1997, 1, 1, 0, 0, 0))
-        self.assertEquals(last_date, datetime.datetime(1998, 6, 30, 0, 0, 0))
-
-        month_diff = entity_h2o_engine.get_month_diff(first_date, last_date)
-
-        # testing get_clv_in_window
-        response = entity_h2o_engine.get_clv_in_window(start_date=first_date, end_date=last_date, month_diff=month_diff)
-        self.assertEquals(list(response.keys()), [u'user_id', u'clv'])
-        self.assertEquals(response['user_id'].count(), 23570)
-        self.assertEquals(round(response['clv'].max(), 2), 777.27)
-        self.assertEquals(round(response['clv'].mean(), 2), 5.89)
-        self.assertEquals(round(response['clv'].min(), 2), 0.0)
-
-        # testing dynamic rmf crawling, slightly faster than normal looping
-        response = entity_h2o_engine.get_dynamic_rmf_in_window(start_date=first_date, end_date=last_date,
-                                                               window_length=3, month_diff=month_diff)
-        self.assertEquals(len(response), 6)
-        self.assertEquals(list(response[0]), ['user_id', 'frequency', 'monetary_amount', 'monetary_quantity', 'recency'])
-        # TODO: more asserting?
-        # print(response)
-        # normal looping approach for reference here
-        # -----------------------------------------------------------------------------------------------------
-        # date_list = [last_date - relativedelta(months=i * 3) for i in range(7)]
-        # date_list.append(first_date)
-        # object = []
-        # for i in reversed(range(len(date_list) - 2)):
-        #     t_response = entity_h2o_engine.get_rmf_in_window(start_date=date_list[i + 1], end_date=last_date)
-        #     object.append(t_response)
-        # ------------------------------------------------------------------------------------------------------
+    # def test_big_clv_analysis(self):
+    #     print(
+    #         self.WARNING + "Following test \"test_big_clv_analysis\" takes around 90 seconds, please wait."
+    #         + self.ENDC)
+    #
+    #     with open(self.bigTransactionFilename) as fp:
+    #         ret = self.client.post('/entity/create_entity/',
+    #                                {'file': fp, 'entity': self.entityJSON1, 'isHeaderIncluded': False})
+    #
+    #     rid = from_json(ret.content)['entity_id']
+    #     self.client.post('/entity/%s/create_entity_mapped/' % rid,
+    #                      data=self.entityDataHeaderNoFileHeader, content_type="application/json",
+    #                      HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+    #
+    #     user_group = Group.objects(name="dummy_group").get()
+    #     entity_h2o_engine = EntityH2OEngine(user_group)
+    #     self.assertEquals(len(entity_h2o_engine.get_user_list()), 23570)
+    #
+    #     # testing get_time_window
+    #     time_range_response = entity_h2o_engine.get_time_window()
+    #     # self.assertEquals(time_range_response.keys(), [u'last_date', u'_id', u'first_date'])
+    #     last_date, _id, first_date = [time_range_response[x] for x in list(time_range_response)]
+    #
+    #     self.assertEquals(first_date, datetime.datetime(1997, 1, 1, 0, 0, 0))
+    #     self.assertEquals(last_date, datetime.datetime(1998, 6, 30, 0, 0, 0))
+    #
+    #     month_diff = entity_h2o_engine.get_month_diff(first_date, last_date)
+    #
+    #     # testing get_clv_in_window
+    #     response = entity_h2o_engine.get_clv_in_window(start_date=first_date, end_date=last_date, month_diff=month_diff)
+    #     self.assertEquals(list(response.keys()), [u'user_id', u'clv'])
+    #     self.assertEquals(response['user_id'].count(), 23570)
+    #     self.assertEquals(round(response['clv'].max(), 2), 777.27)
+    #     self.assertEquals(round(response['clv'].mean(), 2), 5.89)
+    #     self.assertEquals(round(response['clv'].min(), 2), 0.0)
+    #
+    #     # testing dynamic rmf crawling, slightly faster than normal looping
+    #     response = entity_h2o_engine.get_dynamic_rmf_in_window(start_date=first_date, end_date=last_date,
+    #                                                            window_length=3, month_diff=month_diff)
+    #     self.assertEquals(len(response), 6)
+    #     self.assertEquals(list(response[0]), ['user_id', 'frequency', 'monetary_amount', 'monetary_quantity', 'recency'])
+    #     # TODO: more asserting?
+    #     # print(response)
+    #     # normal looping approach for reference here
+    #     # -----------------------------------------------------------------------------------------------------
+    #     # date_list = [last_date - relativedelta(months=i * 3) for i in range(7)]
+    #     # date_list.append(first_date)
+    #     # object = []
+    #     # for i in reversed(range(len(date_list) - 2)):
+    #     #     t_response = entity_h2o_engine.get_rmf_in_window(start_date=date_list[i + 1], end_date=last_date)
+    #     #     object.append(t_response)
+    #     # ------------------------------------------------------------------------------------------------------

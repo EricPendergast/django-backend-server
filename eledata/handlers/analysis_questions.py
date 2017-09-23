@@ -1,6 +1,7 @@
 from eledata.models.analysis_questions import GroupAnalysisSettings
 from eledata.serializers.analysis_questions import AnalysisQuestionSerializer, AnalysisParameterSerializer
 from eledata.core_engine.entity_h2o_engine import *
+from multiprocessing import Process
 import ast
 
 
@@ -31,44 +32,6 @@ def get_analysis_questions_settings(settings):
     ret_data["analysis_questions"].sort(key=get_sort_key)
 
     return ret_data
-
-
-# TODO: (issue #1) Maybe we do not need this function, just returning all params for every user fetch
-def toggle_analysis_question(request_data, settings, verifier):
-    verifier.verify(0, request_data)
-
-    label = request_data['toggled']
-    # The analysis question that the user is trying to toggle
-    analysis_question = None
-
-    for q in settings.questions:
-        if q.enabled and q.label == label:
-            analysis_question = q
-            break
-
-    verifier.verify(1, analysis_question)
-
-    analysis_question.selected = not analysis_question.selected
-
-    settings.update_parameters()
-
-    return {"msg": "Toggle successful"}
-
-
-# TODO: (issue #1) Maybe we do not need this function, just returning all params for every user fetch
-def change_analysis_parameter(request_data, settings, verifier):
-    verifier.verify(0, request_data)
-    param_to_change = settings.get_parameter(request_data["label"])
-    verifier.verify(1, param_to_change, request_data["label"])
-    param_to_change.choice_index = request_data["choice_index"]
-    verifier.verify(2, param_to_change)
-
-    if "choice_input" in request_data:
-        param_to_change.choice_input = request_data["choice_input"]
-    else:
-        param_to_change.choice_input = None
-
-    return {"msg": "Change successful"}
 
 
 def update_analysis_settings(request_data, settings, verifier):
@@ -127,17 +90,18 @@ def update_analysis_settings(request_data, settings, verifier):
     return {"msg": "Change successful"}
 
 
-def get_analysis_question_executed(group, settings):
-    ret_data = get_analysis_questions_settings(settings)
+def start_analysis(settings, verifier):
+    questions = settings.questions
+    verifier.verify(stage=0, questions=questions)
 
-    # TODO: move the hardcode list to constants file
-    H2O_questions = [x for x in ret_data["analysis_questions"] if x.label in ["revenue", "churn", "growth", "repeat"]]
+    selected_questions = [x for x in questions if x.selected is True]
+    verifier.verify(stage=1, selected_questions=selected_questions)
 
-    Scraping_questions = [x for x in ret_data["analysis_questions"] if
-                          x.label in ["resellersProducts", "competitorsProducts", "extremeResellersProducts",
-                                      "extremeCompetitorProducts", "firstPageProducts", "firstPageCompetitorProducts",
-                                      "nonConformant", "resellersPriceRange", "competitorsPriceRange",
-                                      ]]
+    pending_analysis_engines = []
+    for selected_question in selected_questions:
+        pending_analysis_engines += [selected_question.analysis_engine, ]
 
-    if H2O_questions:
-        engine = EntityH2OEngine(group)
+    # TODO: (issue #2) choose (A), (B)
+    # (A) save status in questions, run parallel engines;
+    # (B) save status / other info in JOBS, run let jobs engines run them.
+    return {"msg": "Change successful"}
