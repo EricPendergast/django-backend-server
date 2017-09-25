@@ -79,36 +79,36 @@ class CoreH2OTestCase(TestCase):
         self.assertEquals(entity_h2o_engine_1.group.name, "dummy_group")
         self.assertEquals(entity_h2o_engine_2.group.name, "different_dummy_group")
 
-    def test_first_execute_flow(self):
-        print("======Data Uploading===========")
-        print(datetime.datetime.now())
-        # with open(self.defaultTransactionFilename) as fp:
-        #     ret = self.client.post('/entity/create_entity/',
-        #                            {'file': fp, 'entity': self.entityJSON1, 'isHeaderIncluded': True})
-        #
-        # rid = from_json(ret.content)['entity_id']
-        # self.client.post('/entity/%s/create_entity_mapped/' % rid,
-        #                  data=self.entityDataHeaderJSON1, content_type="application/json",
-        #                  HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-        with open(self.bigTransactionFilename) as fp:
-            ret = self.client.post('/entity/create_entity/',
-                                   {'file': fp, 'entity': self.entityJSON1, 'isHeaderIncluded': False})
-
-        rid = from_json(ret.content)['entity_id']
-        self.client.post('/entity/%s/create_entity_mapped/' % rid,
-                         data=self.entityDataHeaderNoFileHeader, content_type="application/json",
-                         HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-
-        print("======Data Uploaded===========")
-        print(datetime.datetime.now())
-
-        user_group = Group.objects(name="dummy_group").get()
-        entity_h2o_engine = EntityH2OEngine(group=user_group, questions=user_group.analysis_settings.questions,
-                                            params=user_group.analysis_settings.parameters)
-        entity_h2o_engine.execute()
-
-        print("======H2O Engine Executed===========")
-        print(datetime.datetime.now())
+    # def test_first_execute_flow(self):
+    #     print("======Data Uploading===========")
+    #     print(datetime.datetime.now())
+    #     # with open(self.defaultTransactionFilename) as fp:
+    #     #     ret = self.client.post('/entity/create_entity/',
+    #     #                            {'file': fp, 'entity': self.entityJSON1, 'isHeaderIncluded': True})
+    #     #
+    #     # rid = from_json(ret.content)['entity_id']
+    #     # self.client.post('/entity/%s/create_entity_mapped/' % rid,
+    #     #                  data=self.entityDataHeaderJSON1, content_type="application/json",
+    #     #                  HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+    #     with open(self.bigTransactionFilename) as fp:
+    #         ret = self.client.post('/entity/create_entity/',
+    #                                {'file': fp, 'entity': self.entityJSON1, 'isHeaderIncluded': False})
+    #
+    #     rid = from_json(ret.content)['entity_id']
+    #     self.client.post('/entity/%s/create_entity_mapped/' % rid,
+    #                      data=self.entityDataHeaderNoFileHeader, content_type="application/json",
+    #                      HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+    #
+    #     print("======Data Uploaded===========")
+    #     print(datetime.datetime.now())
+    #
+    #     user_group = Group.objects(name="dummy_group").get()
+    #     entity_h2o_engine = EntityH2OEngine(group=user_group, questions=user_group.analysis_settings.questions,
+    #                                         params=user_group.analysis_settings.parameters)
+    #     entity_h2o_engine.execute()
+    #
+    #     print("======H2O Engine Executed===========")
+    #     print(datetime.datetime.now())
 
     def test_first_clv_analysis(self):
         # h2o.init()

@@ -8,6 +8,7 @@ from eledata.models.users import User, Group
 import eledata.handlers.event as event_handler
 from project.settings import constants
 import datetime
+from eledata.core_engine.provider import EngineProvider
 
 
 class EventTestCase(TestCase):
@@ -175,3 +176,13 @@ class EventTestCase(TestCase):
         assert response == {'msg': 'Change successful'}
         response = self.admin_client.get("/event/get_general_event/")
         assert len(response.data.get('opportunity')) == 1
+
+    # def test_scraping_on_engine(self):
+    #     summary_entity_stats_engine = EngineProvider.provide("Monitoring.JD",
+    #                                                          group=self.admin_group,
+    #                                                          keyword="DELL")
+    #     summary_entity_stats_engine_2 = EngineProvider.provide("Monitoring.TMall",
+    #                                                            group=self.admin_group,
+    #                                                            keyword="DELL")
+    #     summary_entity_stats_engine.execute()
+    #     summary_entity_stats_engine_2.execute()

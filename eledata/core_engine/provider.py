@@ -8,9 +8,11 @@ class EngineProvider(object):
         pre_name, post_name = name.split('.')
 
         from entity_stats_engine.provider import EntityStatsEngineProvider
+        from monitoring_engine.provider import MonitoringEngineProvider
 
         providers = {
-            "EntityStats": EntityStatsEngineProvider
+            "EntityStats": EntityStatsEngineProvider,
+            "Monitoring": MonitoringEngineProvider
         }
 
         p = providers.get(pre_name)

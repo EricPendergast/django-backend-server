@@ -38,10 +38,18 @@ class Event(Document):
             'initializing'))  # I = initializing, P = pending, # T = taken, # A = aborted, # C = continuous
     created_at = DateTimeField(default=datetime.datetime.now)
     updated_at = DateTimeField(default=datetime.datetime.now)
+
+    # Not disposed, saving mother data here and present aggregated detailed_data and chart_data
+    source_data = ListField(DictField())  # Only when status is C
+    update_freq = IntField()  # Only when status is C, by hour
     group = ReferenceField(Group)
 
     @queryset_manager
     def objects(self, _queryset):
-        # This may actually also be done by defining a default ordering for
-        # the document, but this illustrates the use of manager methods
+        """
+        Reset query object with default order by updated_at
+
+        This may actually also be done by defining a default ordering for
+        the document, but this illustrates the use of manager methods
+        """
         return _queryset.order_by('-updated_at')
