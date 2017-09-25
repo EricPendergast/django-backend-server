@@ -1,5 +1,6 @@
-BeautifulSoup==3.2.1
+beautifulsoup4==4.6.0
 blinker==1.4
+bs4==0.0.1
 certifi==2017.7.27.1
 cffi==1.10.0
 chardet==3.0.4
