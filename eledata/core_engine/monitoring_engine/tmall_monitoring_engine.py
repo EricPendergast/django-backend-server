@@ -30,7 +30,10 @@ class TMallScrap(MonitoringEngine):
         self.url = _url.replace('CHANGEME', keyword)
 
     def set_location(self, _location):
-        pass
+        """
+        We do nothing here.
+        """
+        return
 
     def set_cookie(self, _u_key, _p_key):
         def human_type(element, text):
@@ -162,9 +165,6 @@ class TMallScrap(MonitoringEngine):
                 suit_final_price = {'skuid': i, 'final price': final_price}
                 suit_final_price_list.append(suit_final_price)
             try:
-                text_file = open("image.txt", "w")
-                text_file.write(str(_soup))
-                text_file.close()
                 ul_image_list = _soup.find('ul', {"id": "J_UlThumb"})
                 img_list = ul_image_list.find_all('li')
                 for index2, img in enumerate(img_list):
@@ -213,28 +213,28 @@ class TMallScrap(MonitoringEngine):
                         if i['skuId'] == y[u'skuId']:
                             map_json = {
                                 'default_price': i['priceCent'],
-                                'skuId': i['skuId'],
+                                'sku_id': i['skuId'],
                                 'product name': y[u'names'],
                                 'stock': i['stock']
                             }
                             list_n.append(map_json)
                 for i in list_n:
                     for y in suit_final_price_list:
-                        if i['skuId'] == y['skuid']:
-                            finnal_price_dic = {
+                        if i['sku_id'] == y['skuid']:
+                            final_price_dic = {
                                 'default_price': round(int(i['default_price']) / 100, 2),
-                                'skuId': i['skuId'],
+                                'sku_id': i['sku_id'],
                                 'product name': i['product name'],
                                 'stock': i['stock'],
                                 'final_price': y['final price']
                             }
-                            final_price_list.append(finnal_price_dic)
+                            final_price_list.append(final_price_dic)
                 print("OK when get suit")
 
             except TypeError or ValueError or IndexError:
                 final_price_list.append({
                     'default_price': '',
-                    'skuId': '',
+                    'sku_id': '',
                     'product name': '',
                     'stock': '',
                     'final_price': ''
@@ -242,7 +242,7 @@ class TMallScrap(MonitoringEngine):
                 print 'error when get suit', item_url
 
             detail = {
-                'platform': 'Tmall',
+                'platform': 'TMall',
                 'product_name': product_name,
                 'seller_name': seller_name.strip(),
                 "sku_id": sku_id,
@@ -262,21 +262,22 @@ class TMallScrap(MonitoringEngine):
         return product_list
 
     def out(self, _list):
-        pass
-        # for item in _list:
-        #     print "Sku id:", item['sku_id']
-        #     print "Shop Name:", item['seller_name']
-        #     print "Product Price:", item['default_price']
-        #     print "Product Name:", item['product_name']
-        #     for p in item['images']:
-        #         print p + '.img'
-        #     print "sales_count:", item['sales_count']
-        #     print "item_url:", item['item_url']
-        #     for i in item['support']:
-        #         print i
-        #     try:
-        #         for i in item['suit']:
-        #             print 'Product Name:', i['product name'], '  SkuId:', i['skuId'], '  Stock Value:', i[
-        #                 'stock'], 'Default price:', i['default_price'], 'Final price:', i['final_price'] + '\n',
-        #     except:
-        #         print 'print suit error'
+        # print _list
+        # pass
+        for item in _list:
+            print "Sku id:", item['sku_id']
+            print "Shop Name:", item['seller_name']
+            print "Product Price:", item['default_price']
+            print "Product Name:", item['product_name']
+            for p in item['images']:
+                print p + '.img'
+            print "sales_count:", item['sales_count']
+            print "item_url:", item['item_url']
+            for i in item['support']:
+                print i
+            try:
+                for i in item['suit']:
+                    print 'Product Name:', i['product name'], '  SkuId:', i['sku_id'], '  Stock Value:', i[
+                        'stock'], 'Default price:', i['default_price'], 'Final price:', i['final_price'] + '\n',
+            except:
+                print 'print suit error'

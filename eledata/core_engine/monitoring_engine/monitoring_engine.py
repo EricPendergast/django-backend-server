@@ -8,12 +8,12 @@ import json
 class MonitoringEngine(BaseEngine):
     img_pth = 'temp/img'
 
-    def __init__(self, keyword, group, location=None):
+    def __init__(self, keyword, group, location=None, _u_key='CHANGE_ME', _p_key='CHANGE_ME'):
         super(MonitoringEngine, self).__init__(group)
         self.keyword = keyword
         self.set_searching_url(keyword)
         self.set_location(location)
-        self.set_cookie('CHANGE_USER_NAME', 'CHANGE_PASSWORD')
+        self.set_cookie(_u_key, _p_key)
 
     @abstractmethod
     def set_searching_url(self, _keyword):

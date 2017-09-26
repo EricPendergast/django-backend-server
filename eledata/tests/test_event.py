@@ -183,6 +183,8 @@ class EventTestCase(TestCase):
     #                                                          keyword="DELL")
     #     summary_entity_stats_engine_2 = EngineProvider.provide("Monitoring.TMall",
     #                                                            group=self.admin_group,
-    #                                                            keyword="DELL")
+    #                                                            keyword="DELL",
+    #                                                            _u_key="alexkamlivelyimpact",
+    #                                                            _p_key="53231323A")
     #     summary_entity_stats_engine.execute()
     #     summary_entity_stats_engine_2.execute()

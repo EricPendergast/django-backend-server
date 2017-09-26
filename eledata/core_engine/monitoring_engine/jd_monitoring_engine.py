@@ -43,7 +43,10 @@ class JDMonitoringEngine(MonitoringEngine):
             self.locations = self.supported_locations
 
     def set_cookie(self, _key_1, _key_2):
-        pass
+        """
+        We do nothing here.
+        """
+        return
 
     """
     Engine/ Platform depending functions
@@ -225,23 +228,23 @@ class JDMonitoringEngine(MonitoringEngine):
         return product_list
 
     def out(self, _list):
-        print _list
-        # for i in _list:
-        #     print "Title:", i['product_name']
-        #     print "Product Id:", i['sku_id']
-        #     print "Http:", i['item_url']
-        #     print "Price:", i['default_price']
-        #     print "Commit Count:", i['comments_count']
-        #     for t in i['images']:
-        #         print t + '.img'
-        #     for y in i['current_stock']:
-        #         print y['tn'], ":", y['stock']
-        #     print '延保服务：'
-        #     for item in i['support']:
-        #         print '延保名称：', item['support_name'], '延保价格：', item['support_price']
-        #     # maybe have some problems
-        #     print '广告：'
-        #     for g in i['advertisements']:
-        #         print g
-        #     # print 'tips:'
-        #     print '\n'
+        # print _list
+        for i in _list:
+            print "Title:", i['product_name']
+            print "Product Id:", i['sku_id']
+            print "Http:", i['item_url']
+            print "Price:", i['default_price']
+            print "Commit Count:", i['comments_count']
+            for t in i['images']:
+                print t + '.img'
+            for y in i['current_stock']:
+                print y['tn'], ":", y['stock']
+            print '延保服务：'
+            for item in i['support']:
+                print '延保名称：', item['support_name'], '延保价格：', item['support_price']
+            # maybe have some problems
+            print '广告：'
+            for g in i['advertisements']:
+                print g
+            # print 'tips:'
+            print '\n'
