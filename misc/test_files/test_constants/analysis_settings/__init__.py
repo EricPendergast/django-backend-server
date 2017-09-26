@@ -1,7 +1,3 @@
-from parameters import parameters
-from questions import questions
+from parameters import parameters as ANALYSIS_PARAMETERS
+from questions import questions as ANALYSIS_QUESTIONS
 
-AnalysisSettings = {
-    "parameters": parameters,
-    "questions": questions
-}

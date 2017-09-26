@@ -65,6 +65,7 @@ class AnalysisQuestionsViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
         group = request.user.group
 
         resp_data = handler.start_analysis(
+            group=group,
             settings=group.analysis_settings,
             verifier=verifier
         )

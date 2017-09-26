@@ -1,16 +1,16 @@
-category = {
-    "opportunity": "Opportunity",
-    "risk": "Risk",
-    "insight": "Insight"
-}
+CATEGORY = dict(
+    OPPORTUNITY="Opportunity",
+    RISK="Risk",
+    INSIGHT="Insight"
+)
 
-status = {
-    "initializing": "I",
-    "pending": "P",
-    "continuous": "C",
-    "taken": "T",
-    "abort": "A"
-}
+STATUS = dict(
+    INITIALIZING="I",
+    PENDING="P",
+    CONTINUOUS="C",
+    TAKEN="T",
+    ABORT="A"
+)
 
 # TODO: Event Dictionary
 # Constants saving TODOs for each event
@@ -33,7 +33,3 @@ event_spec = {
     }
 }
 '''
-event = {
-    "category": category,
-    "status": status
-}

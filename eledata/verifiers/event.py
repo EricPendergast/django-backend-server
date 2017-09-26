@@ -1,6 +1,6 @@
 from eledata.verifiers.verifier import Verifier
 from eledata.util import InvalidInputError
-from project.settings import constants
+from project.settings import CONSTANTS
 
 
 class UpdateEventStatusVerifier(Verifier):
@@ -13,7 +13,7 @@ class UpdateEventStatusVerifier(Verifier):
             raise InvalidInputError("No corresponding event exists")
 
     def stage2(self, event):
-        if event.event_status is not constants().get('Event').get("Status").get("Pending"):
+        if event.event_status is not CONSTANTS.EVENT.STATUS.get("PENDING"):
             raise InvalidInputError("No pending event is found")
 
     stages = [stage0, stage1, stage2, ]
@@ -24,8 +24,16 @@ class InitNewEventVerifier(Verifier):
         # print(event_obj)
         pass
 
-    def stage1(self, serializer):
-        if not serializer.is_valid():
-            raise InvalidInputError("Invalid serializer")
+    def stage1(self, group):
+        if not group:
+            raise InvalidInputError("No group object is used to init new event")
 
-    stages = [stage0, stage1, ]
+    def stage2(self, serializer):
+        if not serializer.is_valid():
+            raise InvalidInputError("Invalid serialized data")
+
+    def stage3(self, _new_event_obj):
+        if not _new_event_obj.group:
+            raise InvalidInputError("No group object is referable")
+
+    stages = [stage0, stage1, stage2, stage3, ]

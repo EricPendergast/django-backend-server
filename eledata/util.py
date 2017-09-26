@@ -122,13 +122,23 @@ class InvalidAnalysisParamError(Exception):
     def __str__(self):
         return self.msg
 
+
+class EngineExecutingError(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+
 # Takes a string representation of a type and returns a function that casts
 # strings to that type
+
+
 string_caster = {
     "string": str,
-    "date": lambda str: datetime.datetime.strptime(str, '%d/%m/%Y'),
+    "date": lambda _str: datetime.datetime.strptime(_str, '%d/%m/%Y'),
     "number": float,
-    "bool": lambda str: bool(distutils.util.strtobool(str)),
+    "bool": lambda _str: bool(distutils.util.strtobool(_str)),
 }
 
 

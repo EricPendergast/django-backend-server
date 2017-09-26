@@ -7,7 +7,7 @@ from eledata.serializers.event import *
 from eledata.verifiers.event import *
 import eledata.handlers.event as handler
 from eledata.models.event import *
-from project.settings import constants
+from project.settings import CONSTANTS
 
 
 class EventViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
@@ -25,15 +25,15 @@ class EventViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
         response = {
             "opportunity": [
                 x for x in serializer.data if
-                x.get('event_category') == constants().get("event").get('category').get('opportunity')
+                x.get('event_category') == CONSTANTS.EVENT.CATEGORY.get('OPPORTUNITY')
             ],
             "risk": [
                 x for x in serializer.data if
-                x.get('event_category') == constants().get("event").get('category').get('risk')
+                x.get('event_category') == CONSTANTS.EVENT.CATEGORY.get('RISK')
             ],
             "insight": [
                 x for x in serializer.data if
-                x.get('event_category') == constants().get("event").get('category').get('insight')
+                x.get('event_category') == CONSTANTS.EVENT.CATEGORY.get('INSIGHT')
             ]
         }
         return Response(response)

@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from django.test import TestCase
 from django.test import Client
 from eledata.models.users import User, Group
+from eledata.models.event import Job
 
 from eledata.util import from_json
 from eledata.models.analysis_questions import AnalysisQuestion, AnalysisParameter
@@ -41,6 +42,7 @@ class AnalysisQuestionTestCase(TestCase):
     def doCleanups(self):
         User.drop_collection()
         Group.drop_collection()
+        Job.drop_collection()
 
     def test_get_all_questions(self):
         c, _ = self._create_default_user()
@@ -97,13 +99,16 @@ class AnalysisQuestionTestCase(TestCase):
             u'analysis_questions': [
                 {u'orientation': u'hiddenInsight', u'selected': True, u'enabled': True, u'label': u'cause of leave',
                  u'icon': u'maps/directionsRun', u'content': u'What has caused the most customers to leave?',
-                 u'type': u'descriptive'},
+                 u'type': u'descriptive',
+                 u'required_entities': [u'transaction', u'customer']},
                 {u'orientation': u'customer', u'selected': False, u'enabled': True, u'label': u'leaving',
                  u'icon': u'maps/directionsRun',
-                 u'content': u'Which customers will likely be leaving in the coming time?', u'type': u'predictive'},
+                 u'content': u'Which customers will likely be leaving in the coming time?', u'type': u'predictive',
+                 u'required_entities': [u'transaction', u'customer']},
                 {u'orientation': u'product', u'selected': False, u'enabled': False, u'label': u'popularity',
                  u'icon': u'action/trendingUp', u'content': u'Which products will be the most popular in the future?',
-                 u'type': u'predictive'}]})
+                 u'type': u'predictive',
+                 u'required_entities': [u'transaction']}]})
 
         self.assertIn("analysis_questions", response.data)
 
@@ -178,7 +183,18 @@ class AnalysisQuestionTestCase(TestCase):
 
     def test_start_analysis(self):
         c, user = self._create_default_user()
-        c.put('/analysis_questions/start_analysis/')
+
+        c.post('/analysis_questions/update_analysis_settings/',
+               data={
+                   "analysisQuestion": ["leaving"],
+                   "analysisParams": [{
+                       "label": "clv",
+                       "choiceIndex": 0,
+                   }]
+               })
+        user.reload()
+        response = c.put('/analysis_questions/start_analysis/')
+        self.assertEqual(response.status_code, 200)
 
     def test_same_elements(self):
         self.assertTrue(_same_elements([5, 6, 7, 3], [3, 6, 7, 5]))

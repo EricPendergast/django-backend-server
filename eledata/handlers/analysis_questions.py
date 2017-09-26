@@ -1,9 +1,9 @@
 from eledata.models.analysis_questions import GroupAnalysisSettings
 from eledata.serializers.analysis_questions import AnalysisQuestionSerializer, AnalysisParameterSerializer
-from eledata.core_engine.entity_h2o_engine import *
-from multiprocessing import Process
 import ast
-
+from event import create_new_initializing_job, start_all_initializing_job
+from project.settings import CONSTANTS
+from eledata.models.event import Job
 
 def get_analysis_questions_settings(settings):
     assert type(settings) is GroupAnalysisSettings
@@ -13,7 +13,8 @@ def get_analysis_questions_settings(settings):
     for question in settings.questions:
         entry = AnalysisQuestionSerializer(question).data
 
-        del entry['required_entities']
+        # disabled required_entities hiding
+        # del entry['required_entities']
 
         ret_data["analysis_questions"] += [entry, ]
 
@@ -90,7 +91,7 @@ def update_analysis_settings(request_data, settings, verifier):
     return {"msg": "Change successful"}
 
 
-def start_analysis(settings, verifier):
+def start_analysis(group, settings, verifier):
     questions = settings.questions
     verifier.verify(stage=0, questions=questions)
 
@@ -101,7 +102,21 @@ def start_analysis(settings, verifier):
     for selected_question in selected_questions:
         pending_analysis_engines += [selected_question.analysis_engine, ]
 
-    # TODO: (issue #2) choose (A), (B)
-    # (A) save status in questions, run parallel engines;
-    # (B) save status / other info in JOBS, run let jobs engines run them.
+    _selected_obj = []
+
+    for _selected_question in selected_questions:
+        filtered_param = filter(lambda param: _selected_question.label in param.required_question_labels,
+                                settings.parameters)
+        _selected_obj += [dict(
+            job_engine=_selected_question.analysis_engine,
+            job_status=CONSTANTS.JOB.STATUS.get('INITIALIZING'),
+            group=group,
+            # Change params to dict before fitting them into List(Dict()) Serializing
+            parameter=[x.to_mongo() for x in filtered_param]
+        ), ]
+
+    create_new_initializing_job(_selected_obj)
+
+    start_all_initializing_job(group)
+
     return {"msg": "Change successful"}

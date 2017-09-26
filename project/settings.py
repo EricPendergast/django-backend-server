@@ -125,13 +125,9 @@ else:
 
     mongoengine.connect(db=_MONGODB_NAME, host=_MONGODB_DATABASE_HOST)
 
-    from misc.test_files.test_constants import constants
+    import misc.test_files.test_constants as constants
 
     CONSTANTS = constants
-
-
-def constants():
-    return CONSTANTS
 
 
 PASSWORD_HASHERS = [
