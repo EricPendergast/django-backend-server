@@ -305,6 +305,9 @@ class TMallScrap(MonitoringEngine):
         _url_list = self.url_list
         for item in _url_list:
             _soup = self.get_soup(item)
-            t_list = self.get_basic_info(_soup)
-            self.out(t_list)
-            # self.put_db(t_list)
+            try:
+                t_list = self.get_basic_info(_soup)
+                self.out(t_list)
+                # self.put_db(t_list)
+            except:
+                print 'error when get soup'
