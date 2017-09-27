@@ -1,6 +1,6 @@
 from mongoengine.django import auth
 from mongoengine import fields, Document
-from project.settings import constants
+from project.settings import CONSTANTS
 
 
 class Group(Document):
@@ -16,7 +16,10 @@ class Group(Document):
         from eledata.models.analysis_questions import GroupAnalysisSettings
         group = cls(name=name)
         group.analysis_settings = \
-            GroupAnalysisSettings(**constants().get('analysis_settings'))
+            GroupAnalysisSettings(**dict(
+                parameters=CONSTANTS.ANALYSIS_SETTINGS.ANALYSIS_PARAMETERS,
+                questions=CONSTANTS.ANALYSIS_SETTINGS.ANALYSIS_QUESTIONS,
+            ))
         group.save()
 
         return group

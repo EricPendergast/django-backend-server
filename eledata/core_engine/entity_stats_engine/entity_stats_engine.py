@@ -21,7 +21,7 @@ class EntityStatsEngine(BaseEngine):
         EntityStatsEngine Does not init event (For the time beings?)
         :return:
         """
-        pass
+        return
 
     @abstractmethod
     def get_stats(self, data, data_type):

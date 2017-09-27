@@ -54,4 +54,7 @@ class BaseEngine(object):
 
         p = Process(target=_run(self))
         p.start()
-        p.join()
+        return
+        # We do not have to join the process back
+        # Not focusing on its result
+        # p.join()

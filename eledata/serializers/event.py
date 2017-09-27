@@ -15,3 +15,10 @@ class DetailedEventSerializer(DocumentSerializer):
         model = Event
         depth = 2
         fields = '__all__'
+
+
+class DetailedJobSerializer(DocumentSerializer):
+    class Meta:
+        model = Job
+        depth = 2
+        fields = ['job_engine', 'job_status', 'group', 'parameter']

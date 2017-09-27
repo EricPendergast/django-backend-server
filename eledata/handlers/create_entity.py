@@ -5,8 +5,7 @@ from eledata.serializers.entity import EntityDetailedSerializer
 from eledata.models.entity import Entity
 from eledata.util import string_caster
 from eledata.core_engine.provider import EngineProvider
-from project.settings import constants
-import datetime
+from project.settings import CONSTANTS
 
 
 class EntityViewSetHandler(object):
@@ -21,9 +20,9 @@ class EntityViewSetHandler(object):
 
         # retrieving list of constant entity
         # TODO: move status to constant/ utils, add the intermediate status
-        constant_list = constants().get('entity').get('entity_type')
+        constant_list = list(CONSTANTS.ENTITY.ENTITY_TYPE)
         for x in constant_list:
-            x[u'status'] = u'Ready' if x['value'] in active_list else u'Pending'
+            x['status'] = 'Ready' if x['value'] in active_list else 'Pending'
         return constant_list
 
     @staticmethod
@@ -64,7 +63,7 @@ class EntityViewSetHandler(object):
         response_data = {
             'entity_id': str(entity.id),
             'data': entity_data,
-            'header_option': constants().get('entity').get('header_option').get(entity_dict["type"])
+            'header_option': CONSTANTS.ENTITY.HEADER_OPTION.get(entity_dict["type"])
         }
         # Saving the serializer while also adding its id to the response
         # Loading the first 100 lines of data from the request file

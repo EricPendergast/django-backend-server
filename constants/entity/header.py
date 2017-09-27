@@ -1,11 +1,11 @@
-header_id_field = {
-      "transaction": "Transaction_ID",
-      "customer": "User_ID",
-      "conversion": "Conversion_ID"
-}
+HEADER_ID_FIELD = dict(
+    TRANSACTION="Transaction_ID",
+    CUSTOMER="User_ID",
+    CONVERSION="Conversion_ID"
+)
 
-header_option = {
-      "transaction": [
+HEADER_OPTION = dict(
+    TRANSACTION=[
         "Transaction_ID",
         "User_ID",
         "Transaction_Date",
@@ -16,8 +16,8 @@ header_option = {
         "Brand",
         "Category",
         "Chain"
-      ],
-      "customer": [
+    ],
+    CUSTOMER=[
         "User_ID",
         "Contact_Number",
         "Contact_Email",
@@ -30,8 +30,8 @@ header_option = {
         "Country",
         "Create_Date",
         "Last_Modified_Date"
-      ],
-      "conversion": [
+    ],
+    CONVERSION=[
         "Campaign_ID",
         "Campaign_Name",
         "Conversion_ID",
@@ -39,14 +39,14 @@ header_option = {
         "Response",
         "Start_Date",
         "End_Date"
-      ],
-      "offlineEvent": [
+    ],
+    OFFLINE_EVENT=[
         "Event_ID",
         "Event_Type",
         "Start_Date",
         "End_Date"
-      ],
-      "googleAnalytics": [
+    ],
+    GOOGLE_ANALYTICS=[
         "User_City",
         "User_Type",
         "Source",
@@ -54,27 +54,27 @@ header_option = {
         "Mobile_Device_Branding",
         "Browser",
         "Date"
-      ],
-      "serviceLogs": [
+    ],
+    SERVICE_LOGS=[
         "Transaction_ID",
         "Timestamp",
         "Status",
         "Service_Name",
         "Service_Type",
         "Message"
-      ],
-      "subscription": [
+    ],
+    SUBSCRIPTION=[
         "User_Name",
         "Timestamp",
         "Subscription",
         "Action"
-      ],
-      "peopleCounterData": [
+    ],
+    PEOPLE_COUNTER_DATA=[
         "Timestamp",
         "Number_People_In",
         "Number_People_Out"
-      ],
-      "myFacebook": [
+    ],
+    MY_FACEBOOK=[
         "Timestamp",
         "Page_impressions",
         "Page_impressions_paid",
@@ -91,28 +91,28 @@ header_option = {
         "Page_fan_adds_unique",
         "Page_views_total",
         "Page_video_views_10s"
-      ],
-      "openDataWeather": [
+    ],
+    OPEN_DATA_WEATHER=[
         "Date",
         "Weather",
         "Temperature"
-      ],
-      "openDataHolidays": [
+    ],
+    OPEN_DATA_HOLIDAYS=[
         "Date",
         "Weekday",
         "Holiday_Type"
-      ],
-      "openDataHumanTraffic": [
+    ],
+    OPEN_DATA_HUMAN_TRAFFIC=[
         "Timestamp",
         "Location",
         "Status",
         "Index/Ratio"
-      ],
-      "competitorFacebook": [
+    ],
+    COMPETITOR_FACEBOOK=[
         "Competitor",
         "Timestamp",
         "Page_Likes",
         "Followers",
         "People_talking_about"
-      ]
-    }
+    ]
+)

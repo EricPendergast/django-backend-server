@@ -1,9 +1,4 @@
-from event import event
-from analysis_settings import AnalysisSettings
-from entity import entity
-
-constants = {
-    "event": event,
-    "analysis_settings": AnalysisSettings,
-    "entity": entity
-}
+import event as EVENT
+import analysis_settings as ANALYSIS_SETTINGS
+import entity as ENTITY
+import job as JOB

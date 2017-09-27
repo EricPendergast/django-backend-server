@@ -1,4 +1,4 @@
-entity_type = [
+ENTITY_TYPE = [
     {
         "name": "Transaction",
         "value": "transaction",

@@ -6,7 +6,7 @@ from django.test import Client
 from eledata.models.event import Event
 from eledata.models.users import User, Group
 import eledata.handlers.event as event_handler
-from project.settings import constants
+from project.settings import CONSTANTS
 import datetime
 from eledata.core_engine.provider import EngineProvider
 
@@ -31,9 +31,8 @@ class EventTestCase(TestCase):
         assert len(Group.objects) == 1
 
         test_data = {
-            "event_category": constants().get('event').get('category').get('opportunity'),
-            "event_type": "Capture customer likely to repeat purchase",
-            "event_value": "VaO: $102,000",
+            "event_category": CONSTANTS.EVENT.CATEGORY.get("OPPORTUNITY"),
+            "event_type": "Capture customer likely to repeat purchase", "event_value": "VaO: $102,000",
             "event_desc": [
                 {
                     "key": "Captured User",

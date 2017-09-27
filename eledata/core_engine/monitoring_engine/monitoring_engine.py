@@ -8,7 +8,9 @@ import json
 class MonitoringEngine(BaseEngine):
     img_pth = 'temp/img'
 
-    def __init__(self, keyword, group, location=None, _u_key='CHANGE_ME', _p_key='CHANGE_ME'):
+    def __init__(self, group, keyword=None, location=None, _u_key='CHANGE_ME', _p_key='CHANGE_ME'):
+        # if not keyword:
+        #     keyword = get_keyword_from_group_param
         super(MonitoringEngine, self).__init__(group)
         self.keyword = keyword
         self.set_searching_url(keyword)
@@ -43,7 +45,7 @@ class MonitoringEngine(BaseEngine):
         self.out(self.response)
 
     def event_init(self):
-        pass
+        return
 
     def get_soup(self, _url=None):
         """
