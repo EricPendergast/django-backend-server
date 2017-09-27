@@ -1,6 +1,8 @@
 from django.core.management import BaseCommand
 from eledata.models.entity import Entity, Change
 from eledata.models.users import User, Group
+
+
 # from eledata.models.analysis_questions import AnalysisQuestion, AnalysisParameter
 
 # The class must be named Command, and subclass BaseCommand
@@ -12,7 +14,6 @@ class Command(BaseCommand):
 
     # A command must define handle()
     def handle(self, *args, **options):
-
         # Remove all the existing data
         Entity.drop_collection()
         Change.drop_collection()

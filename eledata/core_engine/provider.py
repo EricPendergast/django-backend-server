@@ -9,10 +9,12 @@ class EngineProvider(object):
 
         from entity_stats_engine.provider import EntityStatsEngineProvider
         from monitoring_engine.provider import MonitoringEngineProvider
+        from h2o_engine.provider import H2OEngineProvider
 
         providers = {
             "EntityStats": EntityStatsEngineProvider,
-            "Monitoring": MonitoringEngineProvider
+            "Monitoring": MonitoringEngineProvider,
+            "H2O": H2OEngineProvider
         }
 
         p = providers.get(pre_name)
@@ -51,4 +53,4 @@ class EngineProviderNotFound(NameError):
         self._name = name
 
     def __str__(self):
-        return 'Engine Provider{} Not Found'.format(self._name)
+        return 'Engine Provider {} Not Found'.format(self._name)

@@ -18,9 +18,11 @@ from abc import abstractmethod
 class BaseEngine(object):
     group = None
     response = None
+    params = None
 
-    def __init__(self, group):
+    def __init__(self, group, params):
         self.group = group
+        self.params = params
 
     @abstractmethod
     def execute(self):
@@ -42,19 +44,3 @@ class BaseEngine(object):
         :return: engine ultimate response
         """
         return self.response
-
-    def sync_run(self):
-        """
-        (When engine is for Event Response)
-        Synchronous Wrapper of _run, executing Engine Workflow in parallel job
-        """
-        def _run(_self):
-            _self.execute()
-            _self.event_init()
-
-        p = Process(target=_run(self))
-        p.start()
-        return
-        # We do not have to join the process back
-        # Not focusing on its result
-        # p.join()

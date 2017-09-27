@@ -3,7 +3,6 @@ from eledata.verifiers.event import *
 from project.settings import CONSTANTS
 from eledata.core_engine.provider import EngineProvider
 from eledata.util import EngineExecutingError
-from eledata.core_engine.provider import EngineProviderNotFound
 from multiprocessing import Process
 
 
@@ -46,47 +45,55 @@ def init_new_event(event_object, _group):
 def create_new_initializing_job(jobs):
     _job = []
     for job in jobs:
+        # Assert all engine is valid in this stage
+        assert EngineProvider.provide(job.get('job_engine'), None, None)
+        # Assert all engine's event_spec is valid in this stage
+        assert job[u'job_engine'] in list(CONSTANTS.JOB.EVENT_SPEC.keys())
+
         serializers = DetailedJobSerializer(data=job)
+
         assert serializers.is_valid()
+
         temp_job = serializers.create(serializers.validated_data)
         temp_job.group = job[u'group']
         _job += [temp_job, ]
 
-    # TODO: Assert all engine is valid in this stage
+    # Only save jobs and return when all jobs are valid
     map(lambda x: x.save(), _job)
 
     return {"msg": "Change successful"}
 
 
 def start_all_initializing_job(_group):
-
     def sync_engine_executor(s_job):
         try:
-
             s_job.job_status = CONSTANTS.JOB.STATUS.get("PENDING")
             s_job.save()
 
             s_engine = EngineProvider.provide(s_job.job_engine, group=_group, params=s_job.parameter)
+
+            # TODO: Show more detailed engine process by passing s_job to s_engine to update
             s_engine.execute()
-            # TODO: we should be able to update the s_job's status if s_job is some continuous guys
-            # Do something to update s_engine status
 
             s_engine.event_init()
-            s_engine.job_status = CONSTANTS.JOB.STATUS.get("UPDATED")
+            # event_status should be used in the event_init() Exception should have been threw in case for KeyError
+            event_status = CONSTANTS.JOB.EVENT_SPEC.get(s_job.job_engine).get('event_status')
+
+            if event_status is CONSTANTS.JOB.STATUS.get('PENDING'):
+                s_engine.job_status = event_status
+            else:
+                s_engine.job_status = CONSTANTS.JOB.STATUS.get("UPDATED")
+
         # Use custom Exception case to wrap all the exception from Engine Execution
         except EngineExecutingError as _e:
             s_job.job_status = CONSTANTS.JOB.STATUS.get("FAILED")
             s_job.job_error_message = _e
             s_job.save()
 
-        except EngineProviderNotFound:
-            # It should be fixed in production case
-            pass
-
     _initializing_jobs = Job.objects(group=_group, job_status=CONSTANTS.JOB.STATUS.get("INITIALIZING"))
 
     for job in _initializing_jobs:
-        p = Process(target=sync_engine_executor, args=(job, ))
+        p = Process(target=sync_engine_executor, args=(job,))
         p.start()
 
     # return when all the jobs are executed
