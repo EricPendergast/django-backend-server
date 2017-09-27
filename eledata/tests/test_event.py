@@ -176,14 +176,20 @@ class EventTestCase(TestCase):
         response = self.admin_client.get("/event/get_general_event/")
         assert len(response.data.get('opportunity')) == 1
 
-    # def test_scraping_on_engine(self):
-    #     summary_entity_stats_engine = EngineProvider.provide("Monitoring.JD",
-    #                                                          group=self.admin_group,
-    #                                                          keyword="DELL")
-    #     summary_entity_stats_engine_2 = EngineProvider.provide("Monitoring.TMall",
-    #                                                            group=self.admin_group,
-    #                                                            keyword="DELL",
-    #                                                            _u_key="alexkamlivelyimpact",
-    #                                                            _p_key="53231323A")
-    #     summary_entity_stats_engine.execute()
-    #     summary_entity_stats_engine_2.execute()
+    def test_scraping_on_engine(self):
+        # summary_entity_stats_engine = EngineProvider.provide("Monitoring.JD",
+        #                                                      group=self.admin_group,
+        #                                                      params=None,
+        #                                                      keyword="DELL",
+        #                                                      _page=3
+        #                                                      )
+        summary_entity_stats_engine_2 = EngineProvider.provide("Monitoring.TMall",
+                                                               group=self.admin_group,
+                                                               params=None,
+                                                               keyword="DELL",
+                                                               _u_key="alexkamlivelyimpact",
+                                                               _p_key="53231323A",
+                                                               _page=3
+                                                               )
+        # summary_entity_stats_engine.get_multi_page()
+        summary_entity_stats_engine_2.get_multi_page()

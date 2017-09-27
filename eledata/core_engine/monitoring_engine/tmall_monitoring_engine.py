@@ -12,22 +12,40 @@ import requests
 import json
 import uuid
 from .monitoring_engine import MonitoringEngine
+from datetime import datetime
 
 
 class TMallScrap(MonitoringEngine):
     key = ''
     url = ''
     cookie = ''
+    request_page = ''
+    total_page = ''
+    url_list = []
     results = []
 
     """
     Overriding abstract functions for initialization
     """
 
-    def set_searching_url(self, keyword):
+    def set_searching_url(self, keyword, _page):
         _url = 'https://list.tmall.com/search_product.htm?q=CHANGEME' \
                '&type=p&vmarket=&spm=875.7931836%2FB.a2227oh.d100&from=mallfp..pc_1_searchbutton'
         self.url = _url.replace('CHANGEME', keyword)
+        self.request_page = _page
+        self.get_url_list()
+
+    def get_url_list(self):
+        t_url = self.url
+        url_list = []
+        t_soup = self.get_soup(self.url)
+        total_page = int(t_soup.find("input", {"name": "totalPage"}).get("value"))
+        self.total_page = min(total_page, self.request_page)
+        # self.total_page = total_page
+        for i in range(1, total_page - 1):
+            soure_Url = t_url.replace('q=', 's=' + str(i * 60) + '&q=')
+            url_list.append(soure_Url)
+        self.url_list = url_list
 
     def set_location(self, _location):
         """
@@ -114,6 +132,7 @@ class TMallScrap(MonitoringEngine):
         return ip_list
 
     def get_basic_info(self, soup):
+        print soup
         product_list = []
         product_title = soup.find("div", {"id": "J_ItemList"})
 
@@ -178,8 +197,6 @@ class TMallScrap(MonitoringEngine):
             except TypeError or ValueError or IndexError:
                 print 'error when get image'
 
-            sss = _soup.find("div", {"id": "J_DetailMeta"})
-
             # get support
             support_list = []
             try:
@@ -194,6 +211,7 @@ class TMallScrap(MonitoringEngine):
                 print 'error when get support', item_url
 
             final_price_list = []  # Please update all this simple typo before commit and push
+            sss = _soup.find("div", {"id": "J_DetailMeta"})
             # TODO make the final_price_list better
             try:
                 map_list = []
@@ -239,9 +257,10 @@ class TMallScrap(MonitoringEngine):
                     'stock': '',
                     'final_price': ''
                 })
-                print 'error when get suit', item_url
+                print 'this product no suits'
 
             detail = {
+                'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                 'platform': 'TMall',
                 'product_name': product_name,
                 'seller_name': seller_name.strip(),
@@ -281,3 +300,11 @@ class TMallScrap(MonitoringEngine):
                         'stock'], 'Default price:', i['default_price'], 'Final price:', i['final_price'] + '\n',
             except:
                 print 'print suit error'
+
+    def get_multi_page(self):
+        _url_list = self.url_list
+        for item in _url_list:
+            _soup = self.get_soup(item)
+            t_list = self.get_basic_info(_soup)
+            self.out(t_list)
+            # self.put_db(t_list)
