@@ -58,12 +58,6 @@ class AnalysisQuestion(EmbeddedDocument):
     required_entities = ListField(StringField())
     analysis_engine = StringField()
 
-    # TODO: (issue #2) choose (A), (B)
-    # (A) save status in questions, run parallel engines;
-    # (B) save status / other info in JOBS, run let jobs engines run them.
-    # status = StringField()  # Initialized, Pending, Updating, Updated
-    # updated_at = DateTimeField(default=datetime.datetime.now)
-
     def __str__(self):
         return self.label
 

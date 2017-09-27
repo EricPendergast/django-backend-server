@@ -104,11 +104,13 @@ class EntityViewSetHandler(object):
         summary_entity_stats_engine = EngineProvider\
             .provide("EntityStats.Summary",
                      group=group,
+                     params=None,
                      entity_data=data,
                      entity_type=entity.type)
         chart_entity_stats_engine = EngineProvider\
             .provide("EntityStats.Chart",
                      group=group,
+                     params=None,
                      entity_data=data,
                      entity_type=entity.type)
 
@@ -116,7 +118,7 @@ class EntityViewSetHandler(object):
         chart_entity_stats_engine.execute()
 
         # TODO: generate create entity audit
-        # TODO: use mongoengine aggrate to do data_summary
+        # TODO: use mongoengine aggregate to do data_summary
 
         dummy['data_summary'] = summary_entity_stats_engine.get_processed()
         dummy['data_summary_chart'] = chart_entity_stats_engine.get_processed()
@@ -135,6 +137,7 @@ class EntityViewSetHandler(object):
         entity.source.file = None
         entity.state = 2
         entity.save()
+
         # TODO: this is the pain point for h2o testing to be extremely slow
         entity.save_data_changes()
         group.update_analysis_question_enable()

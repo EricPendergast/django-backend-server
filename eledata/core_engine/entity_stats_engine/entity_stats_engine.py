@@ -8,8 +8,8 @@ class EntityStatsEngine(BaseEngine):
     entity_data = None
     entity_type = None
 
-    def __init__(self, group, entity_data, entity_type):
-        super(EntityStatsEngine, self).__init__(group)
+    def __init__(self, group, params, entity_data, entity_type):
+        super(EntityStatsEngine, self).__init__(group, params)
         # TODO: verify if entity type is missing
         # TODO: verify if data header has been set properly
         df = pd.DataFrame(entity_data)

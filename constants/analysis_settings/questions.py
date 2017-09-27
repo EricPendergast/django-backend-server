@@ -11,7 +11,7 @@ questions = [
             "transaction",
             "customer"
         ],
-        "analysis_engine": "H2O.leaving"
+        "analysis_engine": "H2O.Leaving"
     },
     {
         "content": "Which products will be the most popular in the future?",
@@ -24,7 +24,7 @@ questions = [
         "required_entities": [
             "transaction"
         ],
-        "analysis_engine": "H2O.popularity"
+        "analysis_engine": "H2O.Popularity"
     },
     {
         "content": "What has caused the most customers to leave?",
@@ -38,6 +38,6 @@ questions = [
             "transaction",
             "customer"
         ],
-        "analysis_engine": "EventStats.leaving"
+        "analysis_engine": "H2O.Leaving"
     }
 ]

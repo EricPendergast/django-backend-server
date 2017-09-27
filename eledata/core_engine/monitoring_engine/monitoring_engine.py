@@ -8,10 +8,10 @@ import json
 class MonitoringEngine(BaseEngine):
     img_pth = 'temp/img'
 
-    def __init__(self, group, keyword=None, location=None, _u_key='CHANGE_ME', _p_key='CHANGE_ME'):
+    def __init__(self, group, params, keyword=None, location=None, _u_key='CHANGE_ME', _p_key='CHANGE_ME'):
         # if not keyword:
         #     keyword = get_keyword_from_group_param
-        super(MonitoringEngine, self).__init__(group)
+        super(MonitoringEngine, self).__init__(group, params)
         self.keyword = keyword
         self.set_searching_url(keyword)
         self.set_location(location)
