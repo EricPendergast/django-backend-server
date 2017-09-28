@@ -15,12 +15,11 @@
 
 ## Setup
 - Install Mongodb (confirmed to work with MongoDB version 3.4.5)
-    -  Windows:
-        - Download the latest .msi
-        https://www.mongodb.com/download-center#community
-        - Setup and Starting MongoDB
-        https://docs.mongodb.com/manual/tutorial/install-mongodb-on-windows/
-
+    - Setup testing database
+       ```
+       use django_test
+       db.createUser( { user: "admin", pwd: "password", roles: [ { role: "clusterAdmin", db: "admin" }, { role: "readAnyDatabase", db: "admin" }, "readWrite"] })
+       ```
 - Create and activate virtualenv
 
 - `pip install -r requirement.txt`

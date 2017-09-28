@@ -18,7 +18,6 @@ import json
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
@@ -76,7 +75,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'project.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
@@ -99,6 +97,7 @@ def is_test():
     else:
         return False
 
+
 # MongoEngine
 # https://github.com/MongoEngine/mongoengine
 if not is_test():
@@ -111,10 +110,10 @@ if not is_test():
         % (_MONGODB_USER, _MONGODB_PASSWD, _MONGODB_HOST, _MONGODB_NAME)
 
     mongoengine.connect(db=_MONGODB_NAME, host=_MONGODB_DATABASE_HOST)
-    
-    
-    with open("constants/constants.json") as file:
-        CONSTANTS = json.load(file)
+
+    import constants
+
+    CONSTANTS = constants
 else:
     _MONGODB_USER = 'admin'
     _MONGODB_PASSWD = 'password'
@@ -125,20 +124,20 @@ else:
         % (_MONGODB_USER, _MONGODB_PASSWD, _MONGODB_HOST, _MONGODB_NAME)
 
     mongoengine.connect(db=_MONGODB_NAME, host=_MONGODB_DATABASE_HOST)
-    
-    
-    with open("misc/test_files/test_constants/constants.json") as file:
-        CONSTANTS = json.load(file)
-        
-    PASSWORD_HASHERS = [
-        'django.contrib.auth.hashers.MD5PasswordHasher',
-    ]
+
+    import misc.test_files.test_constants as constants
+
+    CONSTANTS = constants
+
+
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.MD5PasswordHasher',
+]
 
 AUTHENTICATION_BACKENDS = (
-     # 'eledata.auth.CustomAuthBackend',
-     'mongoengine.django.auth.MongoEngineBackend',
+    # 'eledata.auth.CustomAuthBackend',
+    'mongoengine.django.auth.MongoEngineBackend',
 )
-
 
 SESSION_ENGINE = 'mongoengine.django.sessions'
 
@@ -175,13 +174,11 @@ USE_L10N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
 
-
 # So that you can see stdout while testing
 NOSE_ARGS = ['--nocapture',
-             '--nologcapture',]
+             '--nologcapture', ]

@@ -1,9 +1,17 @@
+beautifulsoup4==4.6.0
 blinker==1.4
+bs4==0.0.1
+certifi==2017.7.27.1
 cffi==1.10.0
+chardet==3.0.4
+colorama==0.3.9
 coverage==4.4.1
 Django==1.11.2
 django-rest-framework-mongoengine==3.3.1
 djangorestframework==3.6.3
+future==0.16.0
+h2o==3.10.4.8
+idna==2.6
 mongoengine==0.9.0
 numpy==1.13.1
 pandas==0.20.3
@@ -15,5 +23,9 @@ python-dateutil==2.6.1
 pytz==2017.2
 pyxdg==0.25
 PyYAML==3.11
+requests==2.18.4
+selenium==3.5.0
 six==1.10.0
+tabulate==0.7.7
+urllib3==1.22
 xlrd==1.0.0
