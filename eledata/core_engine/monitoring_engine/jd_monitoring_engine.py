@@ -8,6 +8,7 @@ import time
 from .monitoring_engine import MonitoringEngine
 from datetime import datetime
 
+# TODO: 1.create a function can check json.load success or not 2. all the field check if None or not None
 
 class JDMonitoringEngine(MonitoringEngine):
     keyword = None
@@ -38,10 +39,10 @@ class JDMonitoringEngine(MonitoringEngine):
     Overriding abstract functions for initialization
     """
 
-    def set_searching_url(self, keyword, _page):
+    def set_searching_url(self, keyword, _page_limit):
         _url = 'https://search.jd.com/Search?keyword=CHANGEME&enc=utf-8'
         self.url = _url.replace('CHANGEME', keyword)
-        for num in range(1, _page * 2 + 1, 2):
+        for num in range(1, _page_limit * 2 + 1, 2):
             self.url_list.append('https://search.jd.com/Search?keyword='+keyword+'&enc=utf-8&qrst=1&rt=1&stop=1&vt=2&bs=1&wq=dell&page='+str(num)+'&s=1&click=0')
 
     def set_location(self, location):
@@ -175,18 +176,13 @@ class JDMonitoringEngine(MonitoringEngine):
                             self.locations[0]['id'] + '&brandId=' + _brand_id
             yan_bao_info = self.auto_recovered_fetch_json(_call_support)
             support = []
-            if yan_bao_info == {}:
-                support = []
-            else:
-                yanbaolist = yan_bao_info[_data_pid]
-                for item in yanbaolist:
+            if yan_bao_info and yan_bao_info.get(_data_pid):
+                for item in yan_bao_info[_data_pid]:
                     for item_detail in item['details']:
                         support.append({
                             'support_name': item_detail['bindSkuName'],
                             'support_price': item_detail['price'],
                         })
-
-
             # suit
             _call_suit = 'http://c.3.cn/recommend?sku=' + _data_pid + '&cat=' + _a_str + '&area=' + \
                          self.locations[0]['id'] + '&methods=suitv2'

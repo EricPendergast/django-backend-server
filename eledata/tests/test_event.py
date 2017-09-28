@@ -181,7 +181,7 @@ class EventTestCase(TestCase):
         #                                                      group=self.admin_group,
         #                                                      params=None,
         #                                                      keyword="DELL",
-        #                                                      _page=3
+        #                                                      _page_limit=3
         #                                                      )
         # summary_entity_stats_engine_2 = EngineProvider.provide("Monitoring.TMall",
         #                                                        group=self.admin_group,
@@ -189,7 +189,7 @@ class EventTestCase(TestCase):
         #                                                        keyword="DELL",
         #                                                        _u_key="alexkamlivelyimpact",
         #                                                        _p_key="53231323A",
-        #                                                        _page=3
+        #                                                        _page_limit=3
         #                                                        )
         # summary_entity_stats_engine.get_multi_page()
         # summary_entity_stats_engine_2.get_multi_page()

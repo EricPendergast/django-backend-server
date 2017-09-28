@@ -25,7 +25,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'c*s4n%@c#3sjzc(g4fiq7htu0pfu2reuk)ax((c7y-^h^cu+$*'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 # TODO: Make this read all lines from the file
 with open('allowed_hosts.txt') as file:

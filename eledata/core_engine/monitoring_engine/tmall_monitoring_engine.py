@@ -28,11 +28,11 @@ class TMallScrap(MonitoringEngine):
     Overriding abstract functions for initialization
     """
 
-    def set_searching_url(self, keyword, _page):
+    def set_searching_url(self, keyword, _page_limit):
         _url = 'https://list.tmall.com/search_product.htm?q=CHANGEME' \
                '&type=p&vmarket=&spm=875.7931836%2FB.a2227oh.d100&from=mallfp..pc_1_searchbutton'
         self.url = _url.replace('CHANGEME', keyword)
-        self.request_page = _page
+        self.request_page = _page_limit
         self.get_url_list()
 
     def get_url_list(self):

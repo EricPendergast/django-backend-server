@@ -8,13 +8,13 @@ import json
 class MonitoringEngine(BaseEngine):
     img_pth = 'temp/img'
 
-    def __init__(self, group, params, keyword=None, location=None, _u_key='CHANGE_ME', _p_key='CHANGE_ME', _page=None):
+    def __init__(self, group, params, keyword=None, location=None, _u_key='CHANGE_ME', _p_key='CHANGE_ME', _page_limit=None):
         # if not keyword:
         #     keyword = get_keyword_from_group_param
         super(MonitoringEngine, self).__init__(group, params)
         self.keyword = keyword
-        self.request_page = _page
-        self.set_searching_url(keyword, _page)
+        self.request_page = _page_limit
+        self.set_searching_url(keyword, _page_limit)
         self.set_location(location)
         self.set_cookie(_u_key, _p_key)
 
