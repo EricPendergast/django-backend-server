@@ -3,15 +3,22 @@ import re
 import urllib2
 from bs4 import BeautifulSoup
 import uuid
+from selenium import webdriver
+import time
 from .monitoring_engine import MonitoringEngine
+from datetime import datetime
 
+# TODO: 1.create a function can check json.load success or not 2. all the field check if None or not None
 
 class JDMonitoringEngine(MonitoringEngine):
     keyword = None
     url = None
     results = []
     param_dict = {}
-
+    url_list =[]
+    request_page = None
+    limit_current = None
+    limit_total = None
     # TODO add class variable locations (array of string)
     # 深圳　北京　上海　廣州　杭州　南京　武漢　廈門　天津　蘇州
     supported_locations = [
@@ -32,9 +39,11 @@ class JDMonitoringEngine(MonitoringEngine):
     Overriding abstract functions for initialization
     """
 
-    def set_searching_url(self, keyword):
+    def set_searching_url(self, keyword, _page_limit):
         _url = 'https://search.jd.com/Search?keyword=CHANGEME&enc=utf-8'
         self.url = _url.replace('CHANGEME', keyword)
+        for num in range(1, _page_limit * 2 + 1, 2):
+            self.url_list.append('https://search.jd.com/Search?keyword='+keyword+'&enc=utf-8&qrst=1&rt=1&stop=1&vt=2&bs=1&wq=dell&page='+str(num)+'&s=1&click=0')
 
     def set_location(self, location):
         if location:
@@ -52,12 +61,27 @@ class JDMonitoringEngine(MonitoringEngine):
     Engine/ Platform depending functions
     """
 
-    def get_soup(self, _url=None):
-        request = urllib2.Request(self.url)
-        response = urllib2.urlopen(request, timeout=20)
-        content = response.read()
-        this_soup = BeautifulSoup(content, 'html.parser')
-        return this_soup
+    def get_soup(self, _url=None, is_scroll=False):
+        if not is_scroll:
+            request = urllib2.Request(self.url)
+            response = urllib2.urlopen(request, timeout=20)
+            content = response.read()
+            this_soup = BeautifulSoup(content, 'html.parser')
+            return this_soup
+
+        else:
+            driver = webdriver.Chrome()
+            driver.get(_url)
+
+            def execute_times(times):
+                for i in range(times + 1):
+                    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                    time.sleep(1)
+
+            execute_times(3)
+            html = driver.page_source
+            _soup = BeautifulSoup(html, 'html.parser')
+            return _soup
 
     @staticmethod
     def read_url_detail(_http, _format):
@@ -68,6 +92,11 @@ class JDMonitoringEngine(MonitoringEngine):
         return this_soup
 
     def get_basic_info(self, soup):
+        # get limit info
+        limit_item = soup.find("div", class_='f-pager')
+        self.limit_current = limit_item.find('b').text
+        self.limit_total = limit_item.find('i').text
+        # get details
         product_list = []
         lis = soup.find_all("li", class_='gl-item')
 
@@ -101,8 +130,7 @@ class JDMonitoringEngine(MonitoringEngine):
 
             self.save_image(img_src, self.img_pth, file_name)
 
-            _http = "http:" + img_item.a.get("href")
-
+            _http = "http:" + '//item.jd.com/' + _data_pid + '.html'
             # get product name in list
             name_item = li.find('div', class_="p-name")
             product_name = name_item.find('a').find('em').text
@@ -147,8 +175,14 @@ class JDMonitoringEngine(MonitoringEngine):
             _call_support = 'http://cd.jd.com/yanbao/v3?skuId=' + _data_pid + '&cat=' + _a_str + '&area=' + \
                             self.locations[0]['id'] + '&brandId=' + _brand_id
             yan_bao_info = self.auto_recovered_fetch_json(_call_support)
-            yan_bao_list = yan_bao_info[_data_pid]
-
+            support = []
+            if yan_bao_info and yan_bao_info.get(_data_pid):
+                for item in yan_bao_info[_data_pid]:
+                    for item_detail in item['details']:
+                        support.append({
+                            'support_name': item_detail['bindSkuName'],
+                            'support_price': item_detail['price'],
+                        })
             # suit
             _call_suit = 'http://c.3.cn/recommend?sku=' + _data_pid + '&cat=' + _a_str + '&area=' + \
                          self.locations[0]['id'] + '&methods=suitv2'
@@ -172,18 +206,8 @@ class JDMonitoringEngine(MonitoringEngine):
                     }
                     suit_list.append(suit)
 
-            # print yan_bao_list
-            support = []
-            for item in yan_bao_list:
-                for item_detail in item['details']:
-                    support.append({
-                        'support_name': item_detail['bindSkuName'],
-                        'support_price': item_detail['price'],
-                    })
-
             # advertisements
-            _call_ad = 'http://cd.jd.com/promotion/v2?skuId=' + _data_pid + '&area=' + self.locations[0][
-                'id'] + '&shopId=' + _shop_id + '&venderId=' + _vender_id + '&cat=' + _a_str
+            _call_ad = 'http://cd.jd.com/promotion/v2?skuId=' + _data_pid + '&area=' + self.locations[0]['id'] + '&shopId=' + _shop_id + '&venderId=' + _vender_id + '&cat=' + _a_str
             ad_info = self.auto_recovered_fetch_json(_call_ad)
             ad_info_text = []
             for g in ad_info['ads']:
@@ -206,6 +230,7 @@ class JDMonitoringEngine(MonitoringEngine):
             # create dic
             # TODO create a item that called suit can get suit information
             the_basic_info = {
+                'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                 'platform': 'JD',
                 'product_name': product_name,
                 'seller_name': seller_name,
@@ -248,3 +273,14 @@ class JDMonitoringEngine(MonitoringEngine):
                 print g
             # print 'tips:'
             print '\n'
+
+    def get_multi_page(self):
+        for item in self.url_list:
+            _url = item
+            soup = self.get_soup(_url=_url, is_scroll=True)
+            t_list = self.get_basic_info(soup)
+            # print self.limit_current, self.limit_total
+            self.out(t_list)
+            if self.limit_current == self.limit_total:
+                break
+            # self.put_db(t_list)

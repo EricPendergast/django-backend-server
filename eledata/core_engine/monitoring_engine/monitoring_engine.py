@@ -8,17 +8,18 @@ import json
 class MonitoringEngine(BaseEngine):
     img_pth = 'temp/img'
 
-    def __init__(self, group, params, keyword=None, location=None, _u_key='CHANGE_ME', _p_key='CHANGE_ME'):
+    def __init__(self, group, params, keyword=None, location=None, _u_key='CHANGE_ME', _p_key='CHANGE_ME', _page_limit=None):
         # if not keyword:
         #     keyword = get_keyword_from_group_param
         super(MonitoringEngine, self).__init__(group, params)
         self.keyword = keyword
-        self.set_searching_url(keyword)
+        self.request_page = _page_limit
+        self.set_searching_url(keyword, _page_limit)
         self.set_location(location)
         self.set_cookie(_u_key, _p_key)
 
     @abstractmethod
-    def set_searching_url(self, _keyword):
+    def set_searching_url(self, _keyword, _page):
         """
         update self.url from _keyword, for all sub-engines
         """
@@ -35,6 +36,12 @@ class MonitoringEngine(BaseEngine):
         update self.cookie based on _key_1, _key_2 on selenium (for engines with login dependency most likely)
         """
 
+    @abstractmethod
+    def get_multi_page(self):
+        """
+
+        """
+
     def execute(self):
         """
 
@@ -43,6 +50,9 @@ class MonitoringEngine(BaseEngine):
         soup = self.get_soup(None)
         self.response = self.get_basic_info(soup)
         self.out(self.response)
+
+
+
 
     def event_init(self):
         return
