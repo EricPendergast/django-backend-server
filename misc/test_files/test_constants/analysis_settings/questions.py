@@ -11,7 +11,7 @@ questions = [
             "transaction",
             "customer"
         ],
-        "analysis_engine": "H2O.Leaving"
+        "analysis_engine": "H2O.Clv"
     },
     {
         "content": "Which products will be the most popular in the future?",
@@ -38,6 +38,6 @@ questions = [
             "transaction",
             "customer"
         ],
-        "analysis_engine": "H2O.Leaving"
+        "analysis_engine": "H2O.Clv"
     }
 ]

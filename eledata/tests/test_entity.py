@@ -17,7 +17,7 @@ import platform
 
 class EntityTestCase(TestCase):
     entityJSON1 = '''{"id": "59560d779a4c0e4abaa1b6a8", "type": "transaction", "source_type": "local",
-                   "created_at": "2017-06-28T14:08:10.276000", "updated_at": "2017-06-28T14:08:10.276000"}'''
+                   "created_at": "2017-06-28T06:08:10.276000"}'''
 
     entityDataHeaderJSON1 = '''{
         "data_header": [{"source": "transaction_quantity", "mapped": "Transaction_Quantity", "data_type": "number"},
@@ -88,6 +88,10 @@ class EntityTestCase(TestCase):
 
         del data["id"]
         del data_comp["id"]
+        del data_comp["created_at"]
+
+        # hard to assert dynamic changing time
+        del data["updated_at"]
 
         # Don't compare all the fields because creating an entity object fills
         # in the blank fields with defaults. This is why it is not "for key in

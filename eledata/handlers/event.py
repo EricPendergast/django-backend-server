@@ -4,6 +4,7 @@ from project.settings import CONSTANTS
 from eledata.core_engine.provider import EngineProvider
 from eledata.util import EngineExecutingError
 from multiprocessing import Process
+import time
 
 
 def update_event_status(event, status, verifier):
@@ -79,7 +80,7 @@ def start_all_initializing_job(_group):
             # event_status should be used in the event_init() Exception should have been threw in case for KeyError
             event_status = CONSTANTS.JOB.EVENT_SPEC.get(s_job.job_engine).get('event_status')
 
-            if event_status is CONSTANTS.JOB.STATUS.get('PENDING'):
+            if event_status is CONSTANTS.JOB.STATUS.get('CONTINUOUS'):
                 s_engine.job_status = event_status
             else:
                 s_engine.job_status = CONSTANTS.JOB.STATUS.get("UPDATED")
@@ -93,6 +94,9 @@ def start_all_initializing_job(_group):
     _initializing_jobs = Job.objects(group=_group, job_status=CONSTANTS.JOB.STATUS.get("INITIALIZING"))
 
     for job in _initializing_jobs:
+        # Loosen racing condition by firing jobs with slightly delay
+        time.sleep(1)
+
         p = Process(target=sync_engine_executor, args=(job,))
         p.start()
 

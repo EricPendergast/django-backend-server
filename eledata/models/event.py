@@ -61,6 +61,11 @@ class Event(Document):
         """
         return _queryset.order_by('-updated_at')
 
+    def save(self, *args, **kwargs):
+        self.updated_at = datetime.datetime.now()
+
+        super(Event, self).save(*args, **kwargs)
+
     def get_analysis_question(self, _label):
         _group = self.group
         for obj in _group.analysis_settings.questions:
@@ -90,3 +95,8 @@ class Job(Document):
 
     created_at = DateTimeField(default=datetime.datetime.now)
     updated_at = DateTimeField(default=datetime.datetime.now)
+
+    def save(self, *args, **kwargs):
+        self.updated_at = datetime.datetime.now()
+
+        super(Job, self).save(*args, **kwargs)

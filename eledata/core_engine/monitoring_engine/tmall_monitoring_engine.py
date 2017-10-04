@@ -19,7 +19,6 @@ class TMallScrap(MonitoringEngine):
     key = ''
     url = ''
     cookie = ''
-    request_page = ''
     total_page = ''
     url_list = []
     results = []
@@ -32,7 +31,6 @@ class TMallScrap(MonitoringEngine):
         _url = 'https://list.tmall.com/search_product.htm?q=CHANGEME' \
                '&type=p&vmarket=&spm=875.7931836%2FB.a2227oh.d100&from=mallfp..pc_1_searchbutton'
         self.url = _url.replace('CHANGEME', keyword)
-        self.request_page = _page_limit
         self.get_url_list()
 
     def get_url_list(self):
@@ -40,14 +38,14 @@ class TMallScrap(MonitoringEngine):
         url_list = []
         t_soup = self.get_soup(self.url)
         total_page = int(t_soup.find("input", {"name": "totalPage"}).get("value"))
-        self.total_page = min(total_page, self.request_page)
+        self.total_page = min(total_page, self.page_limit)
         # self.total_page = total_page
         for i in range(1, total_page - 1):
             soure_Url = t_url.replace('q=', 's=' + str(i * 60) + '&q=')
             url_list.append(soure_Url)
         self.url_list = url_list
 
-    def set_location(self, _location):
+    def set_location(self):
         """
         We do nothing here.
         """

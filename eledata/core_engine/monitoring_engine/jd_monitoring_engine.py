@@ -8,32 +8,17 @@ import time
 from .monitoring_engine import MonitoringEngine
 from datetime import datetime
 
-# TODO: 1.create a function can check json.load success or not 2. all the field check if None or not None
 
+# TODO: 1.create a function can check json.load success or not 2. all the field check if None or not None
 class JDMonitoringEngine(MonitoringEngine):
     keyword = None
     url = None
     results = []
     param_dict = {}
-    url_list =[]
-    request_page = None
+    url_list = []
     limit_current = None
     limit_total = None
     # TODO add class variable locations (array of string)
-    # 深圳　北京　上海　廣州　杭州　南京　武漢　廈門　天津　蘇州
-    supported_locations = [
-        {'name': 'ShenZhen', 'id': '19_1607_3638_0'},
-        {'name': 'BeiJing', 'id': '1_72_2839_0'},
-        {'name': 'ShangHai', 'id': '2_2813_51976_0'},
-        {'name': 'GuangZhou', 'id': '19_1601_3634_0'},
-        {'name': 'HangZhou', 'id': '15_1213_3408_0'},
-        {'name': 'NanJing', 'id': '12_904_3376_0'},
-        {'name': 'WuHan', 'id': '17_1381_50718_0'},
-        {'name': 'XiaMen', 'id': '16_1315_1316_53522'},
-        {'name': 'TianJin', 'id': '3_51040_2986_0'},
-        {'name': 'Suzhou', 'id': '12_988_4346_0'},
-    ]
-    locations = []
 
     """
     Overriding abstract functions for initialization
@@ -45,11 +30,12 @@ class JDMonitoringEngine(MonitoringEngine):
         for num in range(1, _page_limit * 2 + 1, 2):
             self.url_list.append('https://search.jd.com/Search?keyword='+keyword+'&enc=utf-8&qrst=1&rt=1&stop=1&vt=2&bs=1&wq=dell&page='+str(num)+'&s=1&click=0')
 
-    def set_location(self, location):
-        if location:
-            self.locations = [item for item in self.supported_locations for y in location if item.get('name') == y]
-        else:
-            self.locations = self.supported_locations
+    def set_location(self):
+        # if location:
+        #     self.locations = [item for item in self.supported_locations for y in location if item.get('name') == y]
+        # else:
+        #     self.locations = self.supported_locations
+        pass
 
     def set_cookie(self, _key_1, _key_2):
         """

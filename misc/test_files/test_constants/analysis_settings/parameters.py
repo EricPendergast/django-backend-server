@@ -39,5 +39,19 @@ parameters = [
         "content": "What is your expected prediction window among your predictive questions ?",
         "floating_label": "Prediction Window",
         "required_question_labels": ["repeat", "recommendedProduct", "churn", "growth", "revenue"]
+    },
+
+    # FMCG Version
+    {
+        "choices": [
+            {
+                "content": "Keywords: ",
+                "default_value": "Notebook, Computer"
+            }
+        ],
+        "label": "keywords",
+        "content": "What are the keywords corresponding to your products (please separate with comma)?",
+        "floating_label": "Keywords",
+        "required_question_labels": ["resellerPriceRange", "competitorPriceRange"]
     }
 ]

@@ -338,6 +338,8 @@ class Entity(Document):
                 if to_remove in self._changed_fields:
                     self._changed_fields.remove(to_remove)
 
+        self.updated_at = datetime.datetime.now()
+
         super(Entity, self).save(*args, **kwargs)
 
     def save_data_changes(self):

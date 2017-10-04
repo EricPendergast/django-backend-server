@@ -111,8 +111,6 @@ class CoreH2OTestCase(TestCase):
     #     print(datetime.datetime.now())
 
     def test_first_clv_analysis(self):
-        # h2o.init()
-        # print(h2o.frames())
         with open(self.defaultTransactionFilename) as fp:
             ret = self.client.post('/entity/create_entity/',
                                    {'file': fp, 'entity': self.entityJSON1, 'isHeaderIncluded': True})
@@ -151,21 +149,6 @@ class CoreH2OTestCase(TestCase):
         self.assertEquals(round(response['clv'].min(), 2), 9.57)
 
         # ha1 = h2o.H2OFrame(python_obj=pd.DataFrame(response))
-        # print(response)
-
-        # testing get_rmf_in_window
-        response = entity_h2o_engine.get_rmf_in_window(start_date=first_date, end_date=last_date, month_diff=month_diff)
-        self.assertEquals(list(response.keys()),
-                          [u'_id', u'frequency', u'monetary_amount', u'monetary_quantity', u'recency'])
-        self.assertEquals(list(response['frequency']), [1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
-        self.assertEquals([round(x, 2) for x in list(response['monetary_amount'])],
-                          [42.75, 12.42, 15.71, 37.86, 36.21, 9.92, 9.57, 21.92, 20.85, 35.65])
-        self.assertEquals([round(x, 2) for x in list(response['monetary_quantity'])],
-                          [2.0, 1.0, 1.33, 1.56, 0.67, 0.22, 0.89, 0.33, 1.56, 1.56])
-        self.assertEquals([round(x, 2) for x in list(response['recency'])],
-                          [241.0, 138.0, 108.0, 175.0, 40.0, 21.0, 114.0, 0.0, 50.0, 8.0])
-
-        # ha2 = h2o.H2OFrame(python_obj=pd.DataFrame(response))
         # print(response)
 
         response = entity_h2o_engine.get_allowance_in_window(start_date=first_date, end_date=last_date)

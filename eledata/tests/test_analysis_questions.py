@@ -4,6 +4,7 @@ from django.test import TestCase
 from django.test import Client
 from eledata.models.users import User, Group
 from eledata.models.event import Job
+from eledata.models.entity import Entity
 
 from eledata.util import from_json
 from eledata.models.analysis_questions import AnalysisQuestion, AnalysisParameter
@@ -15,6 +16,37 @@ class AnalysisQuestionTestCase(TestCase):
     admin = None
     admin_client = None
 
+    defaultTransactionFilename = 'misc/test_files/entity_data_1.csv'
+    bigTransactionFilename = 'misc/test_files/core_test/big_transaction.csv'
+    newTransactionFilename = 'misc/test_files/core_test/Data Actual transactions from UK retailer.csv'
+
+    entityJSON1 = '''{
+        "id": "59560d779a4c0e4abaa1b6a8", "type": "transaction", "source_type": "local",
+        "created_at": "2017-06-28T14:08:10.276000", "updated_at": "2017-06-28T14:08:10.276000"}'''
+    entityDataHeaderJSON1 = '''{
+            "data_header": [{"source": "transaction_quantity", "mapped": "Transaction_Quantity", "data_type": "number"},
+                            {"source": "transaction_date", "mapped": "Transaction_Date", "data_type": "date"},
+                            {"source": "transaction_id", "mapped": "Transaction_ID", "data_type": "string"},
+                            {"source": "user_id", "mapped": "User_ID", "data_type": "string"},
+                            {"source": "transaction_value", "mapped": "Transaction_Value", "data_type": "number"}]}'''
+    entityDataHeaderNoFileHeader = '''{
+            "data_header": [{"source": "column 4", "mapped": "Transaction_Quantity", "data_type": "number"},
+                            {"source": "column 3", "mapped": "Transaction_Date", "data_type": "date"},
+                            {"source": "column 1", "mapped": "Transaction_ID", "data_type": "string"},
+                            {"source": "column 2", "mapped": "User_ID", "data_type": "string"},
+                            {"source": "column 5", "mapped": "Transaction_Value", "data_type": "number"}]}'''
+    newEntityDataHeaderJSON1 = '''{
+        "data_header": [
+            {"source": "InvoiceNo", "mapped": "transaction_id", "data_type": "string"},
+            {"source": "StockCode", "mapped": "", "data_type": "string"},
+            {"source": "Description", "mapped": "", "data_type": "string"},
+            {"source": "Quantity", "mapped": "transaction_quantity", "data_type": "number"},
+            {"source": "InvoiceDate", "mapped": "transaction_date", "data_type": "string"},
+            {"source": "UnitPrice", "mapped": "transaction_value", "data_type": "number"},
+            {"source": "CustomerID", "mapped": "user_id", "data_type": "string"},
+            {"source": "Country", "mapped": "", "data_type": "string"}
+        ]
+    }'''
     analysis_params_init = [
         {'content': 'What is your expected variation of CLV?', 'label': 'clv', 'required_question_labels': ['leaving'],
          'floating_label': 'Variation',
@@ -90,7 +122,18 @@ class AnalysisQuestionTestCase(TestCase):
                   u'content': u'What is your expected prediction window among your predictive questions ?',
                   u'floating_label': u'Prediction Window',
                   u'required_question_labels': [u'repeat', u'recommendedProduct',
-                                                u'churn', u'growth', u'revenue']}]
+                                                u'churn', u'growth', u'revenue']},
+                 {u'choice_index': 0, u'choice_input': None, u"choices": [
+                     {
+                         u"content": u"Keywords: ",
+                         u"default_value": u"Notebook, Computer"
+                     }
+                 ],
+                  u"label": u"keywords",
+                  u"content": u"What are the keywords corresponding to your products (please separate with comma)?",
+                  u"floating_label": u"Keywords",
+                  u"required_question_labels": [u"resellerPriceRange", u"competitorPriceRange"]}
+                 ]
             )
         )
 
@@ -182,17 +225,27 @@ class AnalysisQuestionTestCase(TestCase):
         assert_analysis_parameter_is(user, "clv", 0, "Testing Without Validation")
 
     def test_start_analysis(self):
+        Entity.drop_collection()
         c, user = self._create_default_user()
 
-        c.post('/analysis_questions/update_analysis_settings/',
-               data={
-                   "analysisQuestion": ["leaving"],
-                   "analysisParams": [{
-                       "label": "clv",
-                       "choiceIndex": 0,
-                   }]
-               })
+        with open(self.bigTransactionFilename) as fp:
+            ret = c.post('/entity/create_entity/',
+                         {'file': fp, 'entity': self.entityJSON1, 'isHeaderIncluded': False})
+        rid = from_json(ret.content)['entity_id']
+        c.post('/entity/%s/create_entity_mapped/' % rid,
+               data=self.entityDataHeaderNoFileHeader, content_type="application/json",
+               HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        # with open(self.defaultTransactionFilename) as fp:
+        #     ret = c.post('/entity/create_entity/',
+        #                  {'file': fp, 'entity': self.entityJSON1, 'isHeaderIncluded': True})
+        # rid = from_json(ret.content)['entity_id']
+        # c.post('/entity/%s/create_entity_mapped/' % rid,
+        #        data=self.entityDataHeaderJSON1, content_type="application/json",
+        #        HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
         user.reload()
+        assert len(Entity.objects()) == 1
+
         response = c.put('/analysis_questions/start_analysis/')
         self.assertEqual(response.status_code, 200)
 
@@ -234,10 +287,10 @@ class AnalysisQuestionTestCase(TestCase):
         self.admin = User.create_admin(username="admin", password="pass", group_name="dummy_group")
 
         self.admin_client = Client()
-        self.admin_client.post("/users/login/", {"username": "admin", "password": "pass"})
+        self.admin_client.post("/users/login/", {"username": "admin",
+                                                 "password": "pass"})
 
 
-# Checks whether list1 and list2 have the same elements, regardless of order
 def _same_elements(list1, list2):
     for item in list1:
         if item not in list2:

@@ -407,8 +407,8 @@ class EntityH2OEngine(object):
         time_shift = self.get_time_shift(total_month_diff)
         training_month_diff = total_month_diff - time_shift
         prediction_month_diff = time_shift
-        turning_date = last_date - relativedelta(month=time_shift)
-        second_date = first_date + relativedelta(month=time_shift)
+        turning_date = last_date - relativedelta(months=time_shift)
+        second_date = first_date + relativedelta(months=time_shift)
 
         # Prepare Label
         clv = self.get_clv_in_window(user_list=user_list, start_date=turning_date, end_date=last_date,
