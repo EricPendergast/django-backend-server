@@ -1,66 +1,66 @@
 ENTITY_TYPE = [
     {
-        "name": "Transaction",
+        "name": "transaction",
         "value": "transaction",
         "type": "primary"
     },
     {
-        "name": "Customer",
+        "name": "customer",
         "value": "customer",
         "type": "primary"
     },
     {
-        "name": "Conversion",
+        "name": "conversion",
         "value": "conversion",
         "type": "primary"
     },
     {
-        "name": "Event",
+        "name": "offlineEvent",
         "value": "offlineEvent",
         "type": "primary"
     },
     {
-        "name": "Google Analytics",
+        "name": "googleAnalytics",
         "value": "googleAnalytics",
         "type": "primary"
     },
     {
-        "name": "Service",
+        "name": "serviceLogs",
         "value": "serviceLogs",
         "type": "primary"
     },
     {
-        "name": "Subscription",
+        "name": "subscription",
         "value": "subscription",
         "type": "primary"
     },
     {
-        "name": "People Counter",
+        "name": "peopleCounterData",
         "value": "peopleCounterData",
         "type": "primary"
     },
     {
-        "name": "My Facebook",
+        "name": "myFacebook",
         "value": "myFacebook",
         "type": "primary"
     },
     {
-        "name": "Weather (Open Data)",
+        "name": "openDataWeather",
         "value": "openDataWeather",
         "type": "thirdParty"
     },
     {
-        "name": "Holidays (Open Data)",
+        "name": "openDataHolidays",
         "value": "openDataHolidays",
         "type": "thirdParty"
     },
     {
-        "name": "Human Traffic (Open Data)",
+        "name": "openDataHumanTraffic",
         "value": "openDataHumanTraffic",
         "type": "thirdParty"
     },
     {
-        "name": "Competitor Facebook (Open Data)",
+        "name": "competitorFacebook",
         "value": "competitorFacebook",
         "type": "thirdParty"
     }

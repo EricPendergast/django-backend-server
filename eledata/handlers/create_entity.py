@@ -16,13 +16,19 @@ class EntityViewSetHandler(object):
     def get_entity_list(entity_list):
 
         # retrieving list of active entity'
-        active_list = [x.type for x in entity_list if x.is_completed]
+        processing_list = [x.type for x in entity_list if x.is_processing]
+        completed_list = [x.type for x in entity_list if x.is_completed]
 
         # retrieving list of constant entity
         # TODO: move status to constant/ utils, add the intermediate status
         constant_list = list(CONSTANTS.ENTITY.ENTITY_TYPE)
         for x in constant_list:
-            x['status'] = 'Ready' if x['value'] in active_list else 'Pending'
+            if x['value'] in completed_list:
+                x['status'] = 'ready'
+            elif x['value'] in processing_list:
+                x['status'] = 'processing'
+            else:
+                x['status'] = 'pending'
         return constant_list
 
     @staticmethod
@@ -63,7 +69,7 @@ class EntityViewSetHandler(object):
         response_data = {
             'entity_id': str(entity.id),
             'data': entity_data,
-            'header_option': CONSTANTS.ENTITY.HEADER_OPTION.get(entity_dict["type"])
+            'header_option': CONSTANTS.ENTITY.HEADER_OPTION.get(entity_dict["type"].upper())
         }
         # Saving the serializer while also adding its id to the response
         # Loading the first 100 lines of data from the request file
@@ -81,7 +87,7 @@ class EntityViewSetHandler(object):
         # We will create a dummy entity whose only purpose is to serialize the
         # two fields we give it, so we can add them to the actual entity. The
         # dummy starts as a dictionary and then becomes an Entity.
-        dummy = {'data_header': request_data['data_header']}
+        raw_dummy = {'data_header': request_data['data_header']}
 
         assert os.path.isfile(entity.source.file.filename)
         data = util.file_to_list_of_dictionaries(
@@ -90,14 +96,14 @@ class EntityViewSetHandler(object):
 
         # Changing the user created field names in data to the new mapped names
         for item in data:
-            for mapping in dummy['data_header']:
+            for mapping in raw_dummy['data_header']:
                 item[mapping["mapped"]] = item[mapping["source"]]
                 del item[mapping["source"]]
 
         # Casting everything in data from strings to their proper data type
         # according to request.data['data_header']
         for item in data:
-            for mapping in dummy['data_header']:
+            for mapping in raw_dummy['data_header']:
                 item[mapping["mapped"]] = \
                     string_caster[mapping["data_type"]](item[mapping["mapped"]])
         # Generating Entity Summary and Chart Summary after mapping is confirmed.
@@ -120,10 +126,10 @@ class EntityViewSetHandler(object):
         # TODO: generate create entity audit
         # TODO: use mongoengine aggregate to do data_summary
 
-        dummy['data_summary'] = summary_entity_stats_engine.get_processed()
-        dummy['data_summary_chart'] = chart_entity_stats_engine.get_processed()
+        raw_dummy['data_summary'] = summary_entity_stats_engine.get_processed()
+        raw_dummy['data_summary_chart'] = chart_entity_stats_engine.get_processed()
 
-        dummy_serializer = EntityDetailedSerializer(data=dummy)
+        dummy_serializer = EntityDetailedSerializer(data=raw_dummy)
         verifier.verify(3, dummy_serializer)
         dummy = Entity(**dummy_serializer.validated_data)
 
@@ -141,4 +147,10 @@ class EntityViewSetHandler(object):
         # TODO: this is the pain point for h2o testing to be extremely slow
         entity.save_data_changes()
         group.update_analysis_question_enable()
-        return data[:100]
+
+        response_data = {
+            'entity_summary': raw_dummy['data_summary'],
+            'data': data[:100],
+            'header_option': CONSTANTS.ENTITY.HEADER_OPTION.get(entity.type.upper())
+        }
+        return response_data

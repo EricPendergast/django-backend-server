@@ -390,6 +390,9 @@ class Entity(Document):
             assert item in self.data
 
     @property
+    def is_processing(self):
+        return self.state is 1
+
+    @property
     def is_completed(self):
-        # bit dirty to check if entity object is completed stage2
-        return self.data_header is not None and self.data_header is not [] and len(self.data_header) > 0
+        return self.state is 2

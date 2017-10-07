@@ -84,18 +84,15 @@ class EntityTestCase(TestCase):
         # Taking the first item from the list of entities sent back
         data = from_json(response.content)[0]
         data_comp = from_json(self.entityJSON1)
-        # don't compare their id's
-
-        del data["id"]
-        del data_comp["id"]
-        del data_comp["created_at"]
-
-        # hard to assert dynamic changing time
-        del data["updated_at"]
 
         # Don't compare all the fields because creating an entity object fills
         # in the blank fields with defaults. This is why it is not "for key in
         # data"
+        del data_comp["id"]
+
+        # hard to assert dynamic changing time
+        del data_comp["created_at"]
+
         for key in data_comp:
             self.assertEquals(data[key], data_comp[key])
 
@@ -170,13 +167,13 @@ class EntityTestCase(TestCase):
         response = c.get('/entity/get_entity_list/')
 
         self.assertEquals(response.status_code, 200)
-        self.assertEquals((from_json(response.content)[0][u'status']), 'Pending')
+        self.assertEquals((from_json(response.content)[0][u'status']), 'processing')
 
         self._create_mapped_entity(c, self.entityDataHeaderJSON1, 'misc/test_files/entity_data_1.csv')
         response = c.get('/entity/get_entity_list/')
 
         self.assertEquals(response.status_code, 200)
-        self.assertEquals((from_json(response.content)[0][u'status']), 'Ready')
+        self.assertEquals((from_json(response.content)[0][u'status']), 'ready')
 
     '''
     The same as 'test_create_entity_second_stage_csv' (above), except using a
