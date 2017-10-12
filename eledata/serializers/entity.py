@@ -22,5 +22,5 @@ class EntityDetailedSerializer(DocumentSerializer):
     class Meta:
         model = Entity
         depth = 2
-        fields = ['state', 'type', 'source_type', 'source', 'data_summary', 'data_summary_chart', 'data_header',
-                  'created_at', 'updated_at', 'data']
+        fields = ['id', 'state', 'type', 'source_type', 'source', 'data_summary', 'data_summary_chart', 'data_header',
+                  'created_at', 'updated_at', 'data', 'temp_data', 'temp_header']

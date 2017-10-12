@@ -46,13 +46,9 @@ class EntityViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
 
     @detail_route(methods=['get'])
     def select_entity(self, request, pk=None):
-        entity = Entity.objects(type=pk, group=request.user.group).first()
-        if entity is None:
-            return Response()
-        if entity.group != request.user.group:
-            return Response({"error": "User does not have permission to access this entity"})
-        serializer = EntityDetailedSerializer(entity)
-        return Response(serializer.data)
+        query_set = Entity.objects(type=pk, group=request.user.group).first()
+        response_data = EntityViewSetHandler.select_entity(query_set)
+        return Response(response_data)
 
     """
     Creates an entity (without mapping information). Adds it to the group of
@@ -105,6 +101,18 @@ class EntityViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
             request_data=request.data,
             verifier=verifier,
             pk=pk,
+            group=request.user.group)
+
+        assert verifier.verified
+        return Response(response_data, status=200)
+
+    @list_route(methods=['post'])
+    def remove_stage1_entity(self, request):
+
+        verifier = RemoveStage1EntityVerifier()
+        response_data = EntityViewSetHandler.remove_stage1_entity(
+            request_data=request.data,
+            verifier=verifier,
             group=request.user.group)
 
         assert verifier.verified

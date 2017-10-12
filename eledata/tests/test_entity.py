@@ -150,6 +150,26 @@ class EntityTestCase(TestCase):
                        u'Transaction_Value': 320.89}, entity.data)
 
     '''
+    Testing that sending a first stage entity creation post request (to
+    entity/create_entity) puts the entity in the database.
+    '''
+
+    def test_create_entity_first_stage_and_remove(self):
+        c = self.client
+
+        Entity.objects.delete()
+        response = self._create_entity_init_raw_response(c, 'misc/test_files/entity_data_1.csv')
+
+        r_id = from_json(response.content)['entity_id']
+        self.assertEquals(response.status_code, 200)
+        self.assertEquals(len(Entity.objects.filter(pk=r_id)), 1)
+
+        response = c.post('/entity/remove_stage1_entity/',
+                          {'entity_type': 'transaction'})
+
+        self.assertEquals(response.status_code, 200)
+
+    '''
     Sending a get request to get_entity_list and testing that it sends back all
     entity list with status
     '''

@@ -30,6 +30,7 @@ EVENT_SPEC = {
         "chart_type": "Line",
         "chart": "H2O.Clv"
     },
+
     "Monitoring.Reseller_Price_Range": {
         "event_category": CATEGORY.get('INSIGHT'),
         "event_type": STATUS.get('CONTINUOUS'),
