@@ -33,8 +33,8 @@ class ChangeAnalysisParameterVerifier(Verifier):
 
 class UpdateAnalysisSettingsVerifier(Verifier):
     def stage0(self, request_data):
-        request_analysis_questions = request_data.getlist('analysisQuestion', False)
-        request_analysis_params = request_data.getlist('analysisParams', False)
+        request_analysis_questions = request_data.get('analysisQuestion', False)
+        request_analysis_params = request_data.get('analysisParams', False)
 
         if not request_analysis_questions and not request_analysis_params:
             raise InvalidInputError("No request are submitted")
