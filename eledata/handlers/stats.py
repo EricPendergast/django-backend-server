@@ -7,7 +7,7 @@ def get_entity_data_metrics(entities):
 
     response = []
     for entity in entities:
-        if not entity or entity.state < 2:
+        if not entity:
             break
 
         response.append(dict(

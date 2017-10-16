@@ -21,19 +21,14 @@ class EntityViewSetHandler(object):
         return serializer.data
 
     @staticmethod
-    def get_entity_list(entity_list):
-
-        # retrieving list of active entity'
-        processing_list = [x.type for x in entity_list if x.is_processing]
-        completed_list = [x.type for x in entity_list if x.is_completed]
-
+    def get_entity_list(processing_list, completed_list):
         # retrieving list of constant entity
         # TODO: move status to constant/ utils, add the intermediate status
         constant_list = list(CONSTANTS.ENTITY.ENTITY_TYPE)
         for x in constant_list:
-            if x['value'] in completed_list:
+            if x['value'] in [y.type for y in completed_list]:
                 x['status'] = 'ready'
-            elif x['value'] in processing_list:
+            elif x['value'] in [y.type for y in processing_list]:
                 x['status'] = 'processing'
             else:
                 x['status'] = 'pending'

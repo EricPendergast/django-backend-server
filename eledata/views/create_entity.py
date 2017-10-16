@@ -35,8 +35,9 @@ class EntityViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
 
     @list_route(methods=['get'])
     def get_entity_list(self, request):
-        query_set = Entity.objects(group=request.user.group)
-        response_data = EntityViewSetHandler.get_entity_list(query_set)
+        processing_query_set = Entity.objects(group=request.user.group, state=1).fields(type=1)
+        completed_query_set = Entity.objects(group=request.user.group, state=2).fields(type=1)
+        response_data = EntityViewSetHandler.get_entity_list(processing_query_set, completed_query_set)
         return Response(response_data)
 
     """

@@ -20,7 +20,7 @@ class StatsViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
         """
         Get all entity data metrics
         """
-        entities = Entity.objects(group=request.user.group).all()
+        entities = Entity.objects(group=request.user.group, state=2).fields(type=1, data_summary_chart=1, state=1)
 
         response = handler.get_entity_data_metrics(entities)
         return Response(response, status=200)
