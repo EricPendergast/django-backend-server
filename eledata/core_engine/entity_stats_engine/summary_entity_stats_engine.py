@@ -49,9 +49,13 @@ class SummaryEntityStatsEngine(EntityStatsEngine):
         response = [
             {'key': 'Customer Records', 'value': len(data.index)},
             {'key': 'First Customer Join Date', 'value': data['Temp_Create_Date'].min().strftime('%Y-%m-%d')},
-            {'key': 'Latest Customer Join Date', 'value': data['Temp_Create_Date'].max().strftime('%Y-%m-%d')},
-            {'key': 'Involved Countries', 'value': len(data.groupby(['Country']).count().index)},
-            {'key': 'Customer Age Range', 'value': str(data['Age'].min()) + ' - ' + str(data['Age'].max())},
+            {'key': 'Latest Customer Join Date', 'value': data['Temp_Create_Date'].max().strftime('%Y-%m-%d')}
+        ]
+        if 'Country' in data.index:
+            response.append({'key': 'Involved Countries', 'value': len(data.groupby(['Country']).count().index)})
+        if 'Age' in data.index:
+            response.append({'key': 'Customer Age Range', 'value': str(data['Age'].min()) + ' - ' + str(data['Age'].max())})
+        response += [
             {'key': 'Create Date', 'value': create_date or datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')},
             {'key': 'Last Update', 'value': last_update or datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')},
         ]

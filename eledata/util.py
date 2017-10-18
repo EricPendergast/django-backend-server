@@ -4,6 +4,8 @@ import os
 import xlrd
 import datetime
 import distutils.core
+import pandas as pd
+from pandas.errors import ParserError
 
 from django.utils.six import BytesIO
 from rest_framework.parsers import JSONParser
@@ -75,19 +77,30 @@ def file_to_list_of_dictionaries(file, numLines=float("inf"), list=None, is_head
     parser = None
     _, extension = os.path.splitext(file.name)
 
-    if extension.lower() in [".csv", ".tsv"]:
-        # Reading the dialect from the file.
-        dialect = csv.Sniffer().sniff(
-            codecs.EncodedFile(file, "utf-8").read(1024), delimiters=",\t")
+    # TODO: combine csv and tsv handler with better format
+    if extension.lower() in [".csv"]:
+        try:
+            if is_header_included:
+                return pd.read_csv(file).T.to_dict().values()
+            else:
+                df = pd.read_csv(file, header=None)
+                height, width = df.shape
+                df.columns = ["column %s" % (i + 1) for i in range(width)]
+                return df.T.to_dict().values()
+        except ParserError:
+            raise InvalidInputError("Header row and subsequent row(s) are not the same length")
 
-        file.seek(0)  # reset the read point
-
-        def csv_generator(csv_reader):
-            for line in csv_reader:
-                yield line
-
-        parser = csv_generator(csv.reader(codecs.EncodedFile(file, "utf-8"),
-                                          dialect=dialect))
+    elif extension.lower() in [".tsv"]:
+        try:
+            if is_header_included:
+                return pd.read_csv(file, sep='\t').T.to_dict().values()
+            else:
+                df = pd.read_csv(file, header=None, sep='\t')
+                height, width = df.shape
+                df.columns = ["column %s" % (i + 1) for i in range(width)]
+                return df.T.to_dict().values()
+        except ParserError:
+            raise InvalidInputError("Header row and subsequent row(s) are not the same length")
 
     elif extension.lower() in [".xls", ".xlsx"]:
         def xl_generator(worksheet):
@@ -96,6 +109,7 @@ def file_to_list_of_dictionaries(file, numLines=float("inf"), list=None, is_head
 
         ws = xlrd.open_workbook(file.name).sheet_by_index(0)
         parser = xl_generator(ws)
+
     else:
         raise InvalidInputError("Unknown filetype: " + file.name)
 

@@ -3,8 +3,6 @@ from dateutil.relativedelta import relativedelta
 import pandas as pd
 from eledata.models.entity import Entity
 from h2o.estimators.random_forest import H2ORandomForestEstimator
-from h2o.estimators.gbm import H2OGradientBoostingEstimator
-import uuid
 from project.settings import CONSTANTS
 
 
@@ -177,7 +175,8 @@ class ClvH2OEngine(H2OEngine):
         # print(model)
 
         # Set response to the list of leavers' user_id
-        self.response = prediction_frame[prediction_result['predict'] == '0'].as_data_frame()['user_id'].tolist()
+        self.response = prediction_frame.as_data_frame()
+        # self.response.to_csv("prediction.csv")
         map(lambda _x: h2o.remove(_x), self.gc_list)
 
     def event_init(self):
