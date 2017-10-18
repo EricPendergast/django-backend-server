@@ -1,4 +1,3 @@
-Transaction_ID,User_ID,Transaction_Date,Transaction_Quantity,Transaction_Value,Product_Measure,Product_Size,Brand,Category,Chain
 0,27947,1/1/2017,0,1497,Box(s),157,Ilima,Socks,Chain2
 1,24241,1/1/2017,3,1025,Box(s),1611,New Balance,Shoes,Chain3
 2,22551,1/1/2017,0,206,Box(s),302,Ilima,Cosmetics,Chain4

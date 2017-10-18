@@ -125,9 +125,10 @@ class CoreH2OTestCase(TestCase):
 
         # testing get_user_list
         response = entity_h2o_engine.get_user_list()
-        self.assertEquals(list(response),
-                          [u'363-92-5456', u'751-23-2405', u'445-01-1147', u'732-68-8140', u'322-94-7646',
-                           u'973-40-5271', u'461-63-0012', u'821-55-2723', u'443-51-0606', u'988-90-7620'])
+        self.assertEquals(sorted(list(response)),
+                          sorted([u'363-92-5456', u'751-23-2405', u'445-01-1147', u'732-68-8140',
+                                  u'322-94-7646', u'973-40-5271', u'461-63-0012', u'821-55-2723',
+                                  u'443-51-0606', u'988-90-7620']))
         self.assertEquals(len(response), 10)
 
         # testing get_time_window
