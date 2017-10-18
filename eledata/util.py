@@ -38,6 +38,8 @@ def parser_to_list_of_dictionaries(parser, headerRow=None, numLines=float("inf")
     If headerRow is None, it auto generates a header row in the format 
     ["column 1", "column 2", ...]
     """
+    if not numLines:
+        numLines = float("inf")
 
     list = [] if list is None else list
     del list[:]
@@ -73,7 +75,7 @@ def parser_to_list_of_dictionaries(parser, headerRow=None, numLines=float("inf")
     return list
 
 
-def file_to_list_of_dictionaries(file, numLines=float("inf"), list=None, is_header_included=True):
+def file_to_list_of_dictionaries(file, numLines=None, list=None, is_header_included=True):
     parser = None
     _, extension = os.path.splitext(file.name)
 
@@ -81,9 +83,9 @@ def file_to_list_of_dictionaries(file, numLines=float("inf"), list=None, is_head
     if extension.lower() in [".csv"]:
         try:
             if is_header_included:
-                return pd.read_csv(file).T.to_dict().values()
+                return pd.read_csv(file, nrows=numLines).T.to_dict().values()
             else:
-                df = pd.read_csv(file, header=None)
+                df = pd.read_csv(file, nrows=numLines, header=None)
                 height, width = df.shape
                 df.columns = ["column %s" % (i + 1) for i in range(width)]
                 return df.T.to_dict().values()
@@ -93,9 +95,9 @@ def file_to_list_of_dictionaries(file, numLines=float("inf"), list=None, is_head
     elif extension.lower() in [".tsv"]:
         try:
             if is_header_included:
-                return pd.read_csv(file, sep='\t').T.to_dict().values()
+                return pd.read_csv(file, nrows=numLines, sep='\t').T.to_dict().values()
             else:
-                df = pd.read_csv(file, header=None, sep='\t')
+                df = pd.read_csv(file, nrows=numLines, header=None, sep='\t')
                 height, width = df.shape
                 df.columns = ["column %s" % (i + 1) for i in range(width)]
                 return df.T.to_dict().values()

@@ -115,20 +115,20 @@ class EntityViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
         # 2. save file to temp dir
         # 3. save basic entity information, temp dir folder "progressing" state in mongo
         # 4. return 100 rows of data
-        # try:
-        verifier = CreateEntityVerifier()
-        verifier.verify(0, request)
+        try:
+            verifier = CreateEntityVerifier()
+            verifier.verify(0, request)
 
-        response_data = EntityViewSetHandler.create_entity(
-            request_data=request.data,
-            request_file=request.FILES['file'],
-            group=request.user.group,
-            verifier=verifier)
+            response_data = EntityViewSetHandler.create_entity(
+                request_data=request.data,
+                request_file=request.FILES['file'],
+                group=request.user.group,
+                verifier=verifier)
 
-        assert verifier.verified
-        return Response(response_data, status=200)
-        # except:
-        #     return Response({"error": "fileError"}, status=400)
+            assert verifier.verified
+            return Response(response_data, status=200)
+        except:
+            return Response({"error": "fileError"}, status=400)
 
 
     """
