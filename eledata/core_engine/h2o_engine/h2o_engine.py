@@ -98,9 +98,16 @@ class H2OEngine(BaseEngine):
         """
         prediction_window_params = filter(lambda _x: _x.get('label') == "prediction_window", self.params)
         if prediction_window_params:
-            user_choice = prediction_window_params[0].choice_input \
-                if prediction_window_params[0].choice_index == 1 else False
-
+            if prediction_window_params[0].choice_index == 1:
+                user_choice = 1
+            elif prediction_window_params[0].choice_index == 2:
+                user_choice = 3
+            elif prediction_window_params[0].choice_index == 3:
+                user_choice = 12
+            elif prediction_window_params[0].choice_index == 4:
+                user_choice = prediction_window_params[0].choice_input
+            else:
+                user_choice = False
         else:
             user_choice = False
 
@@ -274,11 +281,12 @@ class H2OEngine(BaseEngine):
                 lambda x: x[u'transaction_date_group'])
             del sub_response_group[u'_id']
 
+            _hint_text = "_last_" + str(num_of_month) + "_month"
             sub_response_group = sub_response_group.groupby('user_id')
             t_response = {
-                'monetary_amount': sub_response_group['monetary_amount'].sum() / num_of_month,
-                'frequency': sub_response_group['frequency'].sum() / num_of_month,
-                'recency': end_date and (
+                'monetary_amount' + _hint_text: sub_response_group['monetary_amount'].sum() / num_of_month,
+                'frequency' + _hint_text: sub_response_group['frequency'].sum() / num_of_month,
+                'recency' + _hint_text: end_date and (
                     map(lambda x: (end_date - x).days, sub_response_group['recency'].max())) or (
                                map(lambda x: (datetime.datetime.now() - x).days, sub_response_group['recency'].max())),
                 'monetary_quantity': sub_response_group['monetary_quantity'].sum(),
@@ -343,8 +351,8 @@ class H2OEngine(BaseEngine):
         return response
 
     @abstractmethod
-    def get_back_test_accuracy(self):
-        return
+    def get_back_test_accuracy(self, updated_training_frame):
+        pass
 
     """
     Utility static methods below:
@@ -377,11 +385,6 @@ class H2OEngine(BaseEngine):
     def dynamic_rmf_merger(_left, _right, ext):
         _right.columns = [x + '-' + str(ext) if x is not 'user_id' else x for x in _right.columns]
         return pd.merge(_left, _right, how='outer', on='user_id')
-
-    @classmethod
-    def partial_gc(cls, _list):
-        h2o_client = cls.get_h2o_client()
-        map(lambda _x: h2o_client.remove(_x), _list)
 
     @classmethod
     def overall_gc(cls):

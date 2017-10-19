@@ -1,7 +1,7 @@
 questions = [
     {
         "label": "revenue",
-        "content": "What are the revenue contributed by my customers in the coming time?",
+        "content": "revenue",
         "enabled": False,
         "selected": False,
         "orientation": "customer",
@@ -14,7 +14,7 @@ questions = [
     },
     {
         "label": "churn",
-        "content": "Customers who are predicted to be not buying anymore in the coming time?",
+        "content": "churn",
         "enabled": False,
         "selected": False,
         "orientation": "customer",
@@ -27,7 +27,7 @@ questions = [
     },
     {
         "label": "growth",
-        "content": "Customers who are predicted to be buying more in the coming time?",
+        "content": "growth",
         "enabled": False,
         "selected": False,
         "orientation": "customer",
@@ -40,7 +40,7 @@ questions = [
     },
     {
         "label": "repeat",
-        "content": "Customer who are predicted to be buying repeatedly in the coming time",
+        "content": "repeat",
         "enabled": False,
         "selected": False,
         "orientation": "customer",
@@ -53,7 +53,7 @@ questions = [
     },
     {
         "label": "recommendedProduct",
-        "content": "What are the products that should be recommended to my customers?",
+        "content": "recommendedProduct",
         "enabled": False,
         "selected": False,
         "orientation": "customer",

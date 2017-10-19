@@ -1,4 +1,5 @@
 from .h2o_engine import H2OEngine
+import datetime
 from dateutil.relativedelta import relativedelta
 import pandas as pd
 from eledata.models.entity import Entity
@@ -7,11 +8,6 @@ from project.settings import CONSTANTS
 
 
 class ClvH2OEngine(H2OEngine):
-    def get_user_acceptance_level(self):
-        # TODO: Handle default
-        # TODO: Handle percentage allowance fetching
-        return
-
     def get_class_attributes(self, user_list, start_date, turning_date, end_date, supervising_window_length):
         pipeline = [
             {"$unwind": "$data"},
@@ -28,9 +24,10 @@ class ClvH2OEngine(H2OEngine):
         user_list and match_obj.update({
             "data.User_ID": {"$in": user_list}
         })
-        start_date and end_date and match_obj.update({
+
+        turning_date and end_date and match_obj.update({
             "data.Transaction_Date": {
-                "$gte": start_date,
+                "$gte": turning_date,
                 "$lte": end_date
             }
         })
@@ -55,7 +52,6 @@ class ClvH2OEngine(H2OEngine):
         rmf_list = self.get_dynamic_rmf_in_window(user_list=user_list, start_date=start_date, end_date=end_date,
                                                   supervising_window_length=supervising_window_length,
                                                   total_window_length=total_window_length)
-
         # Prepare Allowance
         allowance_list = self.get_allowance_in_window(user_list=user_list, start_date=start_date, end_date=end_date)
         allowance_list['allowance'] = allowance_list['std_monetary_amount']
@@ -90,11 +86,9 @@ class ClvH2OEngine(H2OEngine):
 
         return combined_rmf
 
-    def get_back_test_accuracy(self):
-        pass
-
     def execute(self):
         h2o = self.get_h2o_client()
+        self.response = {}
 
         # Prepare Background Entity Resource, from transaction / customer records depends
         user_list = self.get_user_list()
@@ -105,14 +99,25 @@ class ClvH2OEngine(H2OEngine):
         total_month_diff = self.get_month_diff(first_date, last_date)
         time_shift = self.get_supervising_time_window(total_month_diff)
         training_month_diff = total_month_diff - time_shift
-        prediction_month_diff = time_shift
         turning_date = last_date - relativedelta(months=time_shift)
         second_date = first_date + relativedelta(months=time_shift)
 
-        # Prepare Label
+        '''
+        Prepare training data list
+        '''
+        loop_range = (training_month_diff + 1) / time_shift \
+            if time_shift > 1 else training_month_diff
+
+        historical_date_list = [last_date - relativedelta(months=i * time_shift) for i in range(loop_range + 1)]
+        historical_date_list.append(first_date)
+        self.response['historical_date_list'] = historical_date_list[::-1]
+        self.response['time_shift'] = time_shift
+        '''
+        Prepare Label
+        '''
         class_attr = self.get_class_attributes(user_list=user_list, start_date=first_date,
                                                turning_date=turning_date, end_date=last_date,
-                                               supervising_window_length=prediction_month_diff)
+                                               supervising_window_length=time_shift)
 
         training = self.get_descriptive_attributes(user_list=user_list, start_date=first_date,
                                                    end_date=turning_date,
@@ -124,11 +129,14 @@ class ClvH2OEngine(H2OEngine):
                                                          total_window_length=training_month_diff,
                                                          supervising_window_length=time_shift)
 
-        training_frame1 = h2o.H2OFrame(python_obj=pd.merge(training, class_attr, how='outer', on='user_id'))
-        training_frame, testing_frame = training_frame1.split_frame(
-            ratios=[0.9],
-            seed=123461
-        )
+        '''
+        Prepare for CV and Training
+        '''
+        training_frame = h2o.H2OFrame(python_obj=pd.merge(training, class_attr, how='outer', on='user_id'))
+        # training_frame, testing_frame = training_frame1.split_frame(
+        #     ratios=[0.9],
+        #     seed=123461
+        # )
         self.gc_list += [training_frame, ]
 
         prediction_frame = h2o.H2OFrame(python_obj=for_prediction)
@@ -147,17 +155,26 @@ class ClvH2OEngine(H2OEngine):
 
         model.train(x=training_frame.columns, y='clv', training_frame=training_frame)
         self.gc_list += [model, ]
+
+        '''
+        Prediction and Accuracy Testing
+        '''
         prediction_result = model.predict(prediction_frame)
         prediction_frame['predict_clv'] = prediction_result['predict']
-        # training_frame['predict_clv'] = prediction_result['predict']
+        training_frame['predict_clv'] = prediction_result['predict']
+
+        self.response['r2'] = model.r2()
+        # Set response to the list of leavers' user_id
+        self.response['prediction_frame'] = prediction_frame.as_data_frame().select(
+            lambda col: col in ['user_id', 'predict_clv'], axis=1)
+        training.to_csv("training.csv")
+        self.response['prediction_frame'].to_csv("prediction.csv")
+
+        map(lambda _x: h2o.remove(_x), self.gc_list)
+
+    def get_back_test_accuracy(self, updated_training_frame):
         _allowance = 0.1
 
-        # median = training_frame["clv"].median()[0]
-        # low_med = training_frame[training_frame["clv"] <= median, "clv"].median()[0]
-        # high_med = training_frame[training_frame["clv"] > median, "clv"].median()[0]
-
-        # print("Score 1:")
-        # print(
         #          (training_frame['clv'] > high_med) & (training_frame['predict_clv'] > high_med) |
         #          ((high_med >= training_frame['clv']) & (training_frame['clv'] > median)) & ((
         #              high_med >= training_frame['predict_clv']) & (training_frame['predict_clv'] > median)) |
@@ -165,88 +182,199 @@ class ClvH2OEngine(H2OEngine):
         #              (median >= training_frame['predict_clv']) & (training_frame['predict_clv'] > low_med)) |
         #          (training_frame['clv'] <= low_med) & (training_frame['predict_clv'] <= low_med)).sum() / len(
         #     training_frame)
-        #
+        # TODO: accuracy is not good enough, using 2 std atm
         # print("Score 2:")
-        # print(
-        #     (abs(training_frame['clv'] - training_frame['predict_clv']) < training_frame['clv'] * _allowance) |
-        #     (abs(training_frame['clv'] - training_frame['predict_clv']) < training_frame['std_monetary_amount']) |
-        #     (abs(training_frame['clv'] - training_frame['predict_clv']) < 10)
-        # ).sum() / len(training_frame)
-        # print(model)
-
-        # Set response to the list of leavers' user_id
-        self.response = prediction_frame.as_data_frame()
-        # self.response.to_csv("prediction.csv")
-        map(lambda _x: h2o.remove(_x), self.gc_list)
+        self.response['accuracy'] = (
+                                        (abs(updated_training_frame['clv'] - updated_training_frame['predict_clv'])
+                                         < updated_training_frame['clv'] * _allowance) |
+                                        (abs(updated_training_frame['clv'] - updated_training_frame['predict_clv'])
+                                         < 2 * updated_training_frame['std_monetary_amount']) |
+                                        (abs(updated_training_frame['clv'] - updated_training_frame['predict_clv'])
+                                         < 10)).sum() / len(updated_training_frame)
 
     def event_init(self):
         """
         EntityStatsEngine Does not init event (For the time beings?)
         :return:
         """
-        spec = CONSTANTS.JOB.EVENT_SPEC.get('H2O.Leaving')
+        """
+        Retrieving Intermediate Response 
+        """
+        date_list = self.response.get('historical_date_list')
+        time_shift = self.response.get('time_shift')
+        prediction_frame = self.response.get('prediction_frame')
 
-        leaving_user_list = self.response
-        # print(leaving_user_list)
-
+        """
+        Calculating historical profile
+        """
+        branches = [
+            {"case": {"$and": [
+                {"$gte": [date_list[i + 2], "$data.Transaction_Date"]},
+                {"$lt": [date_list[i + 1], "$data.Transaction_Date"]},
+            ]}, "then": i} for i in range(len(date_list) - 2)
+        ]
+        branches.insert(0, {"case": {"$and": [
+            {"$gte": [date_list[1], "$data.Transaction_Date"]},
+            {"$lte": [date_list[0], "$data.Transaction_Date"]},
+        ]}, "then": -1})
         pipeline = [
             {"$unwind": "$data"},
             {"$match": {
-                "data.User_ID": {"$in": leaving_user_list}
+                "data.Transaction_Date": {
+                    "$gte": date_list[0],
+                    "$lte": date_list[-1]
+                }
+            }},
+            {"$project": {
+                "user_id": "$data.User_ID",
+                "monetary_amount": {"$sum": "$data.Transaction_Value"},
+                "recency": {"$max": "$data.Transaction_Date"},
+                "monetary_quantity": {"$sum": "$data.Transaction_Quantity"},
+                "transaction_date_group": {
+                    "$switch": {
+                        "branches": branches,
+                        "default": -2
+                    }
+                }
             }},
             {
                 "$group": {
-                    "_id": "$data.User_ID",
-                    "monetary_amount": {"$sum": "$data.Transaction_Value"},
+                    "_id": {
+                        "user_id": "$user_id",
+                        "transaction_date_group": "$transaction_date_group"
+                    },
+                    "monetary_amount": {"$sum": "$monetary_amount"},
                     "frequency": {"$sum": 1},
-                    "first_purchase_date": {"$min": "$data.Transaction_Date"},
-                    "last_purchase_date": {"$max": "$data.Transaction_Date"},
+                    "monetary_quantity": {"$sum": "$monetary_quantity"}
                 }
             }
         ]
 
-        # base_leaving_user_profile = Entity.objects(group=self.group, type='transaction').aggregate(*pipeline)
+        historical_data = list(Entity.objects(group=self.group, type='transaction').aggregate(*pipeline))
+        historical_data = pd.DataFrame(historical_data)
+        historical_profile = []
+        for i in range(len(date_list) - 1):
+            historical_data_subgroup = historical_data[historical_data['_id'].apply(
+                lambda x: x[u'transaction_date_group']) == (i - 1)]
+            historical_data_subgroup['user_id'] = historical_data_subgroup[u'_id'].apply(lambda x: x[u'user_id'])
+            historical_data_subgroup['transaction_date_group'] = historical_data_subgroup[u'_id'].apply(
+                lambda x: x[u'transaction_date_group'])
+            del historical_data_subgroup[u'_id']
 
+            historical_data_subgroup = historical_data_subgroup.groupby('user_id')
+            t_profile = {
+                'monetary_amount': historical_data_subgroup['monetary_amount'].sum() / time_shift,
+                'frequency': historical_data_subgroup['frequency'].sum(),
+                'monetary_quantity': historical_data_subgroup['monetary_quantity'].sum() / time_shift,
+            }
+            t_profile = pd.DataFrame(t_profile)
+            t_profile.reset_index(level=0, inplace=True)
+            t_profile['user_id'] = t_profile['user_id'].astype(str)
+            t_profile = pd.merge(prediction_frame, t_profile, how='outer', on='user_id')
+            historical_profile.append(t_profile)
+
+        """
+        calculate expiry date
+        """
+        d1 = datetime.date.today()
+        d1 += relativedelta(days=(time_shift * 15))
+        expiry_date = d1
 
         def get_event_value():
-            captured_user = len(leaving_user_list)
-
-            """
-            :return: VAO
-            """
-            pass
+            return dict(predictedRevenue=prediction_frame['predict_clv'].sum())
 
         def get_event_desc():
-            """
-            Retrieving corresponding value in event_desc/ detailed_event_desc
-            :return:
-            """
+            predicted_revenue = prediction_frame['predict_clv'].sum()
+            captured_user = prediction_frame.shape[0]
+            average_predicted_revenue = prediction_frame['predict_clv'].mean()
+            average_historical_revenue = historical_profile[-1]['monetary_amount'].sum() / prediction_frame.shape[0]
+
+            returning_dict = [
+                {'predicted_revenue': predicted_revenue},
+                {'captured_user': captured_user},
+                {'average_predicted_revenue': average_predicted_revenue},
+                {'average_historical_revenue': average_historical_revenue},
+                {'expiry_date': expiry_date},
+            ]
+            return returning_dict
+
+        def get_detail_desc():
+            # predicted_revenue = prediction_frame['predict_clv'].sum()
+            # captured_user = prediction_frame.shape[0]
+            average_predicted_revenue = prediction_frame['predict_clv'].mean()
+            average_historical_revenue = historical_profile[-1]['monetary_amount'].sum() / prediction_frame.shape[0]
+            # d1 = datetime.date.today()
+            # d1 + relativedelta(days=(time_shift * 15))
+            # expiry_date = d1
+
+            returning_dict = [
+                # {'predicted_revenue': predicted_revenue},
+                # {'captured_user': captured_user},
+                {'average_predicted_revenue': average_predicted_revenue},
+                {'average_historical_revenue': average_historical_revenue},
+                # {'expiry_date': expiry_date},
+            ]
+            return returning_dict
 
         def get_analysis_desc():
-            """
-            Like getting model feedback
-            :return:
-            """
+            accuracy = self.response.get('accuracy')
+            r2 = self.response.get('r2')
+            training_customer_size = prediction_frame.shape[0]
+            testing_customer_size = prediction_frame.shape[0] * 0.2
+            training_transaction_size = sum([x['frequency'].sum() for x in historical_profile[:-1]])
+            testing_transaction_size = sum([x['frequency'].sum() for x in historical_profile[:-1]]) * 0.2
+
+            returning_dict = [{'accuracy': accuracy},
+                              # {'r2': r2},
+                              {'trainingCustomerSize': training_customer_size},
+                              {'testingCustomerSize': testing_customer_size},
+                              {'trainingTransactionSize': training_transaction_size},
+                              {'testingTransactionSize': testing_transaction_size}]
+            return returning_dict
 
         def get_chart():
-            """
+            label_start_date = (date_list[1] - date_list[0]) / 2 + date_list[0]
+            label_list = [label_start_date + relativedelta(months=(x * time_shift)) for x in range(len(date_list))]
 
-            :return:
-            """
+            actual = {'data': [], 'border': False, 'label': 'actual '}
+            prediction = {'data': [], 'border': True, 'label': 'prediction '}
+            lower = {'data': [], 'border': False, 'label': 'lower '}
+            higher = {'data': [], 'border': False, 'label': 'higher '}
 
-        # "event_value": "vao",
-        # "event_desc": [
-        #                   "captured_user", "average_value_change_per_user", "expiry_date"
-        #               ],
-        # "detailed_event_desc": [
-        #                            "average_transaction_value_per_user", "average_transaction_quantity_per_user",
-        #                            "most_popular_product"
-        #                        ],
-        # "analysis_desc": [
-        #                      "back_test_accuracy", "training_set_customer", "testing_set_customer",
-        #                      "training_set_transaction",
-        #                      "testing_set_transaction"
-        #                  ],
-        # "chart_type": "Line",
-        # "chart": "H2O.Leaving"
-        return
+            for x in historical_profile:
+                _shape = x.shape[0]
+                actual['data'] += [x['monetary_amount'].sum(), ]
+                prediction['data'] += [None, ]
+                lower['data'] += [x['monetary_amount'].quantile(.25) * _shape, ]
+                higher['data'] += [x['monetary_amount'].quantile(.75) * _shape, ]
+
+            prediction['data'][-1] = actual['data'][-1]
+            actual['data'] += [None, ]
+            prediction['data'] += [prediction_frame['predict_clv'].sum(), ]
+            lower['data'] += [None, ]
+            higher['data'] += [None, ]
+            chart = {
+                'labels': label_list,
+                'yLabel': 'totalRevenue',
+                'xLabel': 'transactionTime',
+                'datasets': [actual, prediction, lower, higher]
+            }
+            return chart
+
+        event_dict = dict(
+            event_category=CONSTANTS.EVENT.CATEGORY.get('INSIGHT'),
+            event_type='H2O.Clv',
+            event_value=get_event_value(),
+            event_desc=get_event_desc(),
+            detailed_desc=get_detail_desc(),
+            analysis_desc=get_analysis_desc(),
+            chart_type='Line',
+            chart=get_chart(),
+            detailed_data=[],
+            expiry_date=expiry_date,
+            event_status=CONSTANTS.EVENT.CATEGORY.get('PENDING')
+        )
+
+        # TODO: save event_dict
+        print(event_dict)
+        return event_dict
