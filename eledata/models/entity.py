@@ -172,6 +172,8 @@ class Entity(Document):
     created_at = DateTimeField(default=datetime.datetime.now)
     updated_at = DateTimeField(default=datetime.datetime.now)
     group = ReferenceField(Group)
+    temp_data = ListField()
+    temp_header = ListField()
 
     data = ListField(DictField())
     change_index = IntField(default=-1)

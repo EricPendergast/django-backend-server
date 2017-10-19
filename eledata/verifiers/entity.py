@@ -60,3 +60,19 @@ class CreateEntityMappedVerifier(Verifier):
             raise InvalidInputError("Invalid serializer: " + str(serializer.errors))
 
     stages = [stage0, stage1, stage2, stage3]
+
+
+class RemoveStage1EntityVerifier(Verifier):
+    def stage0(self, request_data):
+        if not ('entity_type' in request_data):
+            raise InvalidInputError("No entity header.")
+
+    def stage1(self, request_data):
+        if not (request_data['entity_type'] in [x['value'] for x in CONSTANTS.ENTITY.ENTITY_TYPE]):
+            raise InvalidInputError("No valid entity header.")
+
+    def stage2(self, entity):
+        if not entity or not entity.state == 1:
+            raise InvalidInputError("No valid entity")
+
+    stages = [stage0, stage1, stage2]

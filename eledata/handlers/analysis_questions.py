@@ -38,8 +38,8 @@ def get_analysis_questions_settings(settings):
 def update_analysis_settings(request_data, settings, verifier):
     # First Verifying for existence of both key, and hence initializing
     verifier.verify(0, request_data)
-    request_analysis_questions = request_data.getlist('analysisQuestion', False)
-    request_analysis_params = request_data.getlist('analysisParams', False)
+    request_analysis_questions = request_data['analysisQuestion']
+    request_analysis_params = request_data['analysisParams']
 
     def update_analysis_question(_request_analysis_questions, _settings):
 
@@ -67,14 +67,12 @@ def update_analysis_settings(request_data, settings, verifier):
     def update_analysis_parameter(_request_analysis_params, _settings):
         _request_analysis_params_labels = []
         for p in _request_analysis_params:
-            p = ast.literal_eval(p)
             _request_analysis_params_labels += [p[u'label'], ]
 
         verifier.verify(3, _request_analysis_params_labels, settings.parameters)
 
         for p in _request_analysis_params:
 
-            p = ast.literal_eval(p)
             _settings.get_parameter(p[u'label']).choice_index = p[u'choiceIndex']
 
             if 'choiceInput' in p:

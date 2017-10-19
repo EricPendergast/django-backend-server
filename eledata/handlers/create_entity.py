@@ -13,19 +13,22 @@ class EntityViewSetHandler(object):
         pass
 
     @staticmethod
-    def get_entity_list(entity_list):
+    def select_entity(entity):
+        if entity is None:
+            return None
 
-        # retrieving list of active entity'
-        processing_list = [x.type for x in entity_list if x.is_processing]
-        completed_list = [x.type for x in entity_list if x.is_completed]
+        serializer = EntityDetailedSerializer(entity)
+        return serializer.data
 
+    @staticmethod
+    def get_entity_list(processing_list, completed_list):
         # retrieving list of constant entity
         # TODO: move status to constant/ utils, add the intermediate status
         constant_list = list(CONSTANTS.ENTITY.ENTITY_TYPE)
         for x in constant_list:
-            if x['value'] in completed_list:
+            if x['value'] in [y.type for y in completed_list]:
                 x['status'] = 'ready'
-            elif x['value'] in processing_list:
+            elif x['value'] in [y.type for y in processing_list]:
                 x['status'] = 'processing'
             else:
                 x['status'] = 'pending'
@@ -59,6 +62,8 @@ class EntityViewSetHandler(object):
             is_header_included=util.string_caster["bool"](
                 entity_dict["source"]["file"]["is_header_included"]))
 
+        entity_dict['temp_data'] = entity_data
+        entity_dict['temp_header'] = CONSTANTS.ENTITY.HEADER_OPTION.get(entity_dict["type"].upper())
         serializer = EntityDetailedSerializer(data=entity_dict)
         verifier.verify(3, serializer)
 
@@ -107,13 +112,13 @@ class EntityViewSetHandler(object):
                 item[mapping["mapped"]] = \
                     string_caster[mapping["data_type"]](item[mapping["mapped"]])
         # Generating Entity Summary and Chart Summary after mapping is confirmed.
-        summary_entity_stats_engine = EngineProvider\
+        summary_entity_stats_engine = EngineProvider \
             .provide("EntityStats.Summary",
                      group=group,
                      params=None,
                      entity_data=data,
                      entity_type=entity.type)
-        chart_entity_stats_engine = EngineProvider\
+        chart_entity_stats_engine = EngineProvider \
             .provide("EntityStats.Chart",
                      group=group,
                      params=None,
@@ -154,3 +159,17 @@ class EntityViewSetHandler(object):
             'header_option': CONSTANTS.ENTITY.HEADER_OPTION.get(entity.type.upper())
         }
         return response_data
+
+    @staticmethod
+    def remove_stage1_entity(request_data, verifier, group):
+
+        verifier.verify(0, request_data)
+        verifier.verify(1, request_data)
+
+        entity = Entity.objects.get(group=group, type=request_data['entity_type'])
+
+        verifier.verify(2, entity)
+
+        entity.delete()
+
+        return {"msg": "Remove successful"}

@@ -28,7 +28,7 @@ class ChartEntityStatsEngine(EntityStatsEngine):
         number_of_group = 20 if len(data.index) >= 2000 else 10
         data['groups'] = pd.cut(data['Transaction_Value'], number_of_group)
         response = {
-            'datasets': data.groupby(['groups'])['Transaction_Value'].count().tolist(),
+            'datasets': [data.groupby(['groups'])['Transaction_Value'].count().tolist()],
             'labels': [''] * number_of_group
         }
         del data['groups']
@@ -46,7 +46,7 @@ class ChartEntityStatsEngine(EntityStatsEngine):
 
         data['groups'] = pd.cut(data['days'], number_of_group)
         response = {
-            'datasets': data.groupby(['groups'])['days'].count().cumsum().tolist(),
+            'datasets': [data.groupby(['groups'])['days'].count().cumsum().tolist()],
             'labels': [''] * number_of_group
         }
 
@@ -59,7 +59,7 @@ class ChartEntityStatsEngine(EntityStatsEngine):
     def calculate_conversion_chart_data(data):
         grouped = data.groupby(['Campaign_Name'])['Campaign_Name'].count()
         response = {
-            'datasets': data.groupby(['Campaign_Name'])['Campaign_Name'].count().tolist(),
+            'datasets': [data.groupby(['Campaign_Name'])['Campaign_Name'].count().tolist()],
             'labels': grouped.keys().tolist()
         }
         del grouped
@@ -74,10 +74,10 @@ class ChartEntityStatsEngine(EntityStatsEngine):
         tdata = gdata.unstack(level=-1)
         tdata['Total visitor'] = tdata['New visitor'] + tdata['Returning  visitor']
         response = {
-            'datasets': {
-                'returning_visitor': tdata['New visitor'].tolist(),
-                'total_visitor': tdata['Total visitor'].tolist()
-            },
+            'datasets': [
+                tdata['New visitor'].tolist(),
+                tdata['Total visitor'].tolist()
+            ],
             'labels': tdata.index.get_level_values('Temp_Date').unique().tolist()
         }
         del data['Temp_Date']
@@ -88,10 +88,10 @@ class ChartEntityStatsEngine(EntityStatsEngine):
     @staticmethod
     def calculate_offline_event_chart_data(df):
         return {
-            'datasets': {
-                'start_date': df['Start_Date'].tolist(),
-                'end_date': df['End_Date'].tolist(),
-            },
+            'datasets': [
+                df['Start_Date'].tolist(),
+                df['End_Date'].tolist(),
+            ],
             'labels': df['Event_Type'].tolist()
         }
 
@@ -104,10 +104,10 @@ class ChartEntityStatsEngine(EntityStatsEngine):
         del gdf
         del df['Temp_Timestamp']
         return {
-            'datasets': {
-                'subscribe_count': tdf['Subscribe'].tolist(),
-                'unsubscribe_count': tdf['Unsubscribe'].tolist(),
-            },
+            'datasets': [
+                tdf['Subscribe'].tolist(),
+                tdf['Unsubscribe'].tolist(),
+            ],
             'labels': tdf.index.tolist()
         }
 
@@ -118,9 +118,9 @@ class ChartEntityStatsEngine(EntityStatsEngine):
         grouped = df.groupby(['Temp_Timestamp']).sum()
         del df['Temp_Timestamp']
         return {
-            'datasets': {
-                'datasets_inflow': grouped['Number_People_In'].tolist(),
-                'datasets_outflow': grouped['Number_People_Out'].tolist(),
-            },
+            'datasets': [
+                grouped['Number_People_In'].tolist(),
+                grouped['Number_People_Out'].tolist(),
+            ],
             'labels': grouped.index.tolist()
         }

@@ -21,6 +21,7 @@ admin.autodiscover()
 from eledata.views.create_entity import *
 from eledata.views.analysis_questions import *
 from eledata.views.event import *
+from eledata.views.stats import *
 from eledata.views.users import GroupAdminActions, UserLogin, UserActions
 from rest_framework.routers import DefaultRouter
 
@@ -31,6 +32,7 @@ router.register(r'event', EventViewSet, r'event')
 router.register(r'users', GroupAdminActions, r'users')
 router.register(r'users', UserLogin, r'users2')
 router.register(r'users', UserActions, r'users2')
+router.register(r'stats', StatsViewSet, r'stats')
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),

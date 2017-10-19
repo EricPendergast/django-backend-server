@@ -112,7 +112,7 @@ class CoreSummaryTestCase(TestCase):
         response = ChartEntityStatsEngine.calculate_transaction_chart_data(data)
 
         self.assertEquals(response.keys(), ['labels', 'datasets'])
-        self.assertEquals([len(x) for x in response.values()], [20, 20])
+        self.assertEquals([len(x) for x in response.values()], [20, 1])
         assert data.equals(pd.read_csv(self.transaction_filename, names=header))
 
     def test_full_calculate_customer_chart_data(self):
@@ -122,7 +122,7 @@ class CoreSummaryTestCase(TestCase):
         response = ChartEntityStatsEngine.calculate_customer_chart_data(data)
 
         self.assertEquals(response.keys(), ['labels', 'datasets'])
-        self.assertEquals([len(x) for x in response.values()], [20, 20])
+        self.assertEquals([len(x) for x in response.values()], [20, 1])
         assert data.equals(pd.read_csv(self.customer_filename, names=header))
 
     def test_full_calculate_conversion_chart_data(self):
@@ -132,7 +132,7 @@ class CoreSummaryTestCase(TestCase):
         response = ChartEntityStatsEngine.calculate_conversion_chart_data(data)
 
         self.assertEquals(response.keys(), ['labels', 'datasets'])
-        self.assertEquals([len(x) for x in response.values()], [13, 13])
+        self.assertEquals([len(x) for x in response.values()], [13, 1])
         assert data.equals(pd.read_csv(self.conversion_filename, names=header))
 
     def test_full_calculate_ga_chart_data(self):

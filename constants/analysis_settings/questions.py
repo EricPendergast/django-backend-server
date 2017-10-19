@@ -1,43 +1,68 @@
 questions = [
     {
-        "content": "Which customers will likely be leaving in the coming time?",
+        "label": "revenue",
+        "content": "What are the revenue contributed by my customers in the coming time?",
         "enabled": False,
-        "label": "leaving",
-        "icon": "maps/directionsRun",
+        "selected": False,
         "orientation": "customer",
-        "selected": False,
         "type": "predictive",
-        "required_entities": [
-            "transaction",
-            "customer"
-        ],
-        "analysis_engine": "H2O.Leaving"
-    },
-    {
-        "content": "Which products will be the most popular in the future?",
-        "enabled": False,
-        "label": "popularity",
-        "icon": "action/trendingUp",
-        "orientation": "product",
-        "selected": False,
-        "type": "predictive",
+        "icon": "editor/attachMoney",
         "required_entities": [
             "transaction"
         ],
-        "analysis_engine": "H2O.Popularity"
+        "analysis_engine": "H2O.Clv"
     },
     {
-        "content": "What has caused the most customers to leave?",
+        "label": "churn",
+        "content": "Customers who are predicted to be not buying anymore in the coming time?",
         "enabled": False,
-        "label": "cause of leave",
-        "icon": "maps/directionsRun",
-        "orientation": "hiddenInsight",
         "selected": False,
-        "type": "descriptive",
+        "orientation": "customer",
+        "type": "predictive",
+        "icon": "action/trendingDown",
+        "required_entities": [
+            "transaction"
+        ],
+        "analysis_engine": "H2O.Leaving"
+    },
+    {
+        "label": "growth",
+        "content": "Customers who are predicted to be buying more in the coming time?",
+        "enabled": False,
+        "selected": False,
+        "orientation": "customer",
+        "type": "predictive",
+        "icon": "action/trendingUp",
+        "required_entities": [
+            "transaction"
+        ],
+        "analysis_engine": "H2O.Growing"
+    },
+    {
+        "label": "repeat",
+        "content": "Customer who are predicted to be buying repeatedly in the coming time",
+        "enabled": False,
+        "selected": False,
+        "orientation": "customer",
+        "type": "predictive",
+        "icon": "av/repeat",
+        "required_entities": [
+            "transaction"
+        ],
+        "analysis_engine": "H2O.Repeat"
+    },
+    {
+        "label": "recommendedProduct",
+        "content": "What are the products that should be recommended to my customers?",
+        "enabled": False,
+        "selected": False,
+        "orientation": "customer",
+        "type": "predictive",
+        "icon": "social/sentimentVerySatisfied",
         "required_entities": [
             "transaction",
             "customer"
         ],
-        "analysis_engine": "H2O.Leaving"
+        "analysis_engine": "H2O.Recommendation"
     }
 ]
