@@ -58,11 +58,11 @@ class OfflineEngineTest(TestCase):
 
         engine.execute()
 
-        response = engine.response
+        responses = engine.responses
         engine.event_init()
         print(response.keys())
         # print or compare response with static data
-        pprint.pprint(response)
+        pprint.pprint(responses)
         # self.assertEquals(response, mock_response)
 
         # TODO: test engine.event_init()
