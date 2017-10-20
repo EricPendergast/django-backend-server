@@ -6,7 +6,7 @@ from eledata.verifiers.event import *
 from pprint import pprint
 
 
-class Question07Engine(BaseEngine):
+class Question09Engine(BaseEngine):
     responses = None
     transaction_data = None
     customer_data = None
@@ -20,7 +20,7 @@ class Question07Engine(BaseEngine):
     }
 
     def __init__(self, group, params, transaction_data, customer_data):
-        super(Question07Engine, self).__init__(group, params)
+        super(Question09Engine, self).__init__(group, params)
         # TODO: Align transaction_data and customer_data with DB schema
 
         self.transaction_data = pd.DataFrame(transaction_data)
@@ -61,7 +61,7 @@ class Question07Engine(BaseEngine):
         responses = []
 
         # Get a list of targeted customers using the user specified rule and param
-        rule = Question07Engine.get_rule(params['rule'])
+        rule = Question09Engine.get_rule(params['rule'])
         target_customers = rule(transaction_data, params['rule_param'])
 
         # Generate response to display different number of months of result
@@ -77,13 +77,13 @@ class Question07Engine(BaseEngine):
                 total_transaction = total_transaction.rename(index=str, columns={'Transaction_Quantity': 'Total_Quantity', 'Transaction_Date': 'Last_Transaction_Date'})
 
                 # Get detailed records for each customer from merging the transaction and customer records
-                detailed_data = Question07Engine.get_detailed_data(total_transaction, target_customers_data)
+                detailed_data = Question09Engine.get_detailed_data(total_transaction, target_customers_data)
 
                 # Construct response
                 responses.append(
                     {
                         "event_category": "insight",
-                        "event_type": "question_07",    # Customers that stopped buying in the past 6 months
+                        "event_type": "question_09",    # Customers that stopped buying in the past 6 months
                         "event_value": "Total Customers Lost: {0}".format(len(observed_target_customers)),
                         "tabs": {
                             "Month": num_month_observe_list,
@@ -93,12 +93,12 @@ class Question07Engine(BaseEngine):
                             "Month": num_month_observe,
                             "Characteristics": characteristic
                         },
-                        "event_desc": Question07Engine.get_event_desc(detailed_data, characteristic),
-                        "detailed_desc": Question07Engine.get_detailed_event_desc(detailed_data, characteristic),
-                        "analysis_desc": Question07Engine.get_analysis_desc(transaction_data, customer_data),
+                        "event_desc": Question09Engine.get_event_desc(detailed_data, characteristic),
+                        "detailed_desc": Question09Engine.get_detailed_event_desc(detailed_data, characteristic),
+                        "analysis_desc": Question09Engine.get_analysis_desc(transaction_data, customer_data),
                         "chart_type": "bar",
-                        "chart": Question07Engine.get_chart(detailed_data, characteristic, num_month_observe, target_customers),
-                        "detailed_data": Question07Engine.transform_detailed_data(detailed_data)    # Transform detailed data from DF to a list of dict
+                        "chart": Question09Engine.get_chart(detailed_data, characteristic, num_month_observe, target_customers),
+                        "detailed_data": Question09Engine.transform_detailed_data(detailed_data)    # Transform detailed data from DF to a list of dict
                     }
                 )
 
@@ -127,7 +127,7 @@ class Question07Engine(BaseEngine):
         :return: function ref, used to select target customers
         """
         mapping = {
-            'nosale': Question07Engine.get_nosale_customers,
+            'nosale': Question09Engine.get_nosale_customers,
         }
         return mapping.get(rule)
 
@@ -149,8 +149,8 @@ class Question07Engine(BaseEngine):
         results = []
         # Get the user IDs for each month
         for month_observe in range(1, 13):
-            transaction_startdate = Question07Engine.get_start_date(month_observe + num_month_nosale)
-            transaction_enddate = Question07Engine.get_start_date(month_observe + num_month_nosale - 1).replace(day=1)
+            transaction_startdate = Question09Engine.get_start_date(month_observe + num_month_nosale)
+            transaction_enddate = Question09Engine.get_start_date(month_observe + num_month_nosale - 1).replace(day=1)
             results.append(last_transactions.loc[
                 (last_transactions['Transaction_Date'] >= transaction_startdate) & (last_transactions['Transaction_Date'] < transaction_enddate), 'User_ID'].astype(str))
         return results
@@ -195,8 +195,8 @@ class Question07Engine(BaseEngine):
 
         # Age needs to be grouped in bins
         if characteristic == 'Age':
-            stats = detailed_data.groupby(pd.cut(detailed_data[characteristic], Question07Engine.AGE_BINS)).size().reset_index()
-            stats[characteristic] = stats[characteristic].astype(str).replace(Question07Engine.AGE_MAPPING)
+            stats = detailed_data.groupby(pd.cut(detailed_data[characteristic], Question09Engine.AGE_BINS)).size().reset_index()
+            stats[characteristic] = stats[characteristic].astype(str).replace(Question09Engine.AGE_MAPPING)
         else:
             stats = detailed_data.groupby(detailed_data[characteristic]).size().reset_index()
         stats = stats.rename(columns={0: 'Count'})
@@ -225,8 +225,8 @@ class Question07Engine(BaseEngine):
 
         # Age needs to be grouped in bins
         if characteristic == 'Age':
-            stats = detailed_data.groupby(pd.cut(detailed_data[characteristic], Question07Engine.AGE_BINS)).mean()['Total_Quantity'].reset_index()
-            stats[characteristic] = stats[characteristic].astype(str).replace(Question07Engine.AGE_MAPPING)
+            stats = detailed_data.groupby(pd.cut(detailed_data[characteristic], Question09Engine.AGE_BINS)).mean()['Total_Quantity'].reset_index()
+            stats[characteristic] = stats[characteristic].astype(str).replace(Question09Engine.AGE_MAPPING)
             stats['Total_Quantity'] = stats['Total_Quantity'].fillna(value=0).astype(int)
         else:
             stats = detailed_data.groupby(detailed_data[characteristic]).mean()['Total_Quantity'].reset_index()
@@ -290,8 +290,8 @@ class Question07Engine(BaseEngine):
 
             # Group and count the customers by the characteristic
             if characteristic == 'Age':
-                stats = stats.groupby(pd.cut(stats[characteristic], Question07Engine.AGE_BINS)).size().reset_index()
-                stats[characteristic] = stats[characteristic].astype(str).replace(Question07Engine.AGE_MAPPING)
+                stats = stats.groupby(pd.cut(stats[characteristic], Question09Engine.AGE_BINS)).size().reset_index()
+                stats[characteristic] = stats[characteristic].astype(str).replace(Question09Engine.AGE_MAPPING)
             else:
                 stats = stats.groupby(stats[characteristic]).size().reset_index()
                 for group in pd.unique(detailed_data[characteristic]):
