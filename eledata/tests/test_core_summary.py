@@ -24,13 +24,13 @@ class CoreSummaryTestCase(TestCase):
                            names=header)
         response = SummaryEntityStatsEngine.calculate_transaction_data(data)
         self.assertEquals(len(response), 8)
-        self.assertEquals(filter(lambda x: x['key'] == 'Transaction Records', response)[0]['value'], 120000)
-        self.assertEquals(filter(lambda x: x['key'] == 'Involved User', response)[0]['value'], 29476)
-        self.assertEquals(filter(lambda x: x['key'] == 'First Transaction Start Date', response)[0]['value'],
+        self.assertEquals(filter(lambda x: x['key'] == 'transactionRecords', response)[0]['value'], 120000)
+        self.assertEquals(filter(lambda x: x['key'] == 'involvedUser', response)[0]['value'], 29476)
+        self.assertEquals(filter(lambda x: x['key'] == 'firstTransactionStartDate', response)[0]['value'],
                           '2017-01-01')
-        self.assertEquals(filter(lambda x: x['key'] == 'Last Transaction End Date', response)[0]['value'], '2017-06-18')
-        self.assertEquals(filter(lambda x: x['key'] == 'Average Transaction Value', response)[0]['value'], '999.42')
-        self.assertEquals(filter(lambda x: x['key'] == 'Average Transaction Quantity', response)[0]['value'], '1.5')
+        self.assertEquals(filter(lambda x: x['key'] == 'lastTransactionEndDate', response)[0]['value'], '2017-06-18')
+        self.assertEquals(filter(lambda x: x['key'] == 'averageTransactionValue', response)[0]['value'], '999.42')
+        self.assertEquals(filter(lambda x: x['key'] == 'averageTransactionQuantity', response)[0]['value'], '1.5')
         assert data.equals(pd.read_csv(self.transaction_filename, names=header))
 
     def test_full_calculate_large_transaction_data(self):
@@ -46,11 +46,11 @@ class CoreSummaryTestCase(TestCase):
                            names=header)
         response = SummaryEntityStatsEngine.calculate_customer_data(data)
         self.assertEquals(len(response), 7)
-        self.assertEquals(filter(lambda x: x['key'] == 'Customer Records', response)[0]['value'], 30000)
-        self.assertEquals(filter(lambda x: x['key'] == 'Involved Countries', response)[0]['value'], 30000)
-        self.assertEquals(filter(lambda x: x['key'] == 'First Customer Join Date', response)[0]['value'], '2016-12-01')
-        self.assertEquals(filter(lambda x: x['key'] == 'Latest Customer Join Date', response)[0]['value'], '2017-02-28')
-        self.assertEquals(filter(lambda x: x['key'] == 'Customer Age Range', response)[0]['value'], '18 - 70')
+        self.assertEquals(filter(lambda x: x['key'] == 'customerRecords', response)[0]['value'], 30000)
+        self.assertEquals(filter(lambda x: x['key'] == 'involvedCountries', response)[0]['value'], 30000)
+        self.assertEquals(filter(lambda x: x['key'] == 'firstCustomerJoinDate', response)[0]['value'], '2016-12-01')
+        self.assertEquals(filter(lambda x: x['key'] == 'latestCustomerJoinDate', response)[0]['value'], '2017-02-28')
+        self.assertEquals(filter(lambda x: x['key'] == 'customerAgeRange', response)[0]['value'], '18 - 70')
         assert data.equals(pd.read_csv(self.customer_filename, names=header))
 
     def test_full_calculate_conversion_data(self):
@@ -60,12 +60,12 @@ class CoreSummaryTestCase(TestCase):
         response = SummaryEntityStatsEngine.calculate_conversion_data(data)
 
         self.assertEquals(len(response), 8)
-        self.assertEquals(filter(lambda x: x['key'] == 'Conversion Records', response)[0]['value'], 20000)
-        self.assertEquals(filter(lambda x: x['key'] == 'Involved Campaigns', response)[0]['value'], 2994)
-        self.assertEquals(filter(lambda x: x['key'] == 'Involved Users', response)[0]['value'], 16604)
-        self.assertEquals(float(filter(lambda x: x['key'] == 'Completed Rate', response)[0]['value']), 0.56)
-        self.assertEquals(filter(lambda x: x['key'] == 'First Record Start Date', response)[0]['value'], '2017-04-01')
-        self.assertEquals(filter(lambda x: x['key'] == 'Last Record End Date', response)[0]['value'], '2017-08-27')
+        self.assertEquals(filter(lambda x: x['key'] == 'conversionRecords', response)[0]['value'], 20000)
+        self.assertEquals(filter(lambda x: x['key'] == 'involvedCampaigns', response)[0]['value'], 2994)
+        self.assertEquals(filter(lambda x: x['key'] == 'involvedUsers', response)[0]['value'], 16604)
+        self.assertEquals(float(filter(lambda x: x['key'] == 'completedRate', response)[0]['value']), 0.56)
+        self.assertEquals(filter(lambda x: x['key'] == 'firstRecordStartDate', response)[0]['value'], '2017-04-01')
+        self.assertEquals(filter(lambda x: x['key'] == 'lastRecordEndDate', response)[0]['value'], '2017-08-27')
         assert data.equals(pd.read_csv(self.conversion_filename, names=header))
 
     # TODO: Update offline event data schema
@@ -74,10 +74,10 @@ class CoreSummaryTestCase(TestCase):
         data = pd.read_csv(self.offline_event_filename, names=header)
         response = SummaryEntityStatsEngine.calculate_offline_event_data(data)
         self.assertEquals(len(response), 6)
-        self.assertEquals(filter(lambda x: x['key'] == 'Event Record Count', response)[0]['value'], 3000)
-        self.assertEquals(filter(lambda x: x['key'] == 'Average Event Period', response)[0]['value'], '84 Days')
-        self.assertEquals(filter(lambda x: x['key'] == 'First Event Start Date', response)[0]['value'], '2017-01-01')
-        self.assertEquals(filter(lambda x: x['key'] == 'Last Event End Date', response)[0]['value'], '2017-06-18')
+        self.assertEquals(filter(lambda x: x['key'] == 'eventRecordCount', response)[0]['value'], 3000)
+        self.assertEquals(filter(lambda x: x['key'] == 'averageEventPeriod', response)[0]['value'], '84 Days')
+        self.assertEquals(filter(lambda x: x['key'] == 'firstEventStartDate', response)[0]['value'], '2017-01-01')
+        self.assertEquals(filter(lambda x: x['key'] == 'lastEventEndDate', response)[0]['value'], '2017-06-18')
         assert data.equals(pd.read_csv(self.offline_event_filename, names=header))
 
     def test_full_calculate_subscription_data(self):
@@ -85,10 +85,10 @@ class CoreSummaryTestCase(TestCase):
         data = pd.read_csv(self.subscription_filename, names=header)
         response = SummaryEntityStatsEngine.calculate_subscription_data(data)
         self.assertEquals(len(response), 6)
-        self.assertEquals(filter(lambda x: x['key'] == 'Total Subscription', response)[0]['value'], 15080)
-        self.assertEquals(filter(lambda x: x['key'] == 'Average Subscription per Day', response)[0]['value'], '88.7')
-        self.assertEquals(filter(lambda x: x['key'] == 'First Record Start Date', response)[0]['value'], '2017-01-01')
-        self.assertEquals(filter(lambda x: x['key'] == 'Last Record End Date', response)[0]['value'], '2017-06-19')
+        self.assertEquals(filter(lambda x: x['key'] == 'totalSubscription', response)[0]['value'], 15080)
+        self.assertEquals(filter(lambda x: x['key'] == 'averageSubscriptionPerDay', response)[0]['value'], '88.7')
+        self.assertEquals(filter(lambda x: x['key'] == 'firstRecordStartDate', response)[0]['value'], '2017-01-01')
+        self.assertEquals(filter(lambda x: x['key'] == 'lastRecordEndDate', response)[0]['value'], '2017-06-19')
         assert data.equals(pd.read_csv(self.subscription_filename, names=header))
 
     def test_full_people_counter_data(self):
@@ -96,13 +96,13 @@ class CoreSummaryTestCase(TestCase):
         data = pd.read_csv(self.people_counter_filename, names=header)
         response = SummaryEntityStatsEngine.calculate_people_counter_data(data)
         self.assertEquals(len(response), 8)
-        self.assertEquals(filter(lambda x: x['key'] == 'Total Head Count', response)[0]['value'], 7524093)
-        self.assertEquals(filter(lambda x: x['key'] == 'First Record Start Date', response)[0]['value'], '2017-01-12')
-        self.assertEquals(filter(lambda x: x['key'] == 'Last Record End Date', response)[0]['value'], '2017-06-19')
-        self.assertEquals(filter(lambda x: x['key'] == 'Average Visitor Count per Day', response)[0]['value'],
+        self.assertEquals(filter(lambda x: x['key'] == 'totalHeadCount', response)[0]['value'], 7524093)
+        self.assertEquals(filter(lambda x: x['key'] == 'firstRecordStartDate', response)[0]['value'], '2017-01-12')
+        self.assertEquals(filter(lambda x: x['key'] == 'lastRecordEndDate', response)[0]['value'], '2017-06-19')
+        self.assertEquals(filter(lambda x: x['key'] == 'averageVisitorCountPerDay', response)[0]['value'],
                           '47321.3')
-        self.assertEquals(filter(lambda x: x['key'] == 'Maximum Visitor Count by Day', response)[0]['value'], 52637)
-        self.assertEquals(filter(lambda x: x['key'] == 'Maximum Visitor Day', response)[0]['value'], '2017-02-10')
+        self.assertEquals(filter(lambda x: x['key'] == 'maximumVisitorCountByDay', response)[0]['value'], 52637)
+        self.assertEquals(filter(lambda x: x['key'] == 'maximumVisitorDay', response)[0]['value'], '2017-02-10')
         assert data.equals(pd.read_csv(self.people_counter_filename, names=header))
 
     def test_full_calculate_transaction_chart_data(self):

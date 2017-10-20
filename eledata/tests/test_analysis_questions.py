@@ -19,7 +19,7 @@ class AnalysisQuestionTestCase(TestCase):
 
     defaultTransactionFilename = 'misc/test_files/entity_data_1.csv'
     bigTransactionFilename = 'misc/test_files/core_test/big_transaction.csv'
-    entityName = 'misc/test_files/core_test/Transaction Entity.csv'
+    smallTransactionMockUp = 'misc/test_files/core_test/SMALL_MOCK_DATA_transaction.csv'
     newTransactionFilename = 'misc/test_files/core_test/Data Actual transactions from UK retailer.csv'
 
     entityJSON1 = '''{
@@ -31,19 +31,12 @@ class AnalysisQuestionTestCase(TestCase):
                             {"source": "transaction_id", "mapped": "Transaction_ID", "data_type": "string"},
                             {"source": "user_id", "mapped": "User_ID", "data_type": "string"},
                             {"source": "transaction_value", "mapped": "Transaction_Value", "data_type": "number"}]}'''
-    entityJson0 = '''{
-        "data_header": [
-            {"source": "transactionID", "mapped": "Transaction_ID", "data_type": "string"},
-            {"source": "userID", "mapped": "User_ID", "data_type": "string"},
-            {"source": "transactionDate", "mapped": "Transaction_Date", "data_type": "date"},
-            {"source": "transactionQuantity", "mapped": "Transaction_Quantity", "data_type": "number"},
-            {"source": "transactionValue", "mapped": "Transaction_Value", "data_type": "number"},
-            {"source": "productMeasure", "mapped": "Product_Measure", "data_type": "string"},
-            {"source": "productSize", "mapped": "Product_Size", "data_type": "number"},
-            {"source": "brand", "mapped": "Brand", "data_type": "string"},
-            {"source": "category", "mapped": "Category", "data_type": "string"},
-            {"source": "chain", "mapped": "Chain", "data_type": "string"}
-        ]}'''
+    smallTransactionMockUpJson = '''{
+            "data_header": [{"source": "TransactionQuantity", "mapped": "Transaction_Quantity", "data_type": "number"},
+                            {"source": "TransactionDate", "mapped": "Transaction_Date", "data_type": "date"},
+                            {"source": "TransactionID", "mapped": "Transaction_ID", "data_type": "string"},
+                            {"source": "UserID", "mapped": "User_ID", "data_type": "string"},
+                            {"source": "TransactionValue", "mapped": "Transaction_Value", "data_type": "number"}]}'''
     entityDataHeaderNoFileHeader = '''{
             "data_header": [{"source": "column 4", "mapped": "Transaction_Quantity", "data_type": "number"},
                             {"source": "column 3", "mapped": "Transaction_Date", "data_type": "date"},
@@ -255,12 +248,12 @@ class AnalysisQuestionTestCase(TestCase):
     #     # c.post('/entity/%s/create_entity_mapped/' % rid,
     #     #        data=self.entityDataHeaderNoFileHeader, content_type="application/json",
     #     #        HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-    #     with open(self.entityName) as fp:
+    #     with open(self.smallTransactionMockUp) as fp:
     #         ret = c.post('/entity/create_entity/',
     #                      {'file': fp, 'entity': self.entityJSON1, 'isHeaderIncluded': True})
     #     rid = from_json(ret.content)['entity_id']
     #     c.post('/entity/%s/create_entity_mapped/' % rid,
-    #            data=self.entityJson0, content_type="application/json",
+    #            data=self.smallTransactionMockUpJson, content_type="application/json",
     #            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
     #
     #     user.reload()

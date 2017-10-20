@@ -11,33 +11,47 @@ parameters = [
         "required_question_labels": ["leaving"]
     },
     {
+        # What is your accepted range of correct prediction
         "choices": [
             {
-                "content": "Default. Handled by Eledata"
+                "content": "defaultChoice"
             },
             {
-                "content": "Enter your value:",
-                "default_value": "50,000"
-            }
+                "content": "ratio",
+                "default_value": "0.1"
+            },
+            {
+                "content": "distribution"
+            },
         ],
-        "label": "income",
-        "content": "What is your company's average monthly income?",
-        "floating_label": "Income",
+        "label": "allowance",
+        "content": "allowance",
+        "floating_label": "allowance",
         "required_question_labels": ["repeat", "recommendedProduct", "churn", "growth", "revenue"]
     },
     {
+        # What is your expected prediction window among your predictive questions ?
         "choices": [
             {
-                "content": "Default. Handled by EleData"
+                "content": "defaultChoice"
             },
             {
-                "content": "My expected prediction window (in month) would be: ",
+                "content": 'monthly'
+            },
+            {
+                "content": 'quarterly'
+            },
+            {
+                "content": 'yearly',
+            },
+            {
+                "content": "expectedTimeWindow",
                 "default_value": "3"
             }
         ],
         "label": "prediction_window",
-        "content": "What is your expected prediction window among your predictive questions ?",
-        "floating_label": "Prediction Window",
+        "content": "prediction_window",
+        "floating_label": "prediction_window",
         "required_question_labels": ["repeat", "recommendedProduct", "churn", "growth", "revenue"]
     }
 ]
