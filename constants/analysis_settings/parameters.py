@@ -70,5 +70,39 @@ parameters = [
         "content": "churner_definition",
         "floating_label": "churner_definition",
         "required_question_labels": ["question_07"]
+    },
+    {
+        # What is your definition of Growthers?
+        "choices": [
+            {
+                "content": "defaultChoice"
+            },
+            {
+                # Users with 6 months of increase of purchase amount in
+                "content": 'increase_purchase',
+                "default_value": '5'
+            }
+        ],
+        "label": "growthers_definition",
+        "content": "growthers_definition",
+        "floating_label": "growthers_definition",
+        "required_question_labels": ["question_08"]
+    },
+    {
+        # What is your definition of Repeaters?
+        "choices": [
+            {
+                "content": "defaultChoice"
+            },
+            {
+                # Users in the past year that purchased more than __ times
+                "content": 'past_year_purchase',
+                "default_value": '10'
+            }
+        ],
+        "label": "repeaters_definition",
+        "content": "repeaters_definition",
+        "floating_label": "repeaters_definition",
+        "required_question_labels": ["question_09"]
     }
 ]
