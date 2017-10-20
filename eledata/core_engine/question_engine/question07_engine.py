@@ -4,13 +4,13 @@ import pandas as pd
 import datetime
 from eledata.verifiers.event import *
 from pprint import pprint
-from collections import defaultdict
 
 
 class Question07Engine(BaseEngine):
     responses = None
     transaction_data = None
     customer_data = None
+    # Constants for age groups
     AGE_BINS = [0, 14, 34, 54, 110]
     AGE_MAPPING = {
         '(0, 14]': '< 15 Years Old',
@@ -21,16 +21,19 @@ class Question07Engine(BaseEngine):
 
     def __init__(self, group, params, transaction_data, customer_data):
         super(Question07Engine, self).__init__(group, params)
-        # TODO: verify if question type is missing
-        # TODO: verify if data header has been set properly
+        # TODO: Align transaction_data and customer_data with DB schema
 
         self.transaction_data = pd.DataFrame(transaction_data)
         self.customer_data = pd.DataFrame(customer_data)
 
+    def execute(self):
+        self.responses = self.get_processed(self.transaction_data, self.customer_data, self.params)
+
     def event_init(self):
         """
-        EntityStatsEngine Does not init event (For the time beings?)
-        :return:
+        Simple validations on the data structure
+        Saves response from each event one by one
+        :return: None
         """
         for response in self.responses:
             verifier = QuestionVerifier()
@@ -47,30 +50,38 @@ class Question07Engine(BaseEngine):
 
     def get_processed(self, transaction_data, customer_data, params):
         """
-        :param data: data
-        :param data_type:
-        :return: stats_response: dictionary of stats finding
+        Main function for processing
+        :param transaction_data: DataFrame, transaction records
+        :param customer_data: DataFrame, customer records
+        :param params: dictionary, user specified parameters for the question
+        :return: List of response dictionaries
         """
         num_month_observe_list = range(1, 13)
         characteristics = ['Age', 'Gender', 'Country']
         responses = []
 
+        # Generate response to display different number of months of result
         for num_month_observe in num_month_observe_list:
+            # Generate 3 type of responses for each number of months
             for characteristic in characteristics:
+                # Get a list of targeted customers using the user specified rule and param
                 rule = Question07Engine.get_rule(params['rule'])
                 target_customers = rule(transaction_data, num_month_observe, params['rule_param'])
                 target_customers_data = customer_data[customer_data['ID'].isin(target_customers)].copy()
 
+                # Aggregate transaction records for the targeted customers
                 total_transaction = transaction_data[transaction_data['User_ID'].isin(target_customers)].groupby(['User_ID'])['Transaction_Quantity'].sum().reset_index()
                 total_transaction = total_transaction.merge(transaction_data.groupby(['User_ID'])['Transaction_Date'].max().reset_index(), on='User_ID')
                 total_transaction = total_transaction.rename(index=str, columns={'Transaction_Quantity': 'Total_Quantity', 'Transaction_Date': 'Last_Transaction_Date'})
 
+                # Get detailed records for each customer from merging the transaction and customer records
                 detailed_data = Question07Engine.get_detailed_data(total_transaction, target_customers_data)
 
+                # Construct response
                 responses.append(
                     {
                         "event_category": "insight",
-                        "event_type": "Customers that stopped buying in the past 6 months",
+                        "event_type": "question_07",    # Customers that stopped buying in the past 6 months
                         "event_value": "Total Customers Lost: {0}".format(len(target_customers)),
                         "tabs": {
                             "Month": num_month_observe_list,
@@ -85,24 +96,34 @@ class Question07Engine(BaseEngine):
                         "analysis_desc": Question07Engine.get_analysis_desc(transaction_data, customer_data),
                         "chart_type": "bar",
                         "chart": Question07Engine.get_chart(detailed_data, characteristic, num_month_observe, params['rule_param']),
-                        "detailed_data": Question07Engine.transform_detailed_data(detailed_data)
+                        "detailed_data": Question07Engine.transform_detailed_data(detailed_data)    # Transform detailed data from DF to a list of dict
                     }
                 )
 
         return responses
 
-    def execute(self):
-        self.responses = self.get_processed(self.transaction_data, self.customer_data, self.params)
-
     @staticmethod
     def get_start_date(num_month, end_date=datetime.date.today()):
+        """
+        Move the date back for the specified number of months (day set to the start of the month)
+        e.g. num_month = 5, end_date = 2017-12-20 return start_date = 2017-07-01
+        :param num_month: int, number of months to move
+        :param end_date: datetime.date, date to move, default to the current date
+        :return: datetime.date, end_date moved back by num_month
+        """
         start_date = end_date.replace(day=1)
+        # Has to be done in a loop and not just using timedelta because each month has different number of days and we could end up in the wrong month
         for i in range(num_month):
             start_date = (start_date - datetime.timedelta(days=1)).replace(day=1)
         return start_date
 
     @staticmethod
     def get_rule(rule):
+        """
+        Return the corresponding rule to select target customers as a function ref
+        :param rule: string, name of the rule, must match one of the keys in the map
+        :return: function ref, used to select target customers
+        """
         mapping = {
             'nosale': Question07Engine.get_nosale_customers,
         }
@@ -110,6 +131,16 @@ class Question07Engine(BaseEngine):
 
     @staticmethod
     def get_nosale_customers(transaction_data, num_month_observe, num_month_nosale):
+        """
+        Return the user id of the customers that have had no sale for the specified number of months during the specified observed period
+        e.g. Current month = Oct, num_month_observe = 4, num_month_nosale = 5
+            Return customers with no sale in the pass 5 months during June - Sept (4 months)
+            The customers reported in June would have no sales starting in Jan or before
+        :param transaction_data: DataFrame, transaction records
+        :param num_month_observe: int, the number of months of the observed period
+        :param num_month_nosale: int, the number of months for which there are no sale
+        :return: List of int, user id of the customers with no sales
+        """
         transaction_startdate = Question07Engine.get_start_date(num_month_observe+num_month_nosale)
         transaction_enddate = Question07Engine.get_start_date(num_month_nosale)
 
@@ -120,11 +151,22 @@ class Question07Engine(BaseEngine):
 
     @staticmethod
     def get_detailed_data(total_transaction, target_customers_data):
+        """
+        Merge the transaction and targeted customers records with only the relevant columns
+        :param total_transaction:  DataFrame, transaction records that has been aggregated for Total_Quantity and Last_Transaction_Date per customer
+        :param target_customers_data: DataFrame, targeted customer records
+        :return: DataFrame: merged records with only the relevant columns
+        """
         return total_transaction.merge(target_customers_data, left_on='User_ID', right_on='ID') \
             [['User_ID', 'Display_Name', 'Age', 'Gender', 'Country', 'Total_Quantity', 'Last_Transaction_Date']]
 
     @staticmethod
     def transform_detailed_data(detailed_data):
+        """
+        Transform the supplied DF to a python structure with fields matching the Event model
+        :param detailed_data: DataFrame, targeted customer records, should be output from get_detailed_data
+        :return: python structure matching the Event model, contains detailed data
+        """
         results = {"data": detailed_data.to_dict(orient='records'), "columns": []}
         for field in results['data'][0].keys():
             results["columns"].append(
@@ -138,25 +180,29 @@ class Question07Engine(BaseEngine):
 
     @staticmethod
     def get_event_desc(detailed_data, characteristic):
+        """
+        Group the records by the specified characteristic, return the total count and count for groups in a python structure
+        :param detailed_data: DataFrame, targeted customer records, should be output from get_detailed_data
+        :param characteristic: string, column to group by
+        :return: python structure matching the Event model, with total count and count for each group
+        """
+
+        # Age needs to be grouped in bins
         if characteristic == 'Age':
             stats = detailed_data.groupby(pd.cut(detailed_data[characteristic], Question07Engine.AGE_BINS)).size().reset_index()
             stats[characteristic] = stats[characteristic].astype(str).replace(Question07Engine.AGE_MAPPING)
         else:
             stats = detailed_data.groupby(detailed_data[characteristic]).size().reset_index()
-        # bins = range(10, 75, 10) if characteristic == 'Age' else None
-        # stats = detailed_data[characteristic].value_counts(bins=bins).reset_index()
         stats = stats.rename(columns={0: 'Count'})
 
+        # Total count
         results = [
             {
                 "key": "Total Customers Lost",
                 "value": stats['Count'].sum()
             }
-            # {
-            #     "key": "Report Date",
-            #     "value": (datetime.date.today().replace(day=1) - datetime.timedelta(days=1))
-            # }
         ]
+        # Count for each group
         for index, row in stats.iterrows():
             results.append({"key": 'Total {0} Customers Lost'.format(row[characteristic]), "value": row['Count']})
 
@@ -164,6 +210,14 @@ class Question07Engine(BaseEngine):
 
     @staticmethod
     def get_detailed_event_desc(detailed_data, characteristic):
+        """
+        Group the records by the specified characteristic, return the average transaction quantity for overall customers lost and for each group
+        :param detailed_data: DataFrame, targeted customer records, should be output from get_detailed_data
+        :param characteristic: string, column to group by
+        :return: python structure matching the Event model, with overall average transaction quantity per customer lost and for each group
+        """
+
+        # Age needs to be grouped in bins
         if characteristic == 'Age':
             stats = detailed_data.groupby(pd.cut(detailed_data[characteristic], Question07Engine.AGE_BINS)).mean()['Total_Quantity'].reset_index()
             stats[characteristic] = stats[characteristic].astype(str).replace(Question07Engine.AGE_MAPPING)
@@ -171,6 +225,7 @@ class Question07Engine(BaseEngine):
         else:
             stats = detailed_data.groupby(detailed_data[characteristic]).mean()['Total_Quantity'].reset_index()
 
+        # Overall average
         results = [
             {
                 "key": 'Average Transaction Quantity per Customer Lost',
@@ -178,6 +233,7 @@ class Question07Engine(BaseEngine):
                 "isFullWIDth": True
             }
         ]
+        # Average per group
         for index, row in stats.iterrows():
             results.append({"key": 'Average Transaction Quantity per {0} Customers Lost'.format(row[characteristic]), "value": row['Total_Quantity']})
 
@@ -185,6 +241,12 @@ class Question07Engine(BaseEngine):
 
     @staticmethod
     def get_analysis_desc(transaction_data, customer_data):
+        """
+        Return the count of transaction records and customer records in a python structure
+        :param transaction_data: DataFrame, transaction records
+        :param customer_data: DataFrame, customer records
+        :return: python structure matching the Event model, contains the number of transaction and customer records
+        """
         results = [
             {
                 "key": "Involved Dataset (Transaction)",
@@ -200,6 +262,12 @@ class Question07Engine(BaseEngine):
 
     @staticmethod
     def get_chart(detailed_data, characteristic, num_month_observe, num_month_rule):
+        """
+        Calculate the number of lost customers each month, used for the chart portion in the response, return in python structure
+        :param detailed_data: DataFrame, targeted customer records, should be output from get_detailed_data
+        :param characteristic: string, column to group by
+        :return: python structure matching the Event model, contains chart portion of the response
+        """
         labels = []
         start_date = datetime.date.today().replace(day=1)
         chart_stats = []
