@@ -134,19 +134,20 @@ class Question07Engine(BaseEngine):
     @staticmethod
     def get_nosale_customers(transaction_data, num_month_nosale):
         """
-        Return the user id of the customers that have had no sale for the specified number of months during the specified observed period
-        e.g. Current month = Oct, num_month_observe = 4, num_month_nosale = 5
-            Return customers with no sale in the pass 5 months during June - Sept (4 months)
-            The customers reported in June would have no sales starting in Jan or before
+        Return the user id of the customers that have had no sale for the specified number of months for each observed month,
+        in a list with each element representing a month
+        e.g. Current month = Oct, num_month_nosale = 5
+            The 4th element in the resulting list will be customers lost in June (i.e. customers with no sales in the pass 5 months (Jan - May))
         :param transaction_data: DataFrame, transaction records
         :param num_month_observe: int, the number of months of the observed period
         :param num_month_nosale: int, the number of months for which there are no sale
-        :return: List of int, user id of the customers with no sales
+        :return: list of series of int, user id of the customers with no sales, with each series representing a month
         """
         last_transactions = transaction_data.groupby(['User_ID'])['Transaction_Date'].max().reset_index()
         last_transactions['Transaction_Date'] = pd.to_datetime(last_transactions['Transaction_Date'])
 
         results = []
+        # Get the user IDs for each month
         for month_observe in range(1, 13):
             transaction_startdate = Question07Engine.get_start_date(month_observe + num_month_nosale)
             transaction_enddate = Question07Engine.get_start_date(month_observe + num_month_nosale - 1).replace(day=1)
@@ -271,17 +272,23 @@ class Question07Engine(BaseEngine):
         Calculate the number of lost customers each month, used for the chart portion in the response, return in python structure
         :param detailed_data: DataFrame, targeted customer records, should be output from get_detailed_data
         :param characteristic: string, column to group by
+        :param num_month_observe: number of months of results to include in the chart
+        :param target_customers: targeted customer IDs returned by the specified rule
         :return: python structure matching the Event model, contains chart portion of the response
         """
         labels = []
         start_date = datetime.date.today().replace(day=1)
         chart_stats = []
+        # Add data month by month to the lists
         for i in range(num_month_observe):
-            end_date = start_date
+            # Construct labels for the X axis
             start_date = (start_date - datetime.timedelta(days=1)).replace(day=1)
             labels.append('{0}-{1}'.format(start_date.year, start_date.month))
 
+            # Get the targeted customer records of the current month
             stats = detailed_data[detailed_data['User_ID'].isin(target_customers[i])]
+
+            # Group and count the customers by the characteristic
             if characteristic == 'Age':
                 stats = stats.groupby(pd.cut(stats[characteristic], Question07Engine.AGE_BINS)).size().reset_index()
                 stats[characteristic] = stats[characteristic].astype(str).replace(Question07Engine.AGE_MAPPING)
@@ -297,6 +304,7 @@ class Question07Engine(BaseEngine):
                 else:
                     chart_stats[index][1].append(row[0])
 
+        # Construct data for the chart
         datasets = []
         for record in chart_stats:
             datasets.append(
@@ -307,6 +315,7 @@ class Question07Engine(BaseEngine):
                 }
             )
 
+        # Construct the chart with the data, labels and other meta fields
         results = {
             "labels": labels,
             "datasets": datasets,
