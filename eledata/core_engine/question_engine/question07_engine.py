@@ -40,7 +40,7 @@ class Question07Engine(BaseEngine):
             serializer = GeneralEventSerializer(data=response)
             verifier.verify(0, self.group)
             verifier.verify(1, serializer)
-            pprint(serializer.validated_data)
+            # pprint(serializer.validated_data)
             entity = serializer.create(serializer.validated_data)
 
             entity.group = self.group
@@ -60,17 +60,19 @@ class Question07Engine(BaseEngine):
         characteristics = ['Age', 'Gender', 'Country']
         responses = []
 
+        # Get a list of targeted customers using the user specified rule and param
+        rule = Question07Engine.get_rule(params['rule'])
+        target_customers = rule(transaction_data, params['rule_param'])
+
         # Generate response to display different number of months of result
         for num_month_observe in num_month_observe_list:
             # Generate 3 type of responses for each number of months
             for characteristic in characteristics:
-                # Get a list of targeted customers using the user specified rule and param
-                rule = Question07Engine.get_rule(params['rule'])
-                target_customers = rule(transaction_data, num_month_observe, params['rule_param'])
-                target_customers_data = customer_data[customer_data['ID'].isin(target_customers)].copy()
+                observed_target_customers = reduce(lambda x, y: x.append(y), target_customers[:num_month_observe])
+                target_customers_data = customer_data[customer_data['ID'].isin(observed_target_customers)].copy()
 
                 # Aggregate transaction records for the targeted customers
-                total_transaction = transaction_data[transaction_data['User_ID'].isin(target_customers)].groupby(['User_ID'])['Transaction_Quantity'].sum().reset_index()
+                total_transaction = transaction_data[transaction_data['User_ID'].isin(observed_target_customers)].groupby(['User_ID'])['Transaction_Quantity'].sum().reset_index()
                 total_transaction = total_transaction.merge(transaction_data.groupby(['User_ID'])['Transaction_Date'].max().reset_index(), on='User_ID')
                 total_transaction = total_transaction.rename(index=str, columns={'Transaction_Quantity': 'Total_Quantity', 'Transaction_Date': 'Last_Transaction_Date'})
 
@@ -82,7 +84,7 @@ class Question07Engine(BaseEngine):
                     {
                         "event_category": "insight",
                         "event_type": "question_07",    # Customers that stopped buying in the past 6 months
-                        "event_value": "Total Customers Lost: {0}".format(len(target_customers)),
+                        "event_value": "Total Customers Lost: {0}".format(len(observed_target_customers)),
                         "tabs": {
                             "Month": num_month_observe_list,
                             "Characteristics": characteristics
@@ -95,7 +97,7 @@ class Question07Engine(BaseEngine):
                         "detailed_desc": Question07Engine.get_detailed_event_desc(detailed_data, characteristic),
                         "analysis_desc": Question07Engine.get_analysis_desc(transaction_data, customer_data),
                         "chart_type": "bar",
-                        "chart": Question07Engine.get_chart(detailed_data, characteristic, num_month_observe, params['rule_param']),
+                        "chart": Question07Engine.get_chart(detailed_data, characteristic, num_month_observe, target_customers),
                         "detailed_data": Question07Engine.transform_detailed_data(detailed_data)    # Transform detailed data from DF to a list of dict
                     }
                 )
@@ -130,7 +132,7 @@ class Question07Engine(BaseEngine):
         return mapping.get(rule)
 
     @staticmethod
-    def get_nosale_customers(transaction_data, num_month_observe, num_month_nosale):
+    def get_nosale_customers(transaction_data, num_month_nosale):
         """
         Return the user id of the customers that have had no sale for the specified number of months during the specified observed period
         e.g. Current month = Oct, num_month_observe = 4, num_month_nosale = 5
@@ -141,13 +143,16 @@ class Question07Engine(BaseEngine):
         :param num_month_nosale: int, the number of months for which there are no sale
         :return: List of int, user id of the customers with no sales
         """
-        transaction_startdate = Question07Engine.get_start_date(num_month_observe+num_month_nosale)
-        transaction_enddate = Question07Engine.get_start_date(num_month_nosale)
-
         last_transactions = transaction_data.groupby(['User_ID'])['Transaction_Date'].max().reset_index()
         last_transactions['Transaction_Date'] = pd.to_datetime(last_transactions['Transaction_Date'])
 
-        return last_transactions.loc[(last_transactions['Transaction_Date'] >= transaction_startdate) & (last_transactions['Transaction_Date'] < transaction_enddate), 'User_ID'].astype(str)
+        results = []
+        for month_observe in range(1, 13):
+            transaction_startdate = Question07Engine.get_start_date(month_observe + num_month_nosale)
+            transaction_enddate = Question07Engine.get_start_date(month_observe + num_month_nosale - 1).replace(day=1)
+            results.append(last_transactions.loc[
+                (last_transactions['Transaction_Date'] >= transaction_startdate) & (last_transactions['Transaction_Date'] < transaction_enddate), 'User_ID'].astype(str))
+        return results
 
     @staticmethod
     def get_detailed_data(total_transaction, target_customers_data):
@@ -261,7 +266,7 @@ class Question07Engine(BaseEngine):
         return results
 
     @staticmethod
-    def get_chart(detailed_data, characteristic, num_month_observe, num_month_rule):
+    def get_chart(detailed_data, characteristic, num_month_observe, target_customers):
         """
         Calculate the number of lost customers each month, used for the chart portion in the response, return in python structure
         :param detailed_data: DataFrame, targeted customer records, should be output from get_detailed_data
@@ -276,13 +281,7 @@ class Question07Engine(BaseEngine):
             start_date = (start_date - datetime.timedelta(days=1)).replace(day=1)
             labels.append('{0}-{1}'.format(start_date.year, start_date.month))
 
-            transaction_start_date = start_date
-            transaction_end_date = end_date
-            for j in range(num_month_rule):
-                transaction_start_date = (transaction_start_date - datetime.timedelta(days=1)).replace(day=1)
-                transaction_end_date = (transaction_end_date - datetime.timedelta(days=1)).replace(day=1)
-            detailed_data['Last_Transaction_Date'] = pd.to_datetime(detailed_data['Last_Transaction_Date'])
-            stats = detailed_data[(detailed_data['Last_Transaction_Date'] < transaction_end_date) & (detailed_data['Last_Transaction_Date'] >= transaction_start_date)]
+            stats = detailed_data[detailed_data['User_ID'].isin(target_customers[i])]
             if characteristic == 'Age':
                 stats = stats.groupby(pd.cut(stats[characteristic], Question07Engine.AGE_BINS)).size().reset_index()
                 stats[characteristic] = stats[characteristic].astype(str).replace(Question07Engine.AGE_MAPPING)
