@@ -53,5 +53,22 @@ parameters = [
         "content": "prediction_window",
         "floating_label": "prediction_window",
         "required_question_labels": ["repeat", "recommendedProduct", "churn", "growth", "revenue"]
+    },
+    {
+        # What is your definition of Churners?
+        "choices": [
+            {
+                "content": "defaultChoice"
+            },
+            {
+                # Users with no sales for __ months
+                "content": 'no_sale',
+                "default_value": '3'
+            }
+        ],
+        "label": "churner_definition",
+        "content": "churner_definition",
+        "floating_label": "churner_definition",
+        "required_question_labels": ["question_07"]
     }
 ]
