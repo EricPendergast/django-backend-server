@@ -14,6 +14,8 @@ class EventChart(EmbeddedDocument):
     x_label = StringField()
     y_label = StringField()
     r_label = StringField()
+    x_stacked = BooleanField()
+    y_stacked = BooleanField()
     datasets = ListField(DictField())
 
 
@@ -26,9 +28,11 @@ class Event(Document):
     event_category = StringField()
     event_type = StringField()  # We can check if event_type is under event category
     event_value = StringField()
+
     event_desc = ListField(DictField())
     detailed_desc = ListField(DictField())
     analysis_desc = ListField(DictField())
+
     chart_type = StringField()  # Defined by event_type actually
     chart = EmbeddedDocumentField(EventChart)
     detailed_data = EmbeddedDocumentField(EventDetailData)
@@ -39,6 +43,10 @@ class Event(Document):
     #         'initializing'))  # I = initializing, P = pending, # T = taken, # A = aborted, # C = continuous
     created_at = DateTimeField(default=datetime.datetime.now)
     updated_at = DateTimeField(default=datetime.datetime.now)
+
+    tabs = DictField()
+    selected_tab = DictField()
+
 
     # Not disposed, saving mother data here and present aggregated detailed_data and chart_data
     source_data = ListField(DictField())  # Only when status is C

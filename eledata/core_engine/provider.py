@@ -10,11 +10,13 @@ class EngineProvider(object):
         from entity_stats_engine.provider import EntityStatsEngineProvider
         from monitoring_engine.provider import MonitoringEngineProvider
         from h2o_engine.provider import H2OEngineProvider
+        from question_engine.provider import QuestionEngineProvider
 
         providers = {
             "EntityStats": EntityStatsEngineProvider,
             "Monitoring": MonitoringEngineProvider,
-            "H2O": H2OEngineProvider
+            "H2O": H2OEngineProvider,
+            "Question": QuestionEngineProvider
         }
 
         p = providers.get(pre_name)

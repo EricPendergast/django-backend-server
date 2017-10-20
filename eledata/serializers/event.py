@@ -22,3 +22,10 @@ class DetailedJobSerializer(DocumentSerializer):
         model = Job
         depth = 2
         fields = ['job_engine', 'job_status', 'group', 'parameter']
+
+
+class QuestionSerializer(DocumentSerializer):
+    class Meta:
+        model = Event
+        depth = 2
+        fields = '__all__'

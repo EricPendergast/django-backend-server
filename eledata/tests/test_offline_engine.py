@@ -10,6 +10,7 @@ from project.settings import CONSTANTS
 import datetime
 from eledata.core_engine.provider import EngineProvider
 import pandas as pd
+import pprint
 
 
 class OfflineEngineTest(TestCase):
@@ -19,9 +20,9 @@ class OfflineEngineTest(TestCase):
     """
 
     # put those demo input csv here for testing to share
-    transactionFilename = 'misc/test_files/entity_data_1.csv'
+    transactionFilename = 'misc/test_files/transaction_records.tsv'
     bigTransactionFilename = 'misc/test_files/core_test/big_transaction.csv'
-    customerFilename = 'misc/test_files/core_test/Data Actual transactions from UK retailer.csv'
+    customerFilename = 'misc/test_files/customer_records.tsv'
 
     '''
     Environment Setup for test cases
@@ -30,6 +31,9 @@ class OfflineEngineTest(TestCase):
         Event.drop_collection()
 
     def setUp(self):
+        Group.drop_collection()
+        User.drop_collection()
+        Event.drop_collection()
         assert len(Group.objects) == 0
         assert len(User.objects) == 0
         assert len(Event.objects) == 0
@@ -42,19 +46,21 @@ class OfflineEngineTest(TestCase):
     """
     Demo testing for some stats engine
     """
-    # def test_engine_1(self):
-    #
-    #     mock_response = {'some_key': 'some_value'}
-    #
-    #     engine = EngineProvider.provide("Customer.CHANGE_ME", pd.read_csv(self.transactionFilename),
-    #                                     pd.read_csv(self.customerFilename))
-    #
-    #     engine.execute()
-    #
-    #     response = engine.get_processed()
-    #
-    #     # print or compare response with static data
-    #     print(response)
-    #     self.assertEquals(response, mock_response)
-    #
-    #     # TODO: test engine.event_init()
+    def test_engine_1(self):
+
+        mock_response = {'some_key': 'some_value'}
+        params = {'duration': 5, 'rule': 'nosale', 'rule_param': 6}
+
+        engine = EngineProvider.provide("Question.Customer", self.admin_group, params, pd.read_csv(self.transactionFilename, sep='\t'),
+                                        pd.read_csv(self.customerFilename, sep='\t'))
+
+        engine.execute()
+
+        response = engine.response
+        engine.event_init()
+
+        # print or compare response with static data
+        pprint.pprint(response)
+        # self.assertEquals(response, mock_response)
+
+        # TODO: test engine.event_init()

@@ -37,3 +37,14 @@ class InitNewEventVerifier(Verifier):
             raise InvalidInputError("No group object is referable")
 
     stages = [stage0, stage1, stage2, stage3, ]
+
+class QuestionVerifier(Verifier):
+    def stage0(self, group):
+        if not group:
+            raise InvalidInputError("No group object is used to init new event")
+
+    def stage1(self, serializer):
+        if not serializer.is_valid():
+            raise InvalidInputError("Invalid serialized data")
+
+    stages = [stage0, stage1, ]

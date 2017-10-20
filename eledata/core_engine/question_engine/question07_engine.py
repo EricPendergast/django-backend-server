@@ -1,11 +1,14 @@
 from eledata.core_engine.base_engine import BaseEngine
+from eledata.serializers.event import QuestionSerializer, GeneralEventSerializer
 import pandas as pd
 import datetime
+from eledata.verifiers.event import *
+from pprint import pprint
 from collections import defaultdict
 
 
 class Question07Engine(BaseEngine):
-
+    responses = None
     transaction_data = None
     customer_data = None
     AGE_BINS = [0, 14, 34, 54, 110]
@@ -29,51 +32,18 @@ class Question07Engine(BaseEngine):
         EntityStatsEngine Does not init event (For the time beings?)
         :return:
         """
-        verifier.verify(1, request_data)
-        # The dir that the uploaded data file will be saved to.
-        # Appending the original filename to the end so that the new
-        # filename has the same extension, while also making the filename
-        # more recognizable.
-        filename = "temp/" + str(uuid.uuid4()) + "." + str(request_file)
+        for response in self.responses:
+            verifier = QuestionVerifier()
+            serializer = GeneralEventSerializer(data=response)
+            verifier.verify(0, self.group)
+            verifier.verify(1, serializer)
+            pprint(serializer.validated_data)
+            entity = serializer.create(serializer.validated_data)
 
-        with open(filename, "w") as fi:
-            fi.write(request_file.read())
-        # Parsing the entity JSON passed in into a dictionary
-        entity_dict = util.from_json(request_data["entity"])
+            entity.group = self.group
+            entity.save()
 
-        entity_dict["source"] = {
-            "file": {"filename": filename,
-                     "is_header_included": request_data["isHeaderIncluded"]}}
-
-        entity_dict['state'] = 1
-        verifier.verify(2, entity_dict)
-
-        # TODO: calculate draft of data summary here?
-        entity_data = util.file_to_list_of_dictionaries(
-            open(entity_dict["source"]["file"]["filename"]),
-            numLines=100,
-            is_header_included=util.string_caster["bool"](
-                entity_dict["source"]["file"]["is_header_included"]))
-
-        serializer = EntityDetailedSerializer(data=entity_dict)
-        verifier.verify(3, serializer)
-
-        entity = serializer.create(serializer.validated_data)
-        entity.group = group
-        entity.save()
-
-        response_data = {
-            'entity_id': str(entity.id),
-            'data': entity_data,
-            'header_option': CONSTANTS.ENTITY.HEADER_OPTION.get(entity_dict["type"].upper())
-        }
-        # Saving the serializer while also adding its id to the response
-        # Loading the first 100 lines of data from the request file
-        # Passing header option from constants file
-
-        return response_data
-
-        return
+        return None
 
     def get_processed(self, transaction_data, customer_data, params):
         """
@@ -83,7 +53,7 @@ class Question07Engine(BaseEngine):
         """
         num_month_observe_list = range(1, 13)
         characteristics = ['Age', 'Gender', 'Country']
-        insights = []
+        responses = []
 
         for num_month_observe in num_month_observe_list:
             for characteristic in characteristics:
@@ -97,35 +67,32 @@ class Question07Engine(BaseEngine):
 
                 detailed_data = Question07Engine.get_detailed_data(total_transaction, target_customers_data)
 
-                insights.append(
+                responses.append(
                     {
-                        "subHeader": "Customers that stopped buying in the past 6 months",
-                        "eventValue": "Total Customers Lost: {0}".format(len(target_customers)),
-                        "tab": {
+                        "event_category": "insight",
+                        "event_type": "Customers that stopped buying in the past 6 months",
+                        "event_value": "Total Customers Lost: {0}".format(len(target_customers)),
+                        "tabs": {
                             "Month": num_month_observe_list,
                             "Characteristics": characteristics
                         },
-                        "selected": {
+                        "selected_tab": {
                             "Month": num_month_observe,
                             "Characteristics": characteristic
                         },
-                        "eventDesc": Question07Engine.get_event_desc(detailed_data, characteristic),
-                        "detailedEventDesc": Question07Engine.get_detailed_event_desc(detailed_data, characteristic),
-                        "analysisDesc": Question07Engine.get_analysis_desc(transaction_data, customer_data),
-                        "chartType": "bar",
+                        "event_desc": Question07Engine.get_event_desc(detailed_data, characteristic),
+                        "detailed_desc": Question07Engine.get_detailed_event_desc(detailed_data, characteristic),
+                        "analysis_desc": Question07Engine.get_analysis_desc(transaction_data, customer_data),
+                        "chart_type": "bar",
                         "chart": Question07Engine.get_chart(detailed_data, characteristic, num_month_observe, params['rule_param']),
-                        "detailedData": detailed_data.to_dict(orient='records')
+                        "detailed_data": Question07Engine.transform_detailed_data(detailed_data)
                     }
                 )
 
-        response = {
-            "insight": insights
-        }
-
-        return response
+        return responses
 
     def execute(self):
-        self.response = self.get_processed(self.transaction_data, self.customer_data, self.params)
+        self.responses = self.get_processed(self.transaction_data, self.customer_data, self.params)
 
     @staticmethod
     def get_start_date(num_month, end_date=datetime.date.today()):
@@ -157,6 +124,19 @@ class Question07Engine(BaseEngine):
             [['User_ID', 'Display_Name', 'Age', 'Gender', 'Country', 'Total_Quantity', 'Last_Transaction_Date']]
 
     @staticmethod
+    def transform_detailed_data(detailed_data):
+        results = {"data": detailed_data.to_dict(orient='records'), "columns": []}
+        for field in results['data'][0].keys():
+            results["columns"].append(
+                {
+                    "key": field,
+                    "sortable": True,
+                    "label": field.replace('_', ' ')
+                }
+            )
+        return results
+
+    @staticmethod
     def get_event_desc(detailed_data, characteristic):
         if characteristic == 'Age':
             stats = detailed_data.groupby(pd.cut(detailed_data[characteristic], Question07Engine.AGE_BINS)).size().reset_index()
@@ -171,11 +151,11 @@ class Question07Engine(BaseEngine):
             {
                 "key": "Total Customers Lost",
                 "value": stats['Count'].sum()
-            },
-            {
-                "key": "Report Date",
-                "value": (datetime.date.today().replace(day=1) - datetime.timedelta(days=1))
             }
+            # {
+            #     "key": "Report Date",
+            #     "value": (datetime.date.today().replace(day=1) - datetime.timedelta(days=1))
+            # }
         ]
         for index, row in stats.iterrows():
             results.append({"key": 'Total {0} Customers Lost'.format(row[characteristic]), "value": row['Count']})
@@ -263,10 +243,10 @@ class Question07Engine(BaseEngine):
         results = {
             "labels": labels,
             "datasets": datasets,
-            "xLabel": 'Month',
-            "yLabel": 'Number of Improved Customers',
-            "xStacked": True,
-            "yStacked": True
+            "x_label": 'Month',
+            "y_label": 'Number of Improved Customers',
+            "x_stacked": True,
+            "y_stacked": True
         }
 
         return results
