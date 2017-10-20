@@ -68,13 +68,13 @@ class AnalysisQuestionTestCase(TestCase):
 
     analysis_questions_init = [
         {"content": "Which customers will likely be leaving in the coming time?", "label": "leaving",
-         "icon": "maps/directionsRun", "type": "predictive", "orientation": "customer",
+         "type": "predictive", "orientation": "customer",
          "required_entities": ["transaction", "customer"]},
         {"content": "Which products will be the most popular in the future?", "label": "popularity",
-         "icon": "action/trendingUp", "type": "predictive", "orientation": "product",
+         "type": "predictive", "orientation": "product",
          "required_entities": ["transaction"]},
         {"content": "What has caused the most customers to leave?", "label": "cause of leave",
-         "icon": "maps/directionsRun", "type": "descriptive", "orientation": "hiddenInsight",
+         "type": "descriptive", "orientation": "hiddenInsight",
          "required_entities": ["transaction", "customer"]}, ]
 
     analysis_questions_init_objs = [AnalysisQuestion(**item) for item in analysis_questions_init]
@@ -149,15 +149,14 @@ class AnalysisQuestionTestCase(TestCase):
         self.assertEquals(data, {
             u'analysis_questions': [
                 {u'orientation': u'hiddenInsight', u'selected': True, u'enabled': True, u'label': u'cause of leave',
-                 u'icon': u'maps/directionsRun', u'content': u'What has caused the most customers to leave?',
+                 u'content': u'What has caused the most customers to leave?',
                  u'type': u'descriptive',
                  u'required_entities': [u'transaction', u'customer']},
                 {u'orientation': u'customer', u'selected': False, u'enabled': True, u'label': u'leaving',
-                 u'icon': u'maps/directionsRun',
                  u'content': u'Which customers will likely be leaving in the coming time?', u'type': u'predictive',
                  u'required_entities': [u'transaction', u'customer']},
                 {u'orientation': u'product', u'selected': False, u'enabled': False, u'label': u'popularity',
-                 u'icon': u'action/trendingUp', u'content': u'Which products will be the most popular in the future?',
+                 u'content': u'Which products will be the most popular in the future?',
                  u'type': u'predictive',
                  u'required_entities': [u'transaction']}]})
 
@@ -237,30 +236,30 @@ class AnalysisQuestionTestCase(TestCase):
         user.reload()
         assert_analysis_parameter_is(user, "clv", 0, "Testing Without Validation")
 
-    # def test_start_analysis(self):
-    #     Entity.drop_collection()
-    #     c, user = self._create_default_user()
-    #
-    #     # with open(self.bigTransactionFilename) as fp:
-    #     #     ret = c.post('/entity/create_entity/',
-    #     #                  {'file': fp, 'entity': self.entityJSON1, 'isHeaderIncluded': False})
-    #     # rid = from_json(ret.content)['entity_id']
-    #     # c.post('/entity/%s/create_entity_mapped/' % rid,
-    #     #        data=self.entityDataHeaderNoFileHeader, content_type="application/json",
-    #     #        HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-    #     with open(self.smallTransactionMockUp) as fp:
-    #         ret = c.post('/entity/create_entity/',
-    #                      {'file': fp, 'entity': self.entityJSON1, 'isHeaderIncluded': True})
-    #     rid = from_json(ret.content)['entity_id']
-    #     c.post('/entity/%s/create_entity_mapped/' % rid,
-    #            data=self.smallTransactionMockUpJson, content_type="application/json",
-    #            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-    #
-    #     user.reload()
-    #     assert len(Entity.objects()) == 1
-    #
-    #     _response = c.put('/analysis_questions/start_analysis/')
-    #     self.assertEqual(_response.status_code, 200)
+    def test_start_analysis(self):
+        Entity.drop_collection()
+        c, user = self._create_default_user()
+
+        # with open(self.bigTransactionFilename) as fp:
+        #     ret = c.post('/entity/create_entity/',
+        #                  {'file': fp, 'entity': self.entityJSON1, 'isHeaderIncluded': False})
+        # rid = from_json(ret.content)['entity_id']
+        # c.post('/entity/%s/create_entity_mapped/' % rid,
+        #        data=self.entityDataHeaderNoFileHeader, content_type="application/json",
+        #        HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        with open(self.smallTransactionMockUp) as fp:
+            ret = c.post('/entity/create_entity/',
+                         {'file': fp, 'entity': self.entityJSON1, 'isHeaderIncluded': True})
+        rid = from_json(ret.content)['entity_id']
+        c.post('/entity/%s/create_entity_mapped/' % rid,
+               data=self.smallTransactionMockUpJson, content_type="application/json",
+               HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        user.reload()
+        assert len(Entity.objects()) == 1
+
+        _response = c.put('/analysis_questions/start_analysis/')
+        self.assertEqual(_response.status_code, 200)
 
     def test_same_elements(self):
         self.assertTrue(_same_elements([5, 6, 7, 3], [3, 6, 7, 5]))

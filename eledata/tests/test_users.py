@@ -7,9 +7,7 @@ from eledata.models.users import User, Group
 
 from eledata.util import from_json
 
-
 # from eledata.util import to_json
-
 # import copy
 # import time
 

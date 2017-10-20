@@ -1,68 +1,76 @@
 questions = [
     {
-        "label": "revenue",
-        "content": "revenue",
+        "label": "question_01",
+        "content": "question_01",
         "enabled": False,
         "selected": False,
         "orientation": "customer",
         "type": "predictive",
-        "icon": "editor/attachMoney",
         "required_entities": [
             "transaction"
         ],
         "analysis_engine": "H2O.Clv"
     },
     {
-        "label": "churn",
-        "content": "churn",
+        "label": "question_02",
+        "content": "question_02",
         "enabled": False,
         "selected": False,
         "orientation": "customer",
         "type": "predictive",
-        "icon": "action/trendingDown",
         "required_entities": [
             "transaction"
         ],
         "analysis_engine": "H2O.Leaving"
     },
     {
-        "label": "growth",
-        "content": "growth",
+        "label": "question_03",
+        "content": "question_03",
         "enabled": False,
         "selected": False,
         "orientation": "customer",
         "type": "predictive",
-        "icon": "action/trendingUp",
         "required_entities": [
             "transaction"
         ],
         "analysis_engine": "H2O.Growing"
     },
     {
-        "label": "repeat",
-        "content": "repeat",
+        "label": "question_04",
+        "content": "question_04",
         "enabled": False,
         "selected": False,
         "orientation": "customer",
         "type": "predictive",
-        "icon": "av/repeat",
         "required_entities": [
             "transaction"
         ],
         "analysis_engine": "H2O.Repeat"
     },
     {
-        "label": "recommendedProduct",
-        "content": "recommendedProduct",
+        "label": "question_05",
+        "content": "question_05",
         "enabled": False,
         "selected": False,
         "orientation": "customer",
         "type": "predictive",
-        "icon": "social/sentimentVerySatisfied",
         "required_entities": [
             "transaction",
             "customer"
         ],
         "analysis_engine": "H2O.Recommendation"
+    },
+    {
+        "label": "question_07",
+        "content": "question_07",
+        "enabled": False,
+        "selected": False,
+        "orientation": "customer",
+        "type": "descriptive",
+        "required_entities": [
+            "transaction",
+            "customer"
+        ],
+        "analysis_engine": "Customer.Question07Engine"
     }
 ]

@@ -1,7 +1,7 @@
 from django.core.management import BaseCommand
 from eledata.models.entity import Entity, Change
 from eledata.models.users import User, Group
-
+from eledata.models.event import Event, Job
 
 # from eledata.models.analysis_questions import AnalysisQuestion, AnalysisParameter
 
@@ -19,6 +19,9 @@ class Command(BaseCommand):
         Change.drop_collection()
         User.drop_collection()
         Group.drop_collection()
+        Event.drop_collection()
+        Job.drop_collection()
+
         self.stdout.write(self.OKGREEN + "Removed all the existing records!" + self.ENDC)
 
         User.create_admin(username="admin", password="password", group_name="Wright")

@@ -15,12 +15,12 @@ class AnalysisQuestionSerializerSummary(DocumentSerializer):
     class Meta:
         model = AnalysisQuestion
         depth = 2
-        fields = ['content', 'label', 'icon', 'type', 'orientation', 'required_entities']
+        fields = ['content', 'label', 'type', 'orientation', 'required_entities']
 
 
 class AnalysisQuestionSerializer(DocumentSerializer):
     class Meta:
         model = AnalysisQuestion
         depth = 2
-        fields = ['content', 'label', 'icon', 'type', 'orientation', 'enabled', 'selected',
+        fields = ['content', 'label', 'type', 'orientation', 'enabled', 'selected',
                   'required_entities']

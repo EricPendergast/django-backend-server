@@ -139,6 +139,14 @@ class InvalidAnalysisParamError(Exception):
         return self.msg
 
 
+class HandlerError(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+
+
 class EngineExecutingError(Exception):
     def __init__(self, msg):
         self.msg = msg

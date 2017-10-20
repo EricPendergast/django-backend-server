@@ -29,6 +29,8 @@ class OfflineEngineTest(TestCase):
     '''
     def doCleanups(self):
         Event.drop_collection()
+        Group.drop_collection()
+        User.drop_collection()
 
     def setUp(self):
         Group.drop_collection()
@@ -58,7 +60,7 @@ class OfflineEngineTest(TestCase):
 
         response = engine.response
         engine.event_init()
-
+        print(response.keys())
         # print or compare response with static data
         pprint.pprint(response)
         # self.assertEquals(response, mock_response)

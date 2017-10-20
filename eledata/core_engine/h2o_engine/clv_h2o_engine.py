@@ -5,6 +5,8 @@ import pandas as pd
 from eledata.models.entity import Entity
 from h2o.estimators.random_forest import H2ORandomForestEstimator
 from project.settings import CONSTANTS
+from eledata.verifiers.event import QuestionVerifier
+from eledata.serializers.event import GeneralEventSerializer
 
 
 class ClvH2OEngine(H2OEngine):
@@ -46,8 +48,7 @@ class ClvH2OEngine(H2OEngine):
 
         return response
 
-    def get_descriptive_attributes(self, user_list, start_date, end_date, total_window_length,
-                                   supervising_window_length):
+    def get_descriptive_attributes(self, user_list, start_date, end_date, total_window_length, supervising_window_length):
         # Prepare Features
         rmf_list = self.get_dynamic_rmf_in_window(user_list=user_list, start_date=start_date, end_date=end_date,
                                                   supervising_window_length=supervising_window_length,
@@ -86,6 +87,17 @@ class ClvH2OEngine(H2OEngine):
 
         return combined_rmf
 
+    def get_back_test_accuracy(self, updated_training_frame):
+        _allowance = 0.1
+        return (
+            ((abs(updated_training_frame['clv'] - updated_training_frame['predict_clv'])
+              < updated_training_frame['clv'] * _allowance) |
+             (abs(updated_training_frame['clv'] - updated_training_frame['predict_clv'])
+              < 2 * updated_training_frame['std_monetary_amount']) |
+             (abs(updated_training_frame['clv'] - updated_training_frame['predict_clv'])
+              < 10)).sum() / len(updated_training_frame)
+        )
+
     def execute(self):
         h2o = self.get_h2o_client()
         self.response = {}
@@ -112,6 +124,7 @@ class ClvH2OEngine(H2OEngine):
         historical_date_list.append(first_date)
         self.response['historical_date_list'] = historical_date_list[::-1]
         self.response['time_shift'] = time_shift
+
         '''
         Prepare Label
         '''
@@ -164,49 +177,27 @@ class ClvH2OEngine(H2OEngine):
         training_frame['predict_clv'] = prediction_result['predict']
 
         self.response['r2'] = model.r2()
-        # Set response to the list of leavers' user_id
         self.response['prediction_frame'] = prediction_frame.as_data_frame().select(
             lambda col: col in ['user_id', 'predict_clv'], axis=1)
-        training.to_csv("training.csv")
-        self.response['prediction_frame'].to_csv("prediction.csv")
+        self.response['accuracy'] = self.get_back_test_accuracy(updated_training_frame=training_frame)
 
         map(lambda _x: h2o.remove(_x), self.gc_list)
-
-    def get_back_test_accuracy(self, updated_training_frame):
-        _allowance = 0.1
-
-        #          (training_frame['clv'] > high_med) & (training_frame['predict_clv'] > high_med) |
-        #          ((high_med >= training_frame['clv']) & (training_frame['clv'] > median)) & ((
-        #              high_med >= training_frame['predict_clv']) & (training_frame['predict_clv'] > median)) |
-        #          ((median >= training_frame['clv']) & (training_frame['clv'] > low_med)) & (
-        #              (median >= training_frame['predict_clv']) & (training_frame['predict_clv'] > low_med)) |
-        #          (training_frame['clv'] <= low_med) & (training_frame['predict_clv'] <= low_med)).sum() / len(
-        #     training_frame)
-        # TODO: accuracy is not good enough, using 2 std atm
-        # print("Score 2:")
-        self.response['accuracy'] = (
-                                        (abs(updated_training_frame['clv'] - updated_training_frame['predict_clv'])
-                                         < updated_training_frame['clv'] * _allowance) |
-                                        (abs(updated_training_frame['clv'] - updated_training_frame['predict_clv'])
-                                         < 2 * updated_training_frame['std_monetary_amount']) |
-                                        (abs(updated_training_frame['clv'] - updated_training_frame['predict_clv'])
-                                         < 10)).sum() / len(updated_training_frame)
 
     def event_init(self):
         """
         EntityStatsEngine Does not init event (For the time beings?)
         :return:
         """
-        """
+        '''
         Retrieving Intermediate Response 
-        """
+        '''
         date_list = self.response.get('historical_date_list')
         time_shift = self.response.get('time_shift')
         prediction_frame = self.response.get('prediction_frame')
 
-        """
+        '''
         Calculating historical profile
-        """
+        '''
         branches = [
             {"case": {"$and": [
                 {"$gte": [date_list[i + 2], "$data.Transaction_Date"]},
@@ -250,6 +241,9 @@ class ClvH2OEngine(H2OEngine):
             }
         ]
 
+        '''
+        Grouping historical data by month group, calculating sum and merging
+        '''
         historical_data = list(Entity.objects(group=self.group, type='transaction').aggregate(*pipeline))
         historical_data = pd.DataFrame(historical_data)
         historical_profile = []
@@ -261,6 +255,7 @@ class ClvH2OEngine(H2OEngine):
                 lambda x: x[u'transaction_date_group'])
             del historical_data_subgroup[u'_id']
 
+            # TODO: can we use pandas aggregation directly?
             historical_data_subgroup = historical_data_subgroup.groupby('user_id')
             t_profile = {
                 'monetary_amount': historical_data_subgroup['monetary_amount'].sum() / time_shift,
@@ -271,6 +266,7 @@ class ClvH2OEngine(H2OEngine):
             t_profile.reset_index(level=0, inplace=True)
             t_profile['user_id'] = t_profile['user_id'].astype(str)
             t_profile = pd.merge(prediction_frame, t_profile, how='outer', on='user_id')
+            t_profile = t_profile.fillna(value=0)
             historical_profile.append(t_profile)
 
         """
@@ -278,7 +274,7 @@ class ClvH2OEngine(H2OEngine):
         """
         d1 = datetime.date.today()
         d1 += relativedelta(days=(time_shift * 15))
-        expiry_date = d1
+        expiry_date = str(d1)
 
         def get_event_value():
             return dict(predictedRevenue=prediction_frame['predict_clv'].sum())
@@ -318,14 +314,13 @@ class ClvH2OEngine(H2OEngine):
 
         def get_analysis_desc():
             accuracy = self.response.get('accuracy')
-            r2 = self.response.get('r2')
+            # r2 = self.response.get('r2')
             training_customer_size = prediction_frame.shape[0]
             testing_customer_size = prediction_frame.shape[0] * 0.2
             training_transaction_size = sum([x['frequency'].sum() for x in historical_profile[:-1]])
             testing_transaction_size = sum([x['frequency'].sum() for x in historical_profile[:-1]]) * 0.2
 
             returning_dict = [{'accuracy': accuracy},
-                              # {'r2': r2},
                               {'trainingCustomerSize': training_customer_size},
                               {'testingCustomerSize': testing_customer_size},
                               {'trainingTransactionSize': training_transaction_size},
@@ -355,26 +350,39 @@ class ClvH2OEngine(H2OEngine):
             higher['data'] += [None, ]
             chart = {
                 'labels': label_list,
-                'yLabel': 'totalRevenue',
-                'xLabel': 'transactionTime',
-                'datasets': [actual, prediction, lower, higher]
+                'y_label': 'totalRevenue',
+                'x_label': 'transactionTime',
+                'datasets': [actual, prediction, lower, higher],
+                "x_stacked": False,
+                "y_stacked": False
             }
             return chart
 
         event_dict = dict(
             event_category=CONSTANTS.EVENT.CATEGORY.get('INSIGHT'),
             event_type='H2O.Clv',
-            event_value=get_event_value(),
+            event_value="get_event_value()",
             event_desc=get_event_desc(),
             detailed_desc=get_detail_desc(),
             analysis_desc=get_analysis_desc(),
             chart_type='Line',
             chart=get_chart(),
-            detailed_data=[],
+            tabs={},
+            selected_tab={},
+            detailed_data=dict(
+                data=[],
+                columns=[]
+            ),
             expiry_date=expiry_date,
             event_status=CONSTANTS.EVENT.CATEGORY.get('PENDING')
         )
 
-        # TODO: save event_dict
-        print(event_dict)
+        verifier = QuestionVerifier()
+        serializer = GeneralEventSerializer(data=event_dict)
+        verifier.verify(0, self.group)
+        verifier.verify(1, serializer)
+        event = serializer.create(serializer.validated_data)
+
+        event.group = self.group
+        event.save()
         return event_dict

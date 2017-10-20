@@ -44,11 +44,9 @@ class EventViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
         Select event list
         @param: event_type
         """
-        event = Event.objects(event_category=pk, group=request.user.group)
+        event = Event.objects(event_category=CONSTANTS.EVENT.CATEGORY.get(pk.upper()), group=request.user.group)
         if event is None:
             return Response()
-        if event.group != request.user.group:
-            return Response({"error": "User does not have permission to access this event"})
         serializer = DetailedEventSerializer(event, many=True, required=True)
         return Response(serializer.data)
 

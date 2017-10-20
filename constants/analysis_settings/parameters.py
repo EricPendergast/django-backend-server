@@ -1,16 +1,5 @@
 parameters = [
     {
-        "choices": [
-            {
-                "content": "Default. Handled by Eledata"
-            }
-        ],
-        "label": "clv",
-        "content": "What is your expected variation of CLV?",
-        "floating_label": "Variation",
-        "required_question_labels": ["leaving"]
-    },
-    {
         # What is your accepted range of correct prediction
         "choices": [
             {
@@ -27,7 +16,7 @@ parameters = [
         "label": "allowance",
         "content": "allowance",
         "floating_label": "allowance",
-        "required_question_labels": ["repeat", "recommendedProduct", "churn", "growth", "revenue"]
+        "required_question_labels": ["question_01", "question_02", "question_03", "question_04", "question_05"]
     },
     {
         # What is your expected prediction window among your predictive questions ?
@@ -52,7 +41,7 @@ parameters = [
         "label": "prediction_window",
         "content": "prediction_window",
         "floating_label": "prediction_window",
-        "required_question_labels": ["repeat", "recommendedProduct", "churn", "growth", "revenue"]
+        "required_question_labels": ["question_01", "question_02", "question_03", "question_04", "question_05"]
     },
     {
         # What is your definition of Churners?
@@ -69,6 +58,6 @@ parameters = [
         "label": "churner_definition",
         "content": "churner_definition",
         "floating_label": "churner_definition",
-        "required_question_labels": ["question_07"]
+        "required_question_labels": ["question_02", "question_07"]
     }
 ]

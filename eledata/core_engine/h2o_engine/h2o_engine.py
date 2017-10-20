@@ -96,16 +96,17 @@ class H2OEngine(BaseEngine):
         :param month_diff: integer, total time window's length, for comparison
         :return: time_shift: integer (in month)
         """
+
         prediction_window_params = filter(lambda _x: _x.get('label') == "prediction_window", self.params)
         if prediction_window_params:
-            if prediction_window_params[0].choice_index == 1:
+            if prediction_window_params[0][u'choice_index'] == 1:
                 user_choice = 1
-            elif prediction_window_params[0].choice_index == 2:
+            elif prediction_window_params[0][u'choice_index'] == 2:
                 user_choice = 3
-            elif prediction_window_params[0].choice_index == 3:
+            elif prediction_window_params[0][u'choice_index'] == 3:
                 user_choice = 12
-            elif prediction_window_params[0].choice_index == 4:
-                user_choice = prediction_window_params[0].choice_input
+            elif prediction_window_params[0][u'choice_index'] == 4:
+                user_choice = prediction_window_params[0][u'choice_input']
             else:
                 user_choice = False
         else:

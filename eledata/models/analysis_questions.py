@@ -45,7 +45,6 @@ class AnalysisQuestion(EmbeddedDocument):
     content = StringField()
     # Short descriptor of the question.  e.g. "leaving"
     label = StringField()
-    icon = StringField()
     # Categorical information
     type = StringField()
     orientation = StringField()

@@ -9,6 +9,9 @@ from eledata.serializers.entity import *
 from eledata.verifiers.entity import *
 from eledata.handlers.create_entity import *
 
+from eledata.util import HandlerError
+
+
 def index_view(request):
     return HttpResponse("index stub page")
 
@@ -89,7 +92,6 @@ class EntityViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
             if len(data_query_set):
                 data_view = EntityDetailedSerializer(data=data_query_set[0])
                 if data_view.is_valid():
-                    print(count_query_set[0])
                     response_data['data'] = data_view.data['data']
                     response_data['count'] = count_query_set[0][u'count']
         return Response(response_data)
@@ -142,16 +144,20 @@ class EntityViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
         # 2. getting header_name/ column_type mapping information from data
         # 3. validating mapping (to be developed afterwards)
         # 4. return 100 rows of data
+        try:
+            verifier = CreateEntityMappedVerifier()
+            response_data = EntityViewSetHandler.create_entity_mapped(
+                request_data=request.data,
+                verifier=verifier,
+                pk=pk,
+                group=request.user.group)
 
-        verifier = CreateEntityMappedVerifier()
-        response_data = EntityViewSetHandler.create_entity_mapped(
-            request_data=request.data,
-            verifier=verifier,
-            pk=pk,
-            group=request.user.group)
+            assert verifier.verified
+            return Response(response_data, status=200)
 
-        assert verifier.verified
-        return Response(response_data, status=200)
+        except HandlerError as e:
+            # TODO: do logging against e
+            return Response({"error": str(e)}, status=400)
 
     @list_route(methods=['post'])
     def remove_stage1_entity(self, request):

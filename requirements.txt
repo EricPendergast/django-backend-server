@@ -9,9 +9,11 @@ coverage==4.4.1
 Django==1.11.2
 django-rest-framework-mongoengine==3.3.1
 djangorestframework==3.6.3
+Faker==0.8.6
 future==0.16.0
 h2o==3.10.4.8
 idna==2.6
+ipaddress==1.0.18
 mongoengine==0.9.0
 numpy==1.13.1
 pandas==0.20.3
@@ -27,5 +29,7 @@ requests==2.18.4
 selenium==3.5.0
 six==1.10.0
 tabulate==0.7.7
+tbselenium==0.2.1
+text-unidecode==1.0
 urllib3==1.22
 xlrd==1.0.0

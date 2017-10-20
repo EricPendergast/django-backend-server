@@ -3,7 +3,7 @@ import uuid
 from eledata import util
 from eledata.serializers.entity import EntityDetailedSerializer
 from eledata.models.entity import Entity
-from eledata.util import string_caster
+from eledata.util import string_caster, HandlerError
 from eledata.core_engine.provider import EngineProvider
 from project.settings import CONSTANTS
 
@@ -100,10 +100,14 @@ class EntityViewSetHandler(object):
             is_header_included=entity.source.file.is_header_included)
 
         # Changing the user created field names in data to the new mapped names
-        for item in data:
-            for mapping in raw_dummy['data_header']:
-                item[mapping["mapped"]] = item[mapping["source"]]
-                del item[mapping["source"]]
+        try:
+            for item in data:
+                for mapping in raw_dummy['data_header']:
+                    item[mapping["mapped"]] = item[mapping["source"]]
+                    del item[mapping["source"]]
+        except KeyError as e:
+            # TODO: do logging against e
+            raise HandlerError('mappingError')
 
         # Casting everything in data from strings to their proper data type
         # according to request.data['data_header']
@@ -124,9 +128,12 @@ class EntityViewSetHandler(object):
                      params=None,
                      entity_data=data,
                      entity_type=entity.type)
-
-        summary_entity_stats_engine.execute()
-        chart_entity_stats_engine.execute()
+        try:
+            summary_entity_stats_engine.execute()
+            chart_entity_stats_engine.execute()
+        except ValueError as e:
+            # TODO: do logging against e
+            raise HandlerError('mappingTypeError')
 
         # TODO: generate create entity audit
         # TODO: use mongoengine aggregate to do data_summary
