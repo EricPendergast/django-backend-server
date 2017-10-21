@@ -236,30 +236,30 @@ class AnalysisQuestionTestCase(TestCase):
         user.reload()
         assert_analysis_parameter_is(user, "clv", 0, "Testing Without Validation")
 
-    def test_start_analysis(self):
-        Entity.drop_collection()
-        c, user = self._create_default_user()
-
-        # with open(self.bigTransactionFilename) as fp:
-        #     ret = c.post('/entity/create_entity/',
-        #                  {'file': fp, 'entity': self.entityJSON1, 'isHeaderIncluded': False})
-        # rid = from_json(ret.content)['entity_id']
-        # c.post('/entity/%s/create_entity_mapped/' % rid,
-        #        data=self.entityDataHeaderNoFileHeader, content_type="application/json",
-        #        HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-        with open(self.smallTransactionMockUp) as fp:
-            ret = c.post('/entity/create_entity/',
-                         {'file': fp, 'entity': self.entityJSON1, 'isHeaderIncluded': True})
-        rid = from_json(ret.content)['entity_id']
-        c.post('/entity/%s/create_entity_mapped/' % rid,
-               data=self.smallTransactionMockUpJson, content_type="application/json",
-               HTTP_X_REQUESTED_WITH='XMLHttpRequest')
-
-        user.reload()
-        assert len(Entity.objects()) == 1
-
-        _response = c.put('/analysis_questions/start_analysis/')
-        self.assertEqual(_response.status_code, 200)
+    # def test_start_analysis(self):
+    #     Entity.drop_collection()
+    #     c, user = self._create_default_user()
+    #
+    #     # with open(self.bigTransactionFilename) as fp:
+    #     #     ret = c.post('/entity/create_entity/',
+    #     #                  {'file': fp, 'entity': self.entityJSON1, 'isHeaderIncluded': False})
+    #     # rid = from_json(ret.content)['entity_id']
+    #     # c.post('/entity/%s/create_entity_mapped/' % rid,
+    #     #        data=self.entityDataHeaderNoFileHeader, content_type="application/json",
+    #     #        HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+    #     with open(self.smallTransactionMockUp) as fp:
+    #         ret = c.post('/entity/create_entity/',
+    #                      {'file': fp, 'entity': self.entityJSON1, 'isHeaderIncluded': True})
+    #     rid = from_json(ret.content)['entity_id']
+    #     c.post('/entity/%s/create_entity_mapped/' % rid,
+    #            data=self.smallTransactionMockUpJson, content_type="application/json",
+    #            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+    #
+    #     user.reload()
+    #     assert len(Entity.objects()) == 1
+    #
+    #     _response = c.put('/analysis_questions/start_analysis/')
+    #     self.assertEqual(_response.status_code, 200)
 
     def test_same_elements(self):
         self.assertTrue(_same_elements([5, 6, 7, 3], [3, 6, 7, 5]))

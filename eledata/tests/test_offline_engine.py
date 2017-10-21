@@ -31,6 +31,7 @@ class OfflineEngineTest(TestCase):
         Event.drop_collection()
         Group.drop_collection()
         User.drop_collection()
+        Event.drop_collection()
 
     def setUp(self):
         Group.drop_collection()
@@ -53,14 +54,14 @@ class OfflineEngineTest(TestCase):
         mock_response = {'some_key': 'some_value'}
         params = {'duration': 5, 'rule': 'nosale', 'rule_param': 6}
 
-        engine = EngineProvider.provide("Question.Customer", self.admin_group, params, pd.read_csv(self.transactionFilename, sep='\t'),
+        engine = EngineProvider.provide("Question.question_07", self.admin_group, params, pd.read_csv(self.transactionFilename, sep='\t'),
                                         pd.read_csv(self.customerFilename, sep='\t'))
 
         engine.execute()
 
         responses = engine.responses
         engine.event_init()
-        print(response.keys())
+        # print(response.keys())
         # print or compare response with static data
         pprint.pprint(responses)
         # self.assertEquals(response, mock_response)

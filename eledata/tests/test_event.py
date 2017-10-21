@@ -18,6 +18,9 @@ class EventTestCase(TestCase):
         Event.drop_collection()
 
     def setUp(self):
+        Group.drop_collection()
+        User.drop_collection()
+        Event.drop_collection()
         assert len(Group.objects) == 0
         assert len(User.objects) == 0
         assert len(Event.objects) == 0
