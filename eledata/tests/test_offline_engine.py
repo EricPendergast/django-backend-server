@@ -79,6 +79,13 @@ class OfflineEngineTest(TestCase):
     #                                       )
     #     j_engine.execute()
     #
+    #     haha_engine = EngineProvider.provide("MonitoringReport.Question37Engine",
+    #                                          group=self.admin_group,
+    #                                          params=None,
+    #                                          keyword_list=["DELL"],
+    #                                          )
+    #     haha_engine.execute()
+    #
     # def test_engine_3(self):
     #     t_engine = EngineProvider.provide("Monitoring.Tao",
     #                                       group=self.admin_group,

@@ -5,6 +5,7 @@ from event import create_new_initializing_job, start_all_initializing_job
 from project.settings import CONSTANTS
 from eledata.models.event import Job
 
+
 def get_analysis_questions_settings(settings):
     assert type(settings) is GroupAnalysisSettings
     ret_data = {"analysis_questions": [], "analysis_params": []}

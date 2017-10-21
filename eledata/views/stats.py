@@ -24,3 +24,16 @@ class StatsViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
 
         response = handler.get_entity_data_metrics(entities)
         return Response(response, status=200)
+
+    @list_route(methods=['get'])
+    def get_event_dashboard_summary(self, request):
+        """
+        Get event summary statistics for dashboard info boxes.
+        :param request: object, With user information
+        :return:
+        """
+        query_set = Event.objects(group=request.user.group, event_status=CONSTANTS.EVENT.STATUS.get("PENDING"))
+        response_data = handler.get_event_dashboard_summary(
+            pending_events=query_set,
+        )
+        return Response(response_data, status=200)

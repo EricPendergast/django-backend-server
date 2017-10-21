@@ -30,13 +30,14 @@ class InitNewEventVerifier(Verifier):
 
     def stage2(self, serializer):
         if not serializer.is_valid():
-            raise InvalidInputError("Invalid serialized data")
+            raise InvalidInputError("Invalid serialized data, {}".format(serializer.errors))
 
     def stage3(self, _new_event_obj):
         if not _new_event_obj.group:
             raise InvalidInputError("No group object is referable")
 
     stages = [stage0, stage1, stage2, stage3, ]
+
 
 class QuestionVerifier(Verifier):
     def stage0(self, group):
@@ -45,6 +46,6 @@ class QuestionVerifier(Verifier):
 
     def stage1(self, serializer):
         if not serializer.is_valid():
-            raise InvalidInputError("Invalid serialized data")
+            raise InvalidInputError("Invalid serialized data, {}".format(serializer.errors))
 
     stages = [stage0, stage1, ]

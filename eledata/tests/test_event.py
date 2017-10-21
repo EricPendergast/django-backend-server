@@ -35,7 +35,7 @@ class EventTestCase(TestCase):
 
         test_data = {
             "event_category": CONSTANTS.EVENT.CATEGORY.get("OPPORTUNITY"),
-            "event_type": "Capture customer likely to repeat purchase", "event_value": "VaO: $102,000",
+            "event_type": "Capture customer likely to repeat purchase", "event_value": {"VaO": "$102,000"},
             "event_desc": [
                 {
                     "key": "Captured User",

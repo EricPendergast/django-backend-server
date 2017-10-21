@@ -277,7 +277,7 @@ class ClvH2OEngine(H2OEngine):
         expiry_date = d1
 
         def get_event_value():
-            return dict(predictedRevenue=prediction_frame['predict_clv'].sum())
+            return dict(predicted_revenue="{:,.2f}".format(prediction_frame['predict_clv'].sum()))
 
         def get_event_desc():
             predicted_revenue = prediction_frame['predict_clv'].sum()
@@ -361,7 +361,7 @@ class ClvH2OEngine(H2OEngine):
         event_dict = dict(
             event_category=CONSTANTS.EVENT.CATEGORY.get('INSIGHT'),
             event_type='H2O.Clv',
-            event_value="get_event_value()",
+            event_value=get_event_value(),
             event_desc=get_event_desc(),
             detailed_desc=get_detail_desc(),
             analysis_desc=get_analysis_desc(),
@@ -374,7 +374,7 @@ class ClvH2OEngine(H2OEngine):
                 columns=[]
             ),
             expiry_date=expiry_date,
-            event_status=CONSTANTS.EVENT.CATEGORY.get('PENDING')
+            event_status=CONSTANTS.EVENT.STATUS.get('PENDING')
         )
 
         verifier = QuestionVerifier()

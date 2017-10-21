@@ -7,6 +7,7 @@ import time
 from .monitoring_engine import MonitoringEngine
 from datetime import datetime
 from pymongo import MongoClient
+from eledata.serializers.watcher import GeneralWatcherSerializer
 
 
 class JDMonitoringEngine(MonitoringEngine):
@@ -50,7 +51,7 @@ class JDMonitoringEngine(MonitoringEngine):
                 self.url_list.append('https://search.jd.com/Search?keyword=' + _keyword +
                                      '&enc=utf-8&qrst=1&rt=1&stop=1&vt=2&bs=1&wq=dell&page=' +
                                      str(num) + '&s=1&click=0')
-                self.order_list.append(None)
+                self.order_list.append('default')
             else:
                 for order in _order:
                     self.url_list.append('https://search.jd.com/Search?keyword=' + _keyword +
@@ -328,9 +329,10 @@ class JDMonitoringEngine(MonitoringEngine):
                                 'key': key,
                                 'value': value
                             })
-                            # else:
-                            #     detail_list.append(li_txt)
-            # create dic
+
+            if not _current_order:
+                _current_order = ''
+
             # TODO create a item that called suit can get suit information
             the_basic_info = {
                 'search_keyword': self.keyword,
@@ -339,11 +341,10 @@ class JDMonitoringEngine(MonitoringEngine):
                 'product_name': product_name,
                 'seller_name': seller_name,
                 'sku_id': _data_pid,
-                'default_price': final_price,
-                'final_price': 'No discount now',
+                'default_price': float(final_price),
+                'final_price': 0,
                 'item_url': _http,
                 'comments_count': comment_count,
-                'img_pth': self.img_pth,
                 'images': img_list,
                 'current_stock': stock_list,
                 'support': support,
@@ -352,7 +353,7 @@ class JDMonitoringEngine(MonitoringEngine):
                 'model': model_dic,
                 'detail': detail_list,
                 'search_rank': rank,
-                'order_type': _current_order,
+                'search_order': _current_order,
                 'seller_url': seller_url
             }
             product_list.append(the_basic_info)
@@ -360,27 +361,13 @@ class JDMonitoringEngine(MonitoringEngine):
         return product_list
 
     def out(self, _list):
-        conn = MongoClient('localhost', 27017)
-        db = conn.testdb
-        # db.X.remove({})
-        db.VR.insert(_list)
-        print len(_list)
-        # for i in _list:
-        #     print "Title:", i['product_name']
-        #     print "Product Id:", i['sku_id']
-        #     print "Http:", i['item_url']
-        #     print "Price:", i['default_price']
-        #     print "Commit Count:", i['comments_count']
-        #     for t in i['images']:
-        #         print t + '.img'
-        #     for y in i['current_stock']:
-        #         print y['tn'], ":", y['stock']
-        #     print '延保服务：'
-        #     for item in i['support']:
-        #         print '延保名称：', item['support_name'], '延保价格：', item['support_price']
-        #     # maybe have some problems
-        #     print '广告：'
-        #     for g in i['advertisements']:
-        #         print g
-        #     # print 'tips:'
-        #     print '\n'
+        serializer = GeneralWatcherSerializer(data=_list, many=True)
+        if serializer.is_valid():
+            # for _data in serializer.validated_data:
+            _data = serializer.create(serializer.validated_data)
+            for data in _data:
+                data.group = self.group
+                data.save()
+        else:
+            # TODO: report errors
+            print(serializer.errors)

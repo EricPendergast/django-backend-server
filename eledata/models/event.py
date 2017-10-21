@@ -27,7 +27,7 @@ class EventDetailData(EmbeddedDocument):
 class Event(Document):
     event_category = StringField()
     event_type = StringField()  # We can check if event_type is under event category
-    event_value = StringField()
+    event_value = DictField()  # Update string to key value pair, for i18n purpose mainly
 
     event_desc = ListField(DictField())
     detailed_desc = ListField(DictField())
