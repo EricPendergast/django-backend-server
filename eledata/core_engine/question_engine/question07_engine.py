@@ -3,6 +3,7 @@ from eledata.serializers.event import QuestionSerializer, GeneralEventSerializer
 import pandas as pd
 import datetime
 from eledata.verifiers.event import *
+from eledata.models.entity import Entity
 from pprint import pprint
 
 
@@ -19,14 +20,20 @@ class Question07Engine(BaseEngine):
         '(54, 110]': '> 54 Years Old'
     }
 
-    def __init__(self, group, params, transaction_data, customer_data):
-        super(Question07Engine, self).__init__(group, params)
+    def __init__(self, group, params, transaction_data=None, customer_data=None):
         # TODO: Align transaction_data and customer_data with DB schema
+        super(Question07Engine, self).__init__(group, params)
 
-        self.transaction_data = pd.DataFrame(transaction_data)
-        self.customer_data = pd.DataFrame(customer_data)
+        # self.transaction_data = pd.DataFrame(transaction_data)
+        # self.customer_data = pd.DataFrame(customer_data)
 
     def execute(self):
+        transaction = Entity.objects(group=self.group, type='transaction').first()[u'data']
+        customer = Entity.objects(group=self.group, type='customer').first()[u'data']
+
+        self.transaction_data = pd.DataFrame(transaction)
+        self.customer_data = pd.DataFrame(customer)
+
         self.responses = self.get_processed(self.transaction_data, self.customer_data, self.params)
 
     def event_init(self):
@@ -35,6 +42,7 @@ class Question07Engine(BaseEngine):
         Saves response from each event one by one
         :return: None
         """
+        print(self.responses)
         for response in self.responses:
             verifier = QuestionVerifier()
             serializer = GeneralEventSerializer(data=response)
@@ -127,7 +135,7 @@ class Question07Engine(BaseEngine):
         :return: function ref, used to select target customers
         """
         mapping = {
-            'nosale': Question07Engine.get_nosale_customers,
+            'no_sale': Question07Engine.get_nosale_customers,
         }
         return mapping.get(rule)
 

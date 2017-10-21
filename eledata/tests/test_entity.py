@@ -140,8 +140,8 @@ class EntityTestCase(TestCase):
         # Checking that the first and last rows of data are the same as the
         # first and last rows of the csv
         self.assertIn({u'User_ID': u'751-23-2405',
-                       u'Transaction_Date': datetime.datetime(2017, 9, 1, 0, 0),
-                       # u'Transaction_Date': datetime.datetime(2017, 1, 9, 0, 0),
+                       # u'Transaction_Date': datetime.datetime(2017, 9, 1, 0, 0),
+                       u'Transaction_Date': datetime.datetime(2017, 1, 9, 0, 0),
                        u'Transaction_Quantity': 8.0, u'Transaction_ID': u'228-08-3254',
                        u'Transaction_Value': 86.17}, entity.data)
 
@@ -208,8 +208,8 @@ class EntityTestCase(TestCase):
             'entity']
 
         self.assertIn({u'User_ID': u'851-23-2405',
-                       u'Transaction_Date': datetime.datetime(2017, 9, 1, 0, 0),
-                       # u'Transaction_Date': datetime.datetime(2017, 1, 9, 0, 0),
+                       # u'Transaction_Date': datetime.datetime(2017, 9, 1, 0, 0),
+                       u'Transaction_Date': datetime.datetime(2017, 1, 9, 0, 0),
                        u'Transaction_Quantity': 8.0, u'Transaction_ID': u'228-08-3254',
                        u'Transaction_Value': 87.17}, entity.data)
 

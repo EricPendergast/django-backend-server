@@ -6,7 +6,7 @@ from .question09_engine import Question09Engine
 
 class QuestionEngineProvider(BaseEngineProvider):
     classes = {
-        'question_07': Question07Engine,
-        'question_08': Question08Engine,
-        'question_09': Question09Engine
+        'Question07Engine': Question07Engine,
+        'Question08Engine': Question08Engine,
+        'Question09Engine': Question09Engine
     }

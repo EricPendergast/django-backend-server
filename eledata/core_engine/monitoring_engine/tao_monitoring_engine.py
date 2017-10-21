@@ -38,6 +38,13 @@ class TaoMonitoringEngine(MonitoringEngine):
     def set_cookie(self, _key_1, _key_2):
         self._u_key = _key_1
         self._p_key = _key_2
+
+        # service_args = [
+        #     '--proxy=217.156.252.118:8080',
+        #     '--proxy-type=https',
+        # ]
+        # driver = webdriver.PhantomJS(service_args=service_args)
+
         profile = webdriver.FirefoxProfile()
         profile.set_preference("network.proxy.type", 1)
         profile.set_preference("network.proxy.http", "116.48.136.128")
@@ -58,7 +65,6 @@ class TaoMonitoringEngine(MonitoringEngine):
         cookies = driver.get_cookies()
         self.driver = driver
         self.cookies = cookies
-        pass
 
     def set_searching_url(self, _keyword, _page_limit, _order):
         _url = 'https://s.taobao.com/search?q=CHANGEME&bcoffset=0&ntoffset=0&s=0'
@@ -73,7 +79,7 @@ class TaoMonitoringEngine(MonitoringEngine):
                     self.url_list.append("https://s.taobao.com/search?" + "q=" + _keyword + "&s=" + str((num + 1) * 44)
                                          + self.ORDER_MAPPING.get(order))
                     self.order_list.append(order)
-                    
+
     """
     Overriding Monitoring Core Functions
     """
@@ -151,6 +157,7 @@ class TaoMonitoringEngine(MonitoringEngine):
         return product_list
 
     def out(self, data):
+        self.driver.quit()
         print(len(data))
         conn = MongoClient('localhost', 27017)
         db = conn.testdb

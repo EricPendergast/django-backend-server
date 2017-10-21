@@ -53,7 +53,7 @@ class OfflineEngineTest(TestCase):
 
     # def test_engine_1(self):
     #     mock_response = {'some_key': 'some_value'}
-    #     params = {'duration': 5, 'rule': 'nosale', 'rule_param': 6}
+    #     params = {'duration': 5, 'rule': 'no_sale', 'rule_param': 6}
     #
     #     engine = EngineProvider.provide("Question.question_07", self.admin_group, params,
     #                                     pd.read_csv(self.transactionFilename, sep='\t'),
@@ -75,7 +75,7 @@ class OfflineEngineTest(TestCase):
     #                                       group=self.admin_group,
     #                                       params=None,
     #                                       keyword="DELL",
-    #                                       _page_limit=3
+    #                                       _page_limit=1
     #                                       )
     #     j_engine.execute()
     #
@@ -84,7 +84,7 @@ class OfflineEngineTest(TestCase):
     #                                       group=self.admin_group,
     #                                       params=None,
     #                                       keyword="DELL",
-    #                                       _page_limit=3,
+    #                                       _page_limit=1,
     #                                       _u_key='alexkamlivelyimpact',
     #                                       _p_key='53231323A',
     #                                       )

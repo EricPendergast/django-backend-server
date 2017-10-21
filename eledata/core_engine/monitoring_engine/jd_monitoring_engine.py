@@ -80,7 +80,8 @@ class JDMonitoringEngine(MonitoringEngine):
     Overriding Monitoring Core Functions
     """
     def get_soup(self, _url):
-        driver = webdriver.Chrome()
+        # driver = webdriver.Chrome()
+        driver = webdriver.PhantomJS()  # Prefer phantom over chrome in production
         driver.get(_url)
 
         def execute_times(times):

@@ -49,7 +49,7 @@ def create_new_initializing_job(jobs):
         # Assert all engine is valid in this stage
         assert EngineProvider.provide(job.get('job_engine'), None, None)
         # Assert all engine's event_spec is valid in this stage
-        assert job[u'job_engine'] in list(CONSTANTS.JOB.EVENT_SPEC.keys())
+        # assert job[u'job_engine'] in list(CONSTANTS.JOB.EVENT_SPEC.keys())
 
         serializers = DetailedJobSerializer(data=job)
 

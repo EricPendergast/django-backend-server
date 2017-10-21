@@ -136,10 +136,10 @@ class CoreH2OTestCase(TestCase):
         self.assertEquals(time_range_response.keys(), [u'last_date', u'_id', u'first_date'])
         last_date, _id, first_date = [time_range_response[x] for x in list(time_range_response)]
 
-        # self.assertEquals(first_date, datetime.datetime(2016, 9, 4, 0, 0, 0))
-        self.assertEquals(first_date, datetime.datetime(2016, 4, 9, 0, 0, 0))
-        # self.assertEquals(last_date, datetime.datetime(2017, 5, 3, 0, 0, 0))
-        self.assertEquals(last_date, datetime.datetime(2017, 12, 4, 0, 0))
+        self.assertEquals(first_date, datetime.datetime(2016, 9, 4, 0, 0, 0))
+        # self.assertEquals(first_date, datetime.datetime(2016, 4, 9, 0, 0, 0))
+        self.assertEquals(last_date, datetime.datetime(2017, 5, 3, 0, 0, 0))
+        # self.assertEquals(last_date, datetime.datetime(2017, 12, 4, 0, 0))
 
         month_diff = entity_h2o_engine.get_month_diff(first_date, last_date)
 
@@ -147,12 +147,12 @@ class CoreH2OTestCase(TestCase):
         response = entity_h2o_engine.get_clv_in_window(start_date=first_date, end_date=last_date, month_diff=month_diff)
         self.assertEquals(list(response.keys()), [u'user_id', u'clv'])
         self.assertEquals(response['user_id'].count(), 10)
-        # self.assertEquals(round(response['clv'].max(), 2), 42.75)
-        self.assertEquals(round(response['clv'].max(), 2), 18.32)
-        # self.assertEquals(round(response['clv'].mean(), 2), 24.29)
-        self.assertEquals(round(response['clv'].mean(), 2), 10.41)
-        # self.assertEquals(round(response['clv'].min(), 2), 9.57)
-        self.assertEquals(round(response['clv'].min(), 2), 4.1)
+        self.assertEquals(round(response['clv'].max(), 2), 42.75)
+        # self.assertEquals(round(response['clv'].max(), 2), 18.32)
+        self.assertEquals(round(response['clv'].mean(), 2), 24.29)
+        # self.assertEquals(round(response['clv'].mean(), 2), 10.41)
+        self.assertEquals(round(response['clv'].min(), 2), 9.57)
+        # self.assertEquals(round(response['clv'].min(), 2), 4.1)
 
         # ha1 = h2o.H2OFrame(python_obj=pd.DataFrame(response))
         # print(response)

@@ -161,8 +161,8 @@ class EngineExecutingError(Exception):
 
 string_caster = {
     "string": str,
-    # "date": lambda _str: datetime.datetime.strptime(_str, '%d/%m/%Y'),
-    "date": lambda _str: dateutil.parser.parse(_str),
+    "date": lambda _str: datetime.datetime.strptime(_str, '%d/%m/%Y'),
+    # "date": lambda _str: dateutil.parser.parse(_str),
     "number": float,
     "bool": lambda _str: bool(distutils.util.strtobool(_str)),
 }
