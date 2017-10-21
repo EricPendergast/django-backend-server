@@ -104,17 +104,21 @@ class EntityViewSetHandler(object):
             for item in data:
                 for mapping in raw_dummy['data_header']:
                     item[mapping["mapped"]] = item[mapping["source"]]
-                    del item[mapping["source"]]
+                    # Avoid deleting data when mapped is source
+                    if mapping["mapped"] != mapping["source"]:
+                        del item[mapping["source"]]
+
+            # Casting everything in data from strings to their proper data type
+            # according to request.data['data_header']
+            for item in data:
+                for mapping in raw_dummy['data_header']:
+                    item[mapping["mapped"]] = \
+                        string_caster[mapping["data_type"]](item[mapping["mapped"]])
+
         except KeyError as e:
             # TODO: do logging against e
             raise HandlerError('mappingError')
 
-        # Casting everything in data from strings to their proper data type
-        # according to request.data['data_header']
-        for item in data:
-            for mapping in raw_dummy['data_header']:
-                item[mapping["mapped"]] = \
-                    string_caster[mapping["data_type"]](item[mapping["mapped"]])
         # Generating Entity Summary and Chart Summary after mapping is confirmed.
         summary_entity_stats_engine = EngineProvider \
             .provide("EntityStats.Summary",

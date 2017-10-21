@@ -27,6 +27,7 @@ class OfflineEngineTest(TestCase):
     '''
     Environment Setup for test cases
     '''
+
     def doCleanups(self):
         Event.drop_collection()
         Group.drop_collection()
@@ -49,21 +50,42 @@ class OfflineEngineTest(TestCase):
     """
     Demo testing for some stats engine
     """
-    def test_engine_1(self):
 
-        mock_response = {'some_key': 'some_value'}
-        params = {'duration': 5, 'rule': 'nosale', 'rule_param': 6}
-
-        engine = EngineProvider.provide("Question.question_07", self.admin_group, params, pd.read_csv(self.transactionFilename, sep='\t'),
-                                        pd.read_csv(self.customerFilename, sep='\t'))
-
-        engine.execute()
-
-        responses = engine.responses
-        engine.event_init()
-        # print(response.keys())
-        # print or compare response with static data
-        pprint.pprint(responses)
-        # self.assertEquals(response, mock_response)
-
-        # TODO: test engine.event_init()
+    # def test_engine_1(self):
+    #     mock_response = {'some_key': 'some_value'}
+    #     params = {'duration': 5, 'rule': 'nosale', 'rule_param': 6}
+    #
+    #     engine = EngineProvider.provide("Question.question_07", self.admin_group, params,
+    #                                     pd.read_csv(self.transactionFilename, sep='\t'),
+    #                                     pd.read_csv(self.customerFilename, sep='\t'))
+    #
+    #     engine.execute()
+    #
+    #     responses = engine.responses
+    #     engine.event_init()
+    #     # print(response.keys())
+    #     # print or compare response with static data
+    #     pprint.pprint(responses)
+    #     # self.assertEquals(response, mock_response)
+    #
+    #     # TODO: test engine.event_init()
+    #
+    # def test_engine_2(self):
+    #     j_engine = EngineProvider.provide("Monitoring.JD",
+    #                                       group=self.admin_group,
+    #                                       params=None,
+    #                                       keyword="DELL",
+    #                                       _page_limit=3
+    #                                       )
+    #     j_engine.execute()
+    #
+    # def test_engine_3(self):
+    #     t_engine = EngineProvider.provide("Monitoring.Tao",
+    #                                       group=self.admin_group,
+    #                                       params=None,
+    #                                       keyword="DELL",
+    #                                       _page_limit=3,
+    #                                       _u_key='alexkamlivelyimpact',
+    #                                       _p_key='53231323A',
+    #                                       )
+    #     t_engine.execute()

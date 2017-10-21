@@ -7,6 +7,4 @@ class H2OEngineProvider(BaseEngineProvider):
     classes = {
         'Leaving': LeavingH2OEngine,
         'Clv': ClvH2OEngine,
-        # 'TMall': TMallScrap,
-        # 'JD': JDMonitoringEngine,
     }

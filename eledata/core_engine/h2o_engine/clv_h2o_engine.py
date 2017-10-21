@@ -274,7 +274,7 @@ class ClvH2OEngine(H2OEngine):
         """
         d1 = datetime.date.today()
         d1 += relativedelta(days=(time_shift * 15))
-        expiry_date = str(d1)
+        expiry_date = d1
 
         def get_event_value():
             return dict(predictedRevenue=prediction_frame['predict_clv'].sum())
@@ -282,15 +282,15 @@ class ClvH2OEngine(H2OEngine):
         def get_event_desc():
             predicted_revenue = prediction_frame['predict_clv'].sum()
             captured_user = prediction_frame.shape[0]
-            average_predicted_revenue = prediction_frame['predict_clv'].mean()
-            average_historical_revenue = historical_profile[-1]['monetary_amount'].sum() / prediction_frame.shape[0]
+            # average_predicted_revenue = prediction_frame['predict_clv'].mean()
+            # average_historical_revenue = historical_profile[-1]['monetary_amount'].sum() / prediction_frame.shape[0]
 
             returning_dict = [
-                {'predicted_revenue': predicted_revenue},
-                {'captured_user': captured_user},
-                {'average_predicted_revenue': average_predicted_revenue},
-                {'average_historical_revenue': average_historical_revenue},
-                {'expiry_date': expiry_date},
+                {'predicted_revenue': "{:,.2f}".format(predicted_revenue)},
+                {'captured_user': "{:.2f}".format(captured_user)},
+                # {'average_predicted_revenue': average_predicted_revenue},
+                # {'average_historical_revenue': average_historical_revenue},
+                {'expiry_date': str(expiry_date)},
             ]
             return returning_dict
 
@@ -306,8 +306,8 @@ class ClvH2OEngine(H2OEngine):
             returning_dict = [
                 # {'predicted_revenue': predicted_revenue},
                 # {'captured_user': captured_user},
-                {'average_predicted_revenue': average_predicted_revenue},
-                {'average_historical_revenue': average_historical_revenue},
+                {'average_predicted_revenue': "{:,.2f}".format(average_predicted_revenue)},
+                {'average_historical_revenue': "{:,.2f}".format(average_historical_revenue)},
                 # {'expiry_date': expiry_date},
             ]
             return returning_dict
@@ -321,10 +321,10 @@ class ClvH2OEngine(H2OEngine):
             testing_transaction_size = sum([x['frequency'].sum() for x in historical_profile[:-1]]) * 0.2
 
             returning_dict = [{'accuracy': accuracy},
-                              {'trainingCustomerSize': training_customer_size},
-                              {'testingCustomerSize': testing_customer_size},
-                              {'trainingTransactionSize': training_transaction_size},
-                              {'testingTransactionSize': testing_transaction_size}]
+                              {'testing_customer_size': training_customer_size},
+                              {'testing_transaction_size': testing_customer_size},
+                              {'training_customer_size': training_transaction_size},
+                              {'training_transaction_size': testing_transaction_size}]
             return returning_dict
 
         def get_chart():
