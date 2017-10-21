@@ -287,7 +287,7 @@ class ClvH2OEngine(H2OEngine):
 
             returning_dict = [
                 {'predicted_revenue': "{:,.2f}".format(predicted_revenue)},
-                {'captured_user': "{:.2f}".format(captured_user)},
+                {'captured_user': "{:,}".format(captured_user)},
                 # {'average_predicted_revenue': average_predicted_revenue},
                 # {'average_historical_revenue': average_historical_revenue},
                 {'expiry_date': str(expiry_date)},
@@ -320,11 +320,11 @@ class ClvH2OEngine(H2OEngine):
             training_transaction_size = sum([x['frequency'].sum() for x in historical_profile[:-1]])
             testing_transaction_size = sum([x['frequency'].sum() for x in historical_profile[:-1]]) * 0.2
 
-            returning_dict = [{'accuracy': accuracy},
-                              {'testing_customer_size': training_customer_size},
-                              {'testing_transaction_size': testing_customer_size},
-                              {'training_customer_size': training_transaction_size},
-                              {'training_transaction_size': testing_transaction_size}]
+            returning_dict = [{'accuracy': "{:,.2f}".format(accuracy)},
+                              {'testing_customer_size': "{:,}".format(training_customer_size)},
+                              {'testing_transaction_size': "{:,}".format(testing_customer_size)},
+                              {'training_customer_size': "{:,}".format(training_transaction_size)},
+                              {'training_transaction_size': "{:,}".format(testing_transaction_size)}]
             return returning_dict
 
         def get_chart():
