@@ -81,7 +81,7 @@ class JDMonitoringEngine(MonitoringEngine):
     """
     def get_soup(self, _url):
         # driver = webdriver.Chrome()
-        driver = webdriver.PhantomJS()  # Prefer phantom over chrome in production
+        driver = webdriver.PhantomJS(executable_path=r'constants/phantomjs')  # Prefer phantom over chrome in production
         driver.get(_url)
 
         def execute_times(times):
@@ -180,15 +180,17 @@ class JDMonitoringEngine(MonitoringEngine):
 
             # Save and save detail images to file
             detail_imgs = this_soup.find("ul", class_='lh')
-            detail_img = detail_imgs.find_all('li')
-            for detail_i in detail_img:
-                try:
-                    img_detail_src = 'http:' + str(detail_i.find('img')['src'])
-                except:
-                    img_detail_src = 'http:' + str(detail_i.find('img')['data-lazy-img'])
-                detail_save_path = self.img_pth
-                detail_file_name = self.save_image(img_detail_src, detail_save_path)
-                img_list.append(detail_file_name)
+
+            if detail_imgs:
+                detail_img = detail_imgs.find_all('li')
+                for detail_i in detail_img:
+                    try:
+                        img_detail_src = 'http:' + str(detail_i.find('img')['src'])
+                    except:
+                        img_detail_src = 'http:' + str(detail_i.find('img')['data-lazy-img'])
+                    detail_save_path = self.img_pth
+                    detail_file_name = self.save_image(img_detail_src, detail_save_path)
+                    img_list.append(detail_file_name)
 
             # get information from js
             ss = this_soup.find_all('script')[0:1]
