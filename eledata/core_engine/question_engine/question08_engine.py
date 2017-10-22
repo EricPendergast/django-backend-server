@@ -132,7 +132,7 @@ class Question08Engine(BaseEngine):
         return mapping.get(rule)
 
     @staticmethod
-    def get_nosale_customers(transaction_data, num_month_nosale):
+    def get_increase_purchase_customers(transaction_data, increase_percentage):
         """
         Return the user id of the customers that have had no sale for the specified number of months for each observed month,
         in a list with each element representing a month
@@ -143,17 +143,42 @@ class Question08Engine(BaseEngine):
         :param num_month_nosale: int, the number of months for which there are no sale
         :return: list of series of int, user id of the customers with no sales, with each series representing a month
         """
-        last_transactions = transaction_data.groupby(['User_ID'])['Transaction_Date'].max().reset_index()
-        last_transactions['Transaction_Date'] = pd.to_datetime(last_transactions['Transaction_Date'])
-
         results = []
         # Get the user IDs for each month
         for month_observe in range(1, 13):
-            transaction_startdate = Question08Engine.get_start_date(month_observe + num_month_nosale)
-            transaction_enddate = Question08Engine.get_start_date(month_observe + num_month_nosale - 1).replace(day=1)
-            results.append(last_transactions.loc[
-                (last_transactions['Transaction_Date'] >= transaction_startdate) & (last_transactions['Transaction_Date'] < transaction_enddate), 'User_ID'].astype(str))
+            transaction_startdate = Question08Engine.get_start_date(month_observe + 6)
+            transaction_enddate = Question08Engine.get_start_date(month_observe).replace(day=1)
+
+            before_transaction = transaction_data[transaction_data['Transaction_Date'] < transaction_startdate].groupby(['User_ID'])['Transaction_Quantity'].sum()
+            after_transaction = \
+            transaction_data[transaction_data['Transaction_Date'] < transaction_enddate].groupby(['User_ID'])[
+                'Transaction_Quantity'].sum()
+
+            results.append(before_transaction[(after_transaction - before_transaction) / before_transaction > 0.05].reset_index().loc[:, 'User_ID'].astype(str))
+
         return results
+
+    @staticmethod
+    def merge_increase_purchase_data(transaction_data, customer_data, observed_target_customers):
+        """
+        Merge the transaction and customer records for the supplied customer IDs and return a DataFrame with the relevant columns
+        :param transaction_data: DataFrame, transaction records
+        :param customer_data: DataFrame, customer records
+        :param observed_target_customers: list of int, customer IDs to return
+        :return: DataFrame, merged records
+        """
+        total_transaction = \
+        transaction_data[transaction_data['User_ID'].isin(observed_target_customers)].groupby(['User_ID'])[
+            'Transaction_Quantity'].sum().reset_index()
+        total_transaction = total_transaction.merge(
+            transaction_data.groupby(['User_ID'])['Transaction_Date'].max().reset_index(), on='User_ID')
+        total_transaction = total_transaction.rename(index=str, columns={'Transaction_Quantity': 'Total_Quantity',
+                                                                         'Transaction_Date': 'Last_Transaction_Date'})
+
+        target_customers_data = customer_data[customer_data['User_ID'].isin(observed_target_customers)].copy()
+
+        return total_transaction.merge(target_customers_data, left_on='User_ID', right_on='User_ID') \
+            [['User_ID', 'Display_Name', 'Age', 'Gender', 'Country', 'Total_Quantity', 'Last_Transaction_Date']]
 
     @staticmethod
     def get_detailed_data(total_transaction, target_customers_data):
