@@ -165,7 +165,8 @@ class MonitoringEngine(BaseEngine):
                 continue
         return _info
 
-    def save_image(self, _url, _save_path):
+    @staticmethod
+    def save_image(_url, _save_path):
         _filename = str(uuid.uuid4())
         if not os.path.exists(_save_path):
             os.makedirs(_save_path)
@@ -173,5 +174,4 @@ class MonitoringEngine(BaseEngine):
         path = _save_path + "/" + _filename + '.jpg'
         with open(path, 'wb') as handler:
             handler.write(img_data)
-        self.img_pth = _save_path
-        return _filename
+        return _save_path

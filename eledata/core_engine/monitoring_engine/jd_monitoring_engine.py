@@ -274,8 +274,9 @@ class JDMonitoringEngine(MonitoringEngine):
             # getGmodel
             _call_model = 'https://c.3.cn/recommend?methods=accessories&sku=' + _data_pid + '&cat=' + _astr
             model_info = self.auto_recovered_fetch_json(_url=_call_model)
+            accessories_info = model_info.get('accessories', None)
             model_dic = {}
-            if 'data' in model_info['accessories']:
+            if accessories_info and ('data' in accessories_info):
                 if 'model' in model_info['accessories']['data']:
                     model_dic['model'] = model_info['accessories']['data']['model']
                 if 'chBrand' in model_info['accessories']['data']:

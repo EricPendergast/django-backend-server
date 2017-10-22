@@ -47,7 +47,6 @@ class Event(Document):
     tabs = DictField()
     selected_tab = DictField()
 
-
     # Not disposed, saving mother data here and present aggregated detailed_data and chart_data
     source_data = ListField(DictField())  # Only when status is C
     update_freq = IntField()  # Only when status is C, by hour

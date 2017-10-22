@@ -1,12 +1,14 @@
-import json
-from operator import itemgetter
-from itertools import groupby
 from eledata.core_engine.base_engine import BaseEngine
 from eledata.models.watcher import Watcher
+import pandas as pd
+from project.settings import CONSTANTS
+from dateutil.relativedelta import relativedelta
+import datetime
+from eledata.serializers.event import GeneralEventSerializer
 
 
 class Question37Engine(BaseEngine):
-
+    IMG_PATH = 'temp/img'
     search_key = None
     result_list = None
     platform = None
@@ -16,6 +18,12 @@ class Question37Engine(BaseEngine):
         self.search_key = keyword_list
 
     def execute(self):
+        """
+        Fetching products data by aggregation, with search_keyword in from self.search_key (list)
+        :return:
+        """
+
+        # Querying from MongoDB. Grouping by sku_id, search_keyword and platform
         pipeline = [
             {
                 "$group": {
@@ -23,8 +31,17 @@ class Question37Engine(BaseEngine):
                         "sku_id": "$sku_id",
                         "search_keyword": "$search_keyword",
                         "platform": "$platform",
+                        # Grouping by seller name in MongoDB or pandas
+                        # "seller_name": "$seller_name",
                     },
-                    "count": {"$sum": 1},
+
+                    # For simplicity, we extract the id content here, assumed identical
+                    "sku_id": {"$first": "$sku_id"},
+                    "search_keyword": {"$first": "$search_keyword"},
+                    "platform": {"$first": "$platform"},
+
+                    "count": {"$first": 1}
+                    ,
                     "max_final_price": {"$max": "$default_price"},
                     "mean_final_price": {"$avg": "$default_price"},
                     "min_final_price": {"$min": "$default_price"},
@@ -34,163 +51,156 @@ class Question37Engine(BaseEngine):
                     "min_comments_count": {"$min": "$comments_count"},
 
                     # Assumed the below fields are identical
-                    "product_name": {"$first": "product_name"},
-                    "item_url": {"$first": "item_url"},
-                    "seller_name": {"$first": "seller_name"},
-                    "seller_url": {"$first": "seller_url"},
+                    "product_name": {"$first": "$product_name"},
+                    "item_url": {"$first": "$item_url"},
+                    "seller_name": {"$first": "$seller_name"},
+                    "seller_url": {"$first": "$seller_url"},
+                    "image": {"$first": "image"},
                 }
             }
         ]
         self.response = list(Watcher.objects(search_keyword__in=self.search_key).aggregate(*pipeline))
-        # TODO: continue with the above response
 
     def event_init(self):
-        pass
+        responses = []
 
-    def manage(self):
-        before_mana_list = self.result_list
-        # this level by key
-        data = []
-        escevent = []
-        escdetailed = []
-        for index, item_by_key in enumerate(before_mana_list):
-            product = self.search_key[index]
-            subdata = []
-            '''
-            seller name based grouping
-            '''
-            item_by_key.sort(key=itemgetter('seller_name'))
-            comment_all_list = []
-            for item in item_by_key:
-                comment_all_list.append({
-                    "sku_id": item["sku_id"],
-                    "comments": item["comments_count"]
-                })
-            comments_sku_list = []
-            comment_all_list.sort(key=itemgetter('sku_id'))
-            for sku_id, items in groupby(comment_all_list, key=itemgetter('sku_id')):
-                # print sku_id
+        raw_product_data = self.response
+        product_data = pd.DataFrame(raw_product_data)
 
-                comments_list = []
-                for item in items:
-                    comments_list.append(item["comments"])
-                high_comments = max(comments_list)
-                low_comments = min(comments_list)
-                # av_comments = statistics.mean(comments_list)
-                comment_sku={
-                    "sku_id": sku_id,
-                    "high_comments": high_comments,
-                    "low_comments": low_comments,
-                    # "av_comments": av_comments,
+        for keyword in self.search_key:
+            selected_product_data = product_data[product_data['search_keyword'] == keyword].copy()
+
+            # Compressing df by seller_url in pandas in case
+            selected_product_data = selected_product_data.groupby('seller_name').agg({
+                "sku_id": ['first'],
+                "search_keyword": ['first'],
+                "platform": ['first'],
+                "count": ['sum'],
+                "max_final_price": ['max'],
+                "mean_final_price": ['mean'],
+                "min_final_price": ['min'],
+
+                "max_comments_count": ['max'],
+                "mean_comments_count": ['mean'],
+                "min_comments_count": ['min'],
+                # Assumed the below fields are identical
+                "product_name": ['first'],
+                "item_url": ['first'],
+                "seller_name": ['first'],
+                "seller_url": ['first'],
+                "image": ['first'],
+            }).reset_index()
+
+            # Flatten hierarchical index in columns
+            selected_product_data.columns = selected_product_data.columns.get_level_values(0)
+
+            # Get seller with lowest price
+            lowest_price_seller = selected_product_data.loc[
+                selected_product_data['min_final_price'] == selected_product_data['min_final_price'].min()]
+
+            # Get seller with highest price
+            highest_price_seller = selected_product_data.loc[
+                selected_product_data['max_final_price'] == selected_product_data['max_final_price'].max()]
+
+            # Get seller with most comments
+            popular_seller = selected_product_data.loc[
+                selected_product_data['max_comments_count'] == selected_product_data['max_comments_count'].max()]
+
+            # Get seller with least comments
+            unpopular_seller = selected_product_data.loc[
+                selected_product_data['min_comments_count'] == selected_product_data['min_comments_count'].min()]
+
+            # Construct response
+            responses.append(
+                {
+                    "event_category": CONSTANTS.EVENT.CATEGORY.get("INSIGHT"),
+                    "event_type": "question_37",
+                    "event_value": self.get_event_value(selected_product_data),
+                    "event_desc": self.get_event_desc(selected_product_data, lowest_price_seller),
+                    "detailed_desc": self.get_detailed_desc(highest_price_seller, popular_seller, unpopular_seller),
+                    "analysis_desc": self.get_analysis_desc(),
+                    "chart_type": "Table",  # For the time being
+                    "chart": {},
+                    "tabs": {
+                        "keyword": self.search_key,
+                    },
+                    "selected_tab": {
+                        "keyword": keyword,
+                    },
+                    "detailed_data": self.transform_detailed_data(selected_product_data),
+                    "event_status": CONSTANTS.EVENT.STATUS.get('PENDING'),
                 }
-                comments_sku_list.append(comment_sku)
-            for seller_name, items in groupby(item_by_key, key=itemgetter('seller_name')):
-                """
-                Shop data Dic
-                """
-                # product_icon = items[0]['images'][0]
-                _seller_name = seller_name
-                price_list = []
-                time_list = []
-                count = 0
-                for item in items:
-                    price = float(item['default_price'])
-                    price_list.append(price)
-                    sales = item['comments_count']
-                    count = count + sales
-                    time = {
-                        "sku_id": item['sku_id'],
-                        "time": item['last_crawling_timestamp']
-                    }
-                    time_list.append(time)
-                price_f = min(price_list)
-                price_t = max(price_list)
-                # price_a = statistics.mean(price_list)
+            )
 
-                subdata.append({
-                    # "product_icon": product_icon,
-                    "seller_name": _seller_name,
-                    "price_from": price_f,
-                    "price_to": price_t,
-                    # "price_a": price_a,
-                    "sales": count
-                })
-                """
-                manage data
-                """
-                # best seller
-                sales_list = []
-                price_list = []
-                price_top_list = []
-                price_lower_list = []
-                for item in subdata:
-                    sales_list.append(item["sales"])
-                    price_list.append(item["price_a"])
-                    price_top_list.append(item["price_to"])
-                    price_lower_list.append(item["price_from"])
-                # best_sales_value = statistics.mean(sales_list)
-                cheapest_value = min(price_list)
-                # av_price_alltime = statistics.mean(price_list)
-                top_price_alltime = max(price_top_list)
-                lower_pirce_alltime = min(price_lower_list)
-                for item in subdata:
-                    # if item["sales"] == best_sales_value:
-                    #     best_seller = item["seller_name"]
-                    if item["price_a"] == cheapest_value:
-                        cheapest_seller = item["seller_name"]
-                eventdesc_by_key = {
-                    # "best_seller": best_seller,
-                    # "best_comment_value": best_sales_value,
-                    "cheapest_seller": cheapest_seller,
-                    "cheapest_seller_value": cheapest_value
+        serializer = GeneralEventSerializer(data=responses, many=True)
+        if serializer.is_valid():
+            # for _data in serializer.validated_data:
+            _data = serializer.create(serializer.validated_data)
+            for data in _data:
+                data.group = self.group
+                data.save()
+        else:
+            # TODO: report errors
+            print(serializer.errors)
+
+    @staticmethod
+    def get_event_value(selected_product_data):
+        product_count = selected_product_data['count'].sum()
+        return dict(captured_products=product_count)
+
+    @staticmethod
+    def get_event_desc(selected_product_data, lowest_price_seller):
+        product_count = selected_product_data['count'].sum()
+        reseller_count = len(selected_product_data)
+        lowest_price_seller_name = lowest_price_seller.iloc[0]['seller_name']
+        lowest_price = lowest_price_seller.iloc[0]['min_final_price']
+        return [
+            {"product_count": product_count},
+            {"reseller_count": reseller_count},
+            {"lowest_price_seller_name": lowest_price_seller_name},
+            {"lowest_price": lowest_price}
+        ]
+
+    @staticmethod
+    def get_detailed_desc(highest_price_seller, popular_seller, unpopular_seller):
+
+        highest_price_seller_name = highest_price_seller.iloc[0]['seller_name']
+        highest_price = highest_price_seller.iloc[0]['max_final_price']
+
+        popular_seller_name = popular_seller.iloc[0]['seller_name']
+        popular_comments = popular_seller.iloc[0]['max_comments_count']
+
+        unpopular_seller_name = unpopular_seller.iloc[0]['seller_name']
+        unpopular_comments = unpopular_seller.iloc[0]['min_comments_count']
+        return [
+            {"highest_price_seller_name": highest_price_seller_name},
+            {"highest_price": highest_price},
+            {"popular_seller_name": popular_seller_name},
+            {"popular_comments": popular_comments},
+            {"unpopular_seller_name": unpopular_seller_name},
+            {"unpopular_comments": unpopular_comments}
+        ]
+
+    @staticmethod
+    def get_analysis_desc():
+        next_update_time = datetime.datetime.now() + relativedelta(days=1)
+        return [dict(next_update_time=next_update_time.strftime("%Y-%m-%d %H:%M:%S"))]
+
+    @staticmethod
+    def transform_detailed_data(detailed_data):
+        """
+        Transform the supplied DF to a python structure with fields matching the Event model
+        :param detailed_data: DataFrame, targeted customer records, should be output from get_detailed_data
+        :return: python structure matching the Event model, contains detailed data
+        """
+        results = {"data": detailed_data.to_dict(orient='records'), "columns": []}
+        for field in ["platform", "max_final_price", "mean_final_price", "min_final_price", "mean_comments_count",
+                      "product_name", "item_url", "seller_name", "seller_url", "image", ]:
+            results["columns"].append(
+                {
+                    "key": field,
+                    "sortable": True,
+                    "label": '',
                 }
-                detaileddesc_by_key={
-                    # "av_price_alltime": av_price_alltime,
-                    "top_price_alltime": top_price_alltime,
-                    "lower_pirce_alltime": lower_pirce_alltime,
-                    "comments": comments_sku_list
-                }
-
-            data.append({
-                "product": product,
-                "subData": subdata
-            })
-            escevent.append({
-                "product": product,
-                "esc": eventdesc_by_key
-            })
-            escdetailed.append({
-                "product": product,
-                "esc": detaileddesc_by_key
-            })
-
-            analysisdesc = [
-                                {
-                                    "key": "Data Processing Time",
-                                    "value": "2.4 hr"
-                                },
-                                {
-                                    "key": "Captured Product Data",
-                                    "value": "5,400"
-                                }
-                            ],
-
-
-        dic = {
-            "subHeader": "Price range for products being sold by my competitors",
-            "eventValue": "Distinct Products: 3",
-            "eventDesc": escevent,
-            "detailedEventDesc": escdetailed,
-            "analysisDesc": analysisdesc,
-            "chartType": "MultiTables",
-            "chart": {},
-            "detailedData": {
-                "data": data,
-                "columns": []
-            }
-        }
-
-        print dic
-        text_file = open("Output.csv", "w")
-        text_file.write(json.dumps(dic))
-        text_file.close()
+            )
+        return results
