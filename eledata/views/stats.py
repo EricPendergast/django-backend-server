@@ -32,7 +32,8 @@ class StatsViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
         :param request: object, With user information
         :return:
         """
-        query_set = Event.objects(group=request.user.group, event_status=CONSTANTS.EVENT.STATUS.get("PENDING"))
+        query_set = Event.objects(group=request.user.group, event_status=CONSTANTS.EVENT.STATUS.get("PENDING"))\
+            .order_by("-updated_at")
         response_data = handler.get_event_dashboard_summary(
             pending_events=query_set,
         )

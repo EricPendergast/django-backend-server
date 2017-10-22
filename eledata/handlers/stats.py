@@ -22,10 +22,23 @@ def get_entity_data_metrics(entities):
 def get_event_dashboard_summary(pending_events):
     """
     Get event dashboard summary from all pending events
-    :param pending_events: Queryset, list of pending events
+    :param pending_events: Queryset, list of ordered pending events
     :return: dictionary, Summary of pending events
     """
+    # Initialize variables and count for all pending
+    pending_opportunity = 0
+    pending_risk = 0
+    pending_count = len(pending_events)
+    pending_last_update = pending_events[0][u'updated_at'].strftime("%Y-%m-%d") if pending_events else "--"
+
     for event in pending_events:
-        # TODO: 1. identify different event cat, 2. sum for risk and opportunity, 3. count for all, 4. get last update time
-        print(event[u'event_type'])
-    return
+        if event[u'event_type'] == CONSTANTS.EVENT.CATEGORY.get('OPPORTUNITY'):
+            pending_opportunity += float(event[u'event_value'].items()[0])
+        elif event[u'event_type'] == CONSTANTS.EVENT.CATEGORY.get('RISK'):
+            pending_risk += float(event[u'event_value'].items()[0])
+
+    return dict(pending_vao="{:,.2f}".format(pending_opportunity),
+                pending_var="{:,.2f}".format(pending_risk),
+                pending_insights=pending_count,
+                last_updated=pending_last_update,
+                )
