@@ -67,7 +67,7 @@ parameters = [
                 "content": "defaultChoice"
             },
             {
-                # Users with 6 months of increase of purchase amount in
+                # In the past 6 months, users with increase of purchase quantity of _ %
                 "content": 'increase_purchase',
                 "default_value": '5'
             }
