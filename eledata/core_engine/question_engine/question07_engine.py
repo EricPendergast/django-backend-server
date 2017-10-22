@@ -5,7 +5,7 @@ import datetime
 from eledata.verifiers.event import *
 from eledata.models.entity import Entity
 from pprint import pprint
-
+from project.settings import CONSTANTS
 
 class Question07Engine(BaseEngine):
     responses = None
@@ -23,7 +23,8 @@ class Question07Engine(BaseEngine):
     def __init__(self, group, params, transaction_data=None, customer_data=None):
         # TODO: Align transaction_data and customer_data with DB schema
         super(Question07Engine, self).__init__(group, params)
-
+        # TODO: update to get information from param with correct structure
+        self.params = params = {'duration': 5, 'rule': 'no_sale', 'rule_param': 6}
         # self.transaction_data = pd.DataFrame(transaction_data)
         # self.customer_data = pd.DataFrame(customer_data)
 
@@ -42,7 +43,6 @@ class Question07Engine(BaseEngine):
         Saves response from each event one by one
         :return: None
         """
-        print(self.responses)
         for response in self.responses:
             verifier = QuestionVerifier()
             serializer = GeneralEventSerializer(data=response)
@@ -77,7 +77,7 @@ class Question07Engine(BaseEngine):
             # Generate 3 type of responses for each number of months
             for characteristic in characteristics:
                 observed_target_customers = reduce(lambda x, y: x.append(y), target_customers[:num_month_observe])
-                target_customers_data = customer_data[customer_data['ID'].isin(observed_target_customers)].copy()
+                target_customers_data = customer_data[customer_data['User_ID'].isin(observed_target_customers)].copy()
 
                 # Aggregate transaction records for the targeted customers
                 total_transaction = transaction_data[transaction_data['User_ID'].isin(observed_target_customers)].groupby(['User_ID'])['Transaction_Quantity'].sum().reset_index()
@@ -90,21 +90,21 @@ class Question07Engine(BaseEngine):
                 # Construct response
                 responses.append(
                     {
-                        "event_category": "insight",
+                        "event_category": CONSTANTS.EVENT.CATEGORY.get("INSIGHT"),
                         "event_type": "question_07",    # Customers that stopped buying in the past 6 months
-                        "event_value": "Total Customers Lost: {0}".format(len(observed_target_customers)),
+                        "event_value": dict(total_customers_lost=len(observed_target_customers)),
                         "tabs": {
-                            "Month": num_month_observe_list,
-                            "Characteristics": characteristics
+                            "month": num_month_observe_list,
+                            "characteristics": characteristics
                         },
                         "selected_tab": {
-                            "Month": num_month_observe,
-                            "Characteristics": characteristic
+                            "month": num_month_observe,
+                            "characteristics": characteristic
                         },
                         "event_desc": Question07Engine.get_event_desc(detailed_data, characteristic),
                         "detailed_desc": Question07Engine.get_detailed_event_desc(detailed_data, characteristic),
                         "analysis_desc": Question07Engine.get_analysis_desc(transaction_data, customer_data),
-                        "chart_type": "bar",
+                        "chart_type": "Bar",
                         "chart": Question07Engine.get_chart(detailed_data, characteristic, num_month_observe, target_customers),
                         "detailed_data": Question07Engine.transform_detailed_data(detailed_data)    # Transform detailed data from DF to a list of dict
                     }
@@ -171,7 +171,7 @@ class Question07Engine(BaseEngine):
         :param target_customers_data: DataFrame, targeted customer records
         :return: DataFrame: merged records with only the relevant columns
         """
-        return total_transaction.merge(target_customers_data, left_on='User_ID', right_on='ID') \
+        return total_transaction.merge(target_customers_data, left_on='User_ID', right_on='User_ID') \
             [['User_ID', 'Display_Name', 'Age', 'Gender', 'Country', 'Total_Quantity', 'Last_Transaction_Date']]
 
     @staticmethod
