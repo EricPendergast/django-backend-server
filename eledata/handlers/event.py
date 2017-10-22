@@ -7,6 +7,42 @@ from multiprocessing import Process
 import time
 
 
+def get_general_event(group):
+    """
+    Return the first 2 events among each categories
+    :param group: object, user group mongo object
+    :return: dictionary, having merged events
+    """
+    # Querying from MongoDB. Grouping by sku_id, search_keyword and platform
+    pipeline = [
+        {
+            "$group": {
+                "_id": {
+                    "event_type": "$event_type",
+                    "tabs": "$tabs",
+                },
+                "first": {"$first": "$$ROOT"},
+            }
+        }
+    ]
+    data = map(lambda _x: _x['first'], list(Event.objects(group=group).aggregate(*pipeline)))
+    serializer = GeneralEventSerializer(data, many=True, required=True)
+    return {
+        "opportunity": [
+            x for x in serializer.data if
+            x.get('event_category') == CONSTANTS.EVENT.CATEGORY.get('OPPORTUNITY')
+        ],
+        "risk": [
+            x for x in serializer.data if
+            x.get('event_category') == CONSTANTS.EVENT.CATEGORY.get('RISK')
+        ],
+        "insight": [
+            x for x in serializer.data if
+            x.get('event_category') == CONSTANTS.EVENT.CATEGORY.get('INSIGHT')
+        ]
+    }
+
+
 def update_event_status(event, status, verifier):
     """
     :param event: Desired event to be updated.

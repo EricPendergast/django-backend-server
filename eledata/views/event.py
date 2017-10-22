@@ -20,22 +20,7 @@ class EventViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
         """
         Get all general events
         """
-        query_set = Event.objects(group=request.user.group)
-        serializer = GeneralEventSerializer(query_set, many=True, required=True)
-        response = {
-            "opportunity": [
-                x for x in serializer.data if
-                x.get('event_category') == CONSTANTS.EVENT.CATEGORY.get('OPPORTUNITY')
-            ],
-            "risk": [
-                x for x in serializer.data if
-                x.get('event_category') == CONSTANTS.EVENT.CATEGORY.get('RISK')
-            ],
-            "insight": [
-                x for x in serializer.data if
-                x.get('event_category') == CONSTANTS.EVENT.CATEGORY.get('INSIGHT')
-            ]
-        }
+        response = handler.get_general_event(request.user.group)
         return Response(response)
 
     @detail_route(methods=['get'])
