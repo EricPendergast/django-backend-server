@@ -159,9 +159,16 @@ class EngineExecutingError(Exception):
 # strings to that type
 
 
+def time_parse(_str):
+    try:
+        return datetime.datetime.strptime(_str, '%d/%m/%Y')
+    except ValueError:
+        return datetime.datetime.strptime(_str, "%Y-%m-%d")
+
+
 string_caster = {
     "string": str,
-    "date": lambda _str: datetime.datetime.strptime(_str, '%d/%m/%Y'),
+    "date": lambda _str: time_parse(_str),
     # "date": lambda _str: dateutil.parser.parse(_str),
     "number": float,
     "bool": lambda _str: bool(distutils.util.strtobool(_str)),

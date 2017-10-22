@@ -48,8 +48,6 @@ def create_new_initializing_job(jobs):
     for job in jobs:
         # Assert all engine is valid in this stage
         assert EngineProvider.provide(job.get('job_engine'), None, None)
-        # Assert all engine's event_spec is valid in this stage
-        # assert job[u'job_engine'] in list(CONSTANTS.JOB.EVENT_SPEC.keys())
 
         serializers = DetailedJobSerializer(data=job)
 
@@ -75,13 +73,13 @@ def start_all_initializing_job(_group):
 
             # TODO: Show more detailed engine process by passing s_job to s_engine to update
             s_engine.execute()
-
             s_engine.event_init()
-            # event_status should be used in the event_init() Exception should have been threw in case for KeyError
-            event_status = CONSTANTS.JOB.EVENT_SPEC.get(s_job.job_engine).get('event_status')
 
-            if event_status is CONSTANTS.JOB.STATUS.get('CONTINUOUS'):
-                s_engine.job_status = event_status
+            # event_status should be used in the event_init() Exception should have been threw in case for KeyError
+            pre_name, post_name = s_job.job_engine.split('.')
+
+            if pre_name is "Continuous":
+                s_engine.job_status = CONSTANTS.JOB.STATUS.get("CONTINUOUS")
             else:
                 s_engine.job_status = CONSTANTS.JOB.STATUS.get("UPDATED")
 

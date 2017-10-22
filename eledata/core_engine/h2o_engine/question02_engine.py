@@ -9,7 +9,7 @@ from project.settings import CONSTANTS
 
 
 # TODO: implement leaving logic
-class LeavingH2OEngine(H2OEngine):
+class Question02Engine(H2OEngine):
     def get_leaving_definition(self):
         # TODO: Handle default
         # TODO: Handle 3 months of inactivity

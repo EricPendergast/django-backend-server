@@ -9,7 +9,7 @@ from eledata.verifiers.event import QuestionVerifier
 from eledata.serializers.event import GeneralEventSerializer
 
 
-class ClvH2OEngine(H2OEngine):
+class Question01Engine(H2OEngine):
     def get_class_attributes(self, user_list, start_date, turning_date, end_date, supervising_window_length):
         pipeline = [
             {"$unwind": "$data"},
@@ -360,7 +360,7 @@ class ClvH2OEngine(H2OEngine):
 
         event_dict = dict(
             event_category=CONSTANTS.EVENT.CATEGORY.get('INSIGHT'),
-            event_type='H2O.Clv',
+            event_type='question_01',
             event_value=get_event_value(),
             event_desc=get_event_desc(),
             detailed_desc=get_detail_desc(),

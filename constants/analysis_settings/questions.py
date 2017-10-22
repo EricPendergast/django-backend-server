@@ -9,7 +9,7 @@ questions = [
         "required_entities": [
             "transaction"
         ],
-        "analysis_engine": "H2O.Clv"
+        "analysis_engine": "H2O.Question01Engine"
     },
     {
         "label": "question_02",
@@ -72,5 +72,15 @@ questions = [
             "customer"
         ],
         "analysis_engine": "Question.Question07Engine"
+    },
+    {
+        "label": "question_37",
+        "content": "question_37",
+        "enabled": True,
+        "selected": False,
+        "orientation": "pricing",
+        "type": "descriptive",
+        "required_entities": [],
+        "analysis_engine": "Continuous.Question37Engine"
     }
 ]
