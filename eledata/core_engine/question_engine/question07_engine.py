@@ -4,8 +4,9 @@ import pandas as pd
 import datetime
 from eledata.verifiers.event import *
 from eledata.models.entity import Entity
-from pprint import pprint
+from bson import objectid
 from project.settings import CONSTANTS
+
 
 class Question07Engine(BaseEngine):
     responses = None
@@ -72,6 +73,7 @@ class Question07Engine(BaseEngine):
         rule = Question07Engine.get_rule(params['rule'])
         target_customers = rule(transaction_data, params['rule_param'])
 
+        event_id = objectid.ObjectId()
         # Generate response to display different number of months of result
         for num_month_observe in num_month_observe_list:
             # Generate 3 type of responses for each number of months
@@ -90,6 +92,7 @@ class Question07Engine(BaseEngine):
                 # Construct response
                 responses.append(
                     {
+                        "event_id": event_id,
                         "event_category": CONSTANTS.EVENT.CATEGORY.get("INSIGHT"),
                         "event_type": "question_07",    # Customers that stopped buying in the past 6 months
                         "event_value": dict(total_customers_lost=len(observed_target_customers)),

@@ -18,8 +18,7 @@ def get_general_event(group):
         {
             "$group": {
                 "_id": {
-                    "event_type": "$event_type",
-                    "tabs": "$tabs",
+                    "event_id": "$event_id",
                 },
                 "first": {"$first": "$$ROOT"},
             }

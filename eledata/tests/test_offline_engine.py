@@ -32,7 +32,6 @@ class OfflineEngineTest(TestCase):
         Event.drop_collection()
         Group.drop_collection()
         User.drop_collection()
-        Event.drop_collection()
 
     def setUp(self):
         Group.drop_collection()
@@ -71,20 +70,21 @@ class OfflineEngineTest(TestCase):
     #     # TODO: test engine.event_init()
     #
     # def test_engine_2(self):
-    #     j_engine = EngineProvider.provide("Monitoring.JD",
-    #                                       group=self.admin_group,
-    #                                       params=None,
-    #                                       keyword="DELL",
-    #                                       _page_limit=1
-    #                                       )
-    #     j_engine.execute()
+    #     # j_engine = EngineProvider.provide("Monitoring.JD",
+    #     #                                   group=self.admin_group,
+    #     #                                   params=None,
+    #     #                                   keyword="HTC",
+    #     #                                   _page_limit=3
+    #     #                                   )
+    #     # j_engine.execute()
     #
     #     haha_engine = EngineProvider.provide("MonitoringReport.Question37Engine",
     #                                          group=self.admin_group,
     #                                          params=None,
-    #                                          keyword_list=["DELL"],
+    #                                          keyword_list=["DELL", "HTC"],
     #                                          )
     #     haha_engine.execute()
+    #     haha_engine.event_init()
     #
     # def test_engine_3(self):
     #     t_engine = EngineProvider.provide("Monitoring.Tao",

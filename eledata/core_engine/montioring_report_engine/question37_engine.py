@@ -5,6 +5,7 @@ from project.settings import CONSTANTS
 from dateutil.relativedelta import relativedelta
 import datetime
 from eledata.serializers.event import GeneralEventSerializer
+from bson import objectid
 
 
 class Question37Engine(BaseEngine):
@@ -59,14 +60,14 @@ class Question37Engine(BaseEngine):
                 }
             }
         ]
-        self.response = list(Watcher.objects(search_keyword__in=self.search_key).aggregate(*pipeline))
+        self.response = list(Watcher.objects(search_keyword__in=self.search_key, group=self.group).aggregate(*pipeline))
 
     def event_init(self):
         responses = []
-
         raw_product_data = self.response
         product_data = pd.DataFrame(raw_product_data)
 
+        event_id = objectid.ObjectId()
         for keyword in self.search_key:
             selected_product_data = product_data[product_data['search_keyword'] == keyword].copy()
 
@@ -113,6 +114,7 @@ class Question37Engine(BaseEngine):
             # Construct response
             responses.append(
                 {
+                    "event_id": event_id,
                     "event_category": CONSTANTS.EVENT.CATEGORY.get("INSIGHT"),
                     "event_type": "question_37",
                     "event_value": self.get_event_value(selected_product_data),
