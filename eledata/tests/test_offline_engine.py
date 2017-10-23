@@ -78,6 +78,39 @@ class OfflineEngineTest(TestCase):
     #     # print or compare response with static data
     #     pprint.pprint(responses)
     #     # self.assertEquals(response, mock_response)
+
+
+    # def test_engine_08(self):
+    #     mock_response = {'some_key': 'some_value'}
+    #     params = {
+    #         u'content': u'growther_definition',
+    #         u'choice_index': 1,
+    #         u'choice_input': u'6',
+    #         u'floating_label': u'growther_definition',
+    #         u'required_question_labels': [u'question_08'],
+    #         u'choices': [
+    #             {u'content': u'defaultChoice'},
+    #             {u'content': u'increase_purchase', u'default_value': u'5'}
+    #         ],
+    #         u'enabled': True,
+    #         u'label': u'growther_definition'
+    #     }
+    #
+    #     engine = EngineProvider.provide("Question.question_08", self.admin_group, params,
+    #                                     pd.read_csv(self.transactionFilename, sep='\t'),
+    #                                     pd.read_csv(self.customerFilename, sep='\t'))
+    #
+    #     engine.execute()
+    #
+    #     responses = engine.responses
+    #     engine.event_init()
+    #     # print(response.keys())
+    #     # print or compare response with static data
+    #     import json
+    #     with open('data.txt', 'w') as outfile:
+    #         json.dump(responses, outfile)
+    #     # self.assertEquals(response, mock_response)
+
     #
     #     # TODO: test engine.event_init()
     #
