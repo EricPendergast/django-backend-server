@@ -4,8 +4,9 @@ import pandas as pd
 import datetime
 from eledata.verifiers.event import *
 from eledata.models.entity import Entity
-from pprint import pprint
+from bson import objectid
 from project.settings import CONSTANTS
+
 
 class Question07Engine(BaseEngine):
     responses = None
@@ -23,11 +24,12 @@ class Question07Engine(BaseEngine):
     }
 
     def __init__(self, group, params, transaction_data=None, customer_data=None):
-        # TODO: Align transaction_data and customer_data with DB schema
         super(Question07Engine, self).__init__(group, params)
-
-        self.rule = params['choices'][params['choice_index']]['content']
-        self.rule_param = params.get('choice_input') if 'choice_input' in params else params['choices'][params['choice_index']].get('default_value')
+        if params:  # enable empty params for engine checking
+            selected_param = filter(lambda x: x['content'] == 'churner_definition', params)[0]
+            self.rule = selected_param['choices'][int(selected_param['choice_index'])]['content']
+            self.rule_param = selected_param.get('choice_input') if 'choice_input' in selected_param \
+                else selected_param['choices'][int(selected_param['choice_index'])].get('default_value')
         # self.transaction_data = pd.DataFrame(transaction_data)
         # self.customer_data = pd.DataFrame(customer_data)
 
@@ -76,6 +78,7 @@ class Question07Engine(BaseEngine):
         get_ids, merge_data = Question07Engine.get_rules(self.rule)
         target_customers = get_ids(transaction_data, self.rule_param)
 
+        event_id = objectid.ObjectId()
         # Generate response to display different number of months of result
         for num_month_observe in num_month_observe_list:
             # Generate 3 type of responses for each number of months
@@ -88,15 +91,16 @@ class Question07Engine(BaseEngine):
                 # Construct response
                 responses.append(
                     {
+                        "event_id": event_id,
                         "event_category": CONSTANTS.EVENT.CATEGORY.get("INSIGHT"),
                         "event_type": "question_07",    # Customers that stopped buying in the past 6 months
                         "event_value": dict(total_customers_lost=len(observed_target_customers)),
                         "tabs": {
-                            "month": num_month_observe_list,
+                            "month": map(lambda x: str(x), num_month_observe_list),
                             "characteristics": characteristics
                         },
                         "selected_tab": {
-                            "month": num_month_observe,
+                            "month": str(num_month_observe),
                             "characteristics": characteristic
                         },
                         "event_desc": Question07Engine.get_event_desc(detailed_data, characteristic),

@@ -5,6 +5,6 @@ from eledata.core_engine.provider import BaseEngineProvider
 
 class H2OEngineProvider(BaseEngineProvider):
     classes = {
-        'Question01Engine': Question01Engine,
-        'Question02Engine': Question02Engine,
+        'question_01': Question01Engine,
+        'question_02': Question02Engine,
     }

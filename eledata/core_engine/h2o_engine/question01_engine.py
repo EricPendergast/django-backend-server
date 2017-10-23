@@ -7,6 +7,7 @@ from h2o.estimators.random_forest import H2ORandomForestEstimator
 from project.settings import CONSTANTS
 from eledata.verifiers.event import QuestionVerifier
 from eledata.serializers.event import GeneralEventSerializer
+from bson import objectid
 
 
 class Question01Engine(H2OEngine):
@@ -359,6 +360,7 @@ class Question01Engine(H2OEngine):
             return chart
 
         event_dict = dict(
+            event_id=objectid.ObjectId(),
             event_category=CONSTANTS.EVENT.CATEGORY.get('INSIGHT'),
             event_type='question_01',
             event_value=get_event_value(),
