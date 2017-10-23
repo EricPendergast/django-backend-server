@@ -7,6 +7,7 @@ from eledata.models.entity import Entity
 from pprint import pprint
 from project.settings import CONSTANTS
 
+
 class Question08Engine(BaseEngine):
     responses = None
     transaction_data = None
@@ -28,15 +29,16 @@ class Question08Engine(BaseEngine):
 
         self.rule = params['choices'][params['choice_index']]['content']
         self.rule_param = params.get('choice_input') if 'choice_input' in params else params['choices'][params['choice_index']].get('default_value')
-        # self.transaction_data = pd.DataFrame(transaction_data)
-        # self.customer_data = pd.DataFrame(customer_data)
+        self.transaction_data = pd.DataFrame(transaction_data)
+        self.customer_data = pd.DataFrame(customer_data)
+        self.transaction_data['Transaction_Date'] = pd.to_datetime(self.transaction_data['Transaction_Date'])
 
     def execute(self):
-        transaction = Entity.objects(group=self.group, type='transaction').first()[u'data']
-        customer = Entity.objects(group=self.group, type='customer').first()[u'data']
-
-        self.transaction_data = pd.DataFrame(transaction)
-        self.customer_data = pd.DataFrame(customer)
+        # transaction = Entity.objects(group=self.group, type='transaction').first()[u'data']
+        # customer = Entity.objects(group=self.group, type='customer').first()[u'data']
+        #
+        # self.transaction_data = pd.DataFrame(transaction)
+        # self.customer_data = pd.DataFrame(customer)
 
         self.responses = self.get_processed(self.transaction_data, self.customer_data, self.params)
 
@@ -73,7 +75,7 @@ class Question08Engine(BaseEngine):
 
         # Get a list of targeted customers using the user specified rule and param
         get_ids, merge_data = Question08Engine.get_rules(self.rule)
-        target_customers = get_ids(transaction_data, self.rule_param)
+        target_customers = get_ids(transaction_data=transaction_data, rule_param=self.rule_param)
 
         # Generate response to display different number of months of result
         for num_month_observe in num_month_observe_list:
@@ -82,14 +84,19 @@ class Question08Engine(BaseEngine):
                 observed_target_customers = reduce(lambda x, y: x.append(y), target_customers[:num_month_observe])
 
                 # Get detailed records for each customer from merging the transaction and customer records
-                detailed_data = merge_data(transaction_data, customer_data, observed_target_customers)
+                detailed_data = merge_data(
+                    transaction_data=transaction_data,
+                    customer_data=customer_data,
+                    observed_target_customers=observed_target_customers,
+                    num_month_observe=num_month_observe
+                )
 
                 # Construct response
                 responses.append(
                     {
                         "event_category": CONSTANTS.EVENT.CATEGORY.get("INSIGHT"),
-                        "event_type": "question_08",    # Customers that stopped buying in the past 6 months
-                        "event_value": dict(total_customers_lost=len(observed_target_customers)),
+                        "event_type": "question_08",
+                        "event_value": dict(total_customers_increased_sale=len(observed_target_customers)),
                         "tabs": {
                             "month": num_month_observe_list,
                             "characteristics": characteristics
@@ -103,7 +110,7 @@ class Question08Engine(BaseEngine):
                         "analysis_desc": Question08Engine.get_analysis_desc(transaction_data, customer_data),
                         "chart_type": "Bar",
                         "chart": Question08Engine.get_chart(detailed_data, characteristic, num_month_observe, target_customers),
-                        "detailed_data": Question08Engine.transform_detailed_data(detailed_data)    # Transform detailed data from DF to a list of dict
+                        "detailed_data": Question08Engine.transform_detailed_data(detailed_data)  # Transform detailed data from DF to a list of dict
                     }
                 )
 
@@ -132,12 +139,12 @@ class Question08Engine(BaseEngine):
         :return: function ref, used to select target customers
         """
         mapping = {
-            'no_sale': [Question08Engine.get_nosale_customers, Question08Engine.merge_nosale_data]
+            'increase_purchase': [Question08Engine.get_increase_purchase_customers, Question08Engine.merge_increase_purchase_data]
         }
         return mapping.get(rule)
 
     @staticmethod
-    def get_increase_purchase_customers(transaction_data, increase_percentage):
+    def get_increase_purchase_customers(transaction_data, rule_param):
         """
         Return the user id of the customers that have had no sale for the specified number of months for each observed month,
         in a list with each element representing a month
@@ -148,23 +155,28 @@ class Question08Engine(BaseEngine):
         :param num_month_nosale: int, the number of months for which there are no sale
         :return: list of series of int, user id of the customers with no sales, with each series representing a month
         """
+        rule_param = int(rule_param)
+
         results = []
         # Get the user IDs for each month
         for month_observe in range(1, 13):
             transaction_startdate = Question08Engine.get_start_date(month_observe + 6)
             transaction_enddate = Question08Engine.get_start_date(month_observe).replace(day=1)
 
-            before_transaction = transaction_data[transaction_data['Transaction_Date'] < transaction_startdate].groupby(['User_ID'])['Transaction_Quantity'].sum()
-            after_transaction = \
-                transaction_data[transaction_data['Transaction_Date'] < transaction_enddate].groupby(['User_ID'])[
-                    'Transaction_Quantity'].sum()
+            merge_transaction = transaction_data[transaction_data['Transaction_Date'] < transaction_startdate].groupby(['User_ID'])['Transaction_Quantity'].sum().reset_index()
+            merge_transaction = merge_transaction.rename(index=str, columns={'Transaction_Quantity': 'Before_Transaction_Quantity', 'Transaction_Date': 'Last_Transaction_Date'})
+            merge_transaction = merge_transaction.merge(
+                transaction_data[transaction_data['Transaction_Date'] < transaction_enddate].groupby(['User_ID'])['Transaction_Quantity'].sum().reset_index(), on='User_ID')
+            merge_transaction = merge_transaction.rename(index=str, columns={'Transaction_Quantity': 'After_Transaction_Quantity'})
+            merge_transaction['Transaction_Quantity_Increase'] = (merge_transaction['After_Transaction_Quantity'] - merge_transaction['Before_Transaction_Quantity']) * 100 / \
+                                                                 merge_transaction['Before_Transaction_Quantity']
 
-            results.append(before_transaction[(after_transaction - before_transaction) / before_transaction > 0.05].reset_index().loc[:, 'User_ID'].astype(str))
+            results.append(merge_transaction.loc[merge_transaction['Transaction_Quantity_Increase'] >= rule_param, 'User_ID'].astype(str))
 
         return results
 
     @staticmethod
-    def merge_increase_purchase_data(transaction_data, customer_data, observed_target_customers):
+    def merge_increase_purchase_data(transaction_data, customer_data, observed_target_customers, num_month_observe):
         """
         Merge the transaction and customer records for the supplied customer IDs and return a DataFrame with the relevant columns
         :param transaction_data: DataFrame, transaction records
@@ -172,18 +184,19 @@ class Question08Engine(BaseEngine):
         :param observed_target_customers: list of int, customer IDs to return
         :return: DataFrame, merged records
         """
-        total_transaction = \
-            transaction_data[transaction_data['User_ID'].isin(observed_target_customers)].groupby(['User_ID'])[
-                'Transaction_Quantity'].sum().reset_index()
-        total_transaction = total_transaction.merge(
-            transaction_data.groupby(['User_ID'])['Transaction_Date'].max().reset_index(), on='User_ID')
-        total_transaction = total_transaction.rename(index=str, columns={'Transaction_Quantity': 'Total_Quantity',
-                                                                         'Transaction_Date': 'Last_Transaction_Date'})
 
-        target_customers_data = customer_data[customer_data['User_ID'].isin(observed_target_customers)].copy()
+        transaction_startdate = Question08Engine.get_start_date(num_month_observe + 6)
+        transaction_enddate = Question08Engine.get_start_date(num_month_observe).replace(day=1)
 
-        return total_transaction.merge(target_customers_data, left_on='User_ID', right_on='User_ID') \
-            [['User_ID', 'Display_Name', 'Age', 'Gender', 'Country', 'Total_Quantity', 'Last_Transaction_Date']]
+        total_transaction = transaction_data[transaction_data['Transaction_Date'] < transaction_startdate].groupby(['User_ID'])['Transaction_Quantity'].sum().reset_index()
+        total_transaction = total_transaction.rename(index=str, columns={'Transaction_Quantity': 'Before_Transaction_Quantity', 'Transaction_Date': 'Last_Transaction_Date'})
+        total_transaction = total_transaction.merge(transaction_data[transaction_data['Transaction_Date'] < transaction_enddate].groupby(['User_ID'])['Transaction_Quantity'].sum().reset_index(), on='User_ID')
+        total_transaction = total_transaction.rename(index=str, columns={'Transaction_Quantity': 'After_Transaction_Quantity'})
+        total_transaction['Transaction_Quantity_Increase'] = (total_transaction['After_Transaction_Quantity'] - total_transaction['Before_Transaction_Quantity']) * 100 / total_transaction['Before_Transaction_Quantity']
+
+        target_customers_data = customer_data[customer_data['ID'].isin(observed_target_customers)].copy()
+
+        return total_transaction.merge(target_customers_data, left_on='User_ID', right_on='ID')[['User_ID', 'Display_Name', 'Age', 'Gender', 'Country', 'Before_Transaction_Quantity', 'After_Transaction_Quantity', 'Transaction_Quantity_Increase']]
 
     @staticmethod
     def transform_detailed_data(detailed_data):
@@ -223,13 +236,13 @@ class Question08Engine(BaseEngine):
         # Total count
         results = [
             {
-                "key": "total_customers_lost",
+                "key": "total_customers_increased_purchase",
                 "value": stats['Count'].sum()
             }
         ]
         # Count for each group
         for index, row in stats.iterrows():
-            results.append({"key": 'customers_lost', "value": '{0}: {1}'.format(row[characteristic], row['Count'])})
+            results.append({"key": 'total_customers_increased_purchase', "value": '{0}: {1}'.format(row[characteristic], row['Count'])})
 
         return results
 
@@ -244,23 +257,23 @@ class Question08Engine(BaseEngine):
 
         # Age needs to be grouped in bins
         if characteristic == 'Age':
-            stats = detailed_data.groupby(pd.cut(detailed_data[characteristic], Question08Engine.AGE_BINS)).mean()['Total_Quantity'].reset_index()
+            stats = detailed_data.groupby(pd.cut(detailed_data[characteristic], Question08Engine.AGE_BINS)).mean()['Transaction_Quantity_Increase'].reset_index()
             stats[characteristic] = stats[characteristic].astype(str).replace(Question08Engine.AGE_MAPPING)
-            stats['Total_Quantity'] = stats['Total_Quantity'].fillna(value=0).astype(int)
+            stats['Transaction_Quantity_Increase'] = stats['Transaction_Quantity_Increase'].fillna(value=0).astype(int)
         else:
-            stats = detailed_data.groupby(detailed_data[characteristic]).mean()['Total_Quantity'].reset_index()
+            stats = detailed_data.groupby(detailed_data[characteristic]).mean()['Transaction_Quantity_Increase'].reset_index()
 
         # Overall average
         results = [
             {
-                "key": 'average_quantity_per_lost_customers',
-                "value": detailed_data['Total_Quantity'].mean(),
+                "key": 'average_percentage_increase_per_increased_purchase_customer',
+                "value": detailed_data['Transaction_Quantity_Increase'].mean(),
                 "isFullWIDth": True
             }
         ]
         # Average per group
         for index, row in stats.iterrows():
-            results.append({"key": 'average_quantity_per_lost_customers', "value": '{0}: {1}'.format(row[characteristic], row['Total_Quantity'])})
+            results.append({"key": 'average_percentage_increase_per_increased_purchase_customer', "value": '{0}: {1}'.format(row[characteristic], row['Transaction_Quantity_Increase'])})
 
         return results
 
@@ -339,7 +352,7 @@ class Question08Engine(BaseEngine):
             "labels": labels,
             "datasets": datasets,
             "x_label": 'month',
-            "y_label": 'number_lost_customers',
+            "y_label": 'number_increased_purchase_customers',
             "x_stacked": True,
             "y_stacked": True
         }
