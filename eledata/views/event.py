@@ -40,12 +40,13 @@ class EventViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
     def select_event(self, request, pk=None):
         """
         Select single event by event_id with detailed value
+        :param query_params: dict, querying param dictionary
         :param request: object, user request with grouping and credentials
         :param pk: string, event_id
         :return: object, detailed single event
         """
-        response = handler.select_event(event_id=pk, group=request.user.group)
-        print(response)
+        query_params = request.query_params
+        response = handler.select_event(event_id=pk, group=request.user.group, query_params=query_params)
         return Response(response)
 
     # Event is created by Core_Engine but not user request, user can only view and mark action on event status

@@ -6,6 +6,7 @@ from eledata.util import EngineExecutingError
 from multiprocessing import Process
 import time
 from bson import objectid
+from bson.json_util import dumps
 
 
 def get_general_event(group):
@@ -68,8 +69,16 @@ def select_event_list(group, event_category):
     return [x for x in serializer.data]
 
 
-def select_event(event_id, group):
-    event_data = Event.objects(group=group, event_id=objectid.ObjectId(event_id)).first()
+def select_event(event_id, group, query_params):
+    if query_params:
+        event_data = Event.objects(
+            group=group, event_id=objectid.ObjectId(event_id))
+        selected_event_data = filter(lambda x: dumps(x['selected_tab']) == dumps(query_params), event_data)[0]
+        return DetailedEventSerializer(selected_event_data, required=True).data
+    else:
+        event_data = Event.objects(
+            group=group, event_id=objectid.ObjectId(event_id)
+        ).first()
     return DetailedEventSerializer(event_data, required=True).data
 
 
@@ -134,7 +143,6 @@ def start_all_initializing_job(_group):
         try:
             s_job.job_status = CONSTANTS.JOB.STATUS.get("PENDING")
             s_job.save()
-
             s_engine = EngineProvider.provide(s_job.job_engine, group=_group, params=s_job.parameter)
 
             # TODO: Show more detailed engine process by passing s_job to s_engine to update
