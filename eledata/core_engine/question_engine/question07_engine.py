@@ -25,7 +25,7 @@ class Question07Engine(BaseEngine):
     def __init__(self, group, params, transaction_data=None, customer_data=None):
         # TODO: Align transaction_data and customer_data with DB schema
         super(Question07Engine, self).__init__(group, params)
-        # TODO: update to get information from param with correct structure
+
         self.rule = params['choices'][params['choice_index']]['content']
         self.rule_param = params.get('choice_input') if 'choice_input' in params else params['choices'][params['choice_index']].get('default_value')
         # self.transaction_data = pd.DataFrame(transaction_data)
@@ -37,6 +37,7 @@ class Question07Engine(BaseEngine):
 
         self.transaction_data = pd.DataFrame(transaction)
         self.customer_data = pd.DataFrame(customer)
+        self.transaction_data['Transaction_Date'] = pd.to_datetime(self.transaction_data['Transaction_Date'])
 
         self.responses = self.get_processed(self.transaction_data, self.customer_data, self.params)
 
@@ -150,7 +151,6 @@ class Question07Engine(BaseEngine):
         num_month_nosale = int(num_month_nosale)
 
         last_transactions = transaction_data.groupby(['User_ID'])['Transaction_Date'].max().reset_index()
-        last_transactions['Transaction_Date'] = pd.to_datetime(last_transactions['Transaction_Date'])
 
         results = []
         # Get the user IDs for each month
