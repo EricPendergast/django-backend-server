@@ -5,11 +5,12 @@ from eledata.core_engine.provider import EngineProvider
 from eledata.util import EngineExecutingError
 from multiprocessing import Process
 import time
+from bson import objectid
 
 
 def get_general_event(group):
     """
-    Return the first 2 events among each categories
+    Return the events among each categories
     :param group: object, user group mongo object
     :return: dictionary, having merged events
     """
@@ -40,6 +41,36 @@ def get_general_event(group):
             x.get('event_category') == CONSTANTS.EVENT.CATEGORY.get('INSIGHT')
         ]
     }
+
+
+def select_event_list(group, event_category):
+    """
+    Return event list of brief information among single category
+    :param group: object, user group MongoDB object
+    :param event_category: string, user input for category, to be mapped to get constants
+    :return: dictionary, list of events
+    """
+    # Querying from MongoDB. Grouping by sku_id, search_keyword and platform
+    pipeline = [
+        {
+            "$group": {
+                "_id": {
+                    "event_id": "$event_id",
+                },
+                "first": {"$first": "$$ROOT"},
+            }
+        }
+    ]
+    data = map(lambda _x: _x['first'],
+               list(Event.objects(group=group, event_category=CONSTANTS.EVENT.CATEGORY.get(event_category.upper()))
+                    .aggregate(*pipeline)))
+    serializer = GeneralEventSerializer(data, many=True, required=True)
+    return [x for x in serializer.data]
+
+
+def select_event(event_id, group):
+    event_data = Event.objects(group=group, event_id=objectid.ObjectId(event_id)).first()
+    return DetailedEventSerializer(event_data, required=True).data
 
 
 def update_event_status(event, status, verifier):
