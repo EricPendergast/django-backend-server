@@ -1,5 +1,5 @@
 from eledata.core_engine.base_engine import BaseEngine
-from eledata.serializers.event import QuestionSerializer, GeneralEventSerializer
+from eledata.serializers.event import GeneralEventSerializer
 import pandas as pd
 import datetime
 from eledata.verifiers.event import *
@@ -80,12 +80,6 @@ class Question07Engine(BaseEngine):
             # Generate 3 type of responses for each number of months
             for characteristic in characteristics:
                 observed_target_customers = reduce(lambda x, y: x.append(y), target_customers[:num_month_observe])
-                # target_customers_data = customer_data[customer_data['User_ID'].isin(observed_target_customers)].copy()
-
-                # Aggregate transaction records for the targeted customers
-                # total_transaction = transaction_data[transaction_data['User_ID'].isin(observed_target_customers)].groupby(['User_ID'])['Transaction_Quantity'].sum().reset_index()
-                # total_transaction = total_transaction.merge(transaction_data.groupby(['User_ID'])['Transaction_Date'].max().reset_index(), on='User_ID')
-                # total_transaction = total_transaction.rename(index=str, columns={'Transaction_Quantity': 'Total_Quantity', 'Transaction_Date': 'Last_Transaction_Date'})
 
                 # Get detailed records for each customer from merging the transaction and customer records
                 detailed_data = merge_data(transaction_data, customer_data, observed_target_customers)
@@ -184,17 +178,6 @@ class Question07Engine(BaseEngine):
 
         return total_transaction.merge(target_customers_data, left_on='User_ID', right_on='ID') \
             [['User_ID', 'Display_Name', 'Age', 'Gender', 'Country', 'Total_Quantity', 'Last_Transaction_Date']]
-
-    # @staticmethod
-    # def get_detailed_data(total_transaction, target_customers_data):
-    #     """
-    #     Merge the transaction and targeted customers records with only the relevant columns
-    #     :param total_transaction:  DataFrame, transaction records that has been aggregated for Total_Quantity and Last_Transaction_Date per customer
-    #     :param target_customers_data: DataFrame, targeted customer records
-    #     :return: DataFrame: merged records with only the relevant columns
-    #     """
-    #     return total_transaction.merge(target_customers_data, left_on='User_ID', right_on='User_ID') \
-    #         [['User_ID', 'Display_Name', 'Age', 'Gender', 'Country', 'Total_Quantity', 'Last_Transaction_Date']]
 
     @staticmethod
     def transform_detailed_data(detailed_data):
