@@ -90,7 +90,7 @@ class OfflineEngineTest(TestCase):
     #     #                                   )
     #     # j_engine.execute()
     #
-    #     haha_engine = EngineProvider.provide("MonitoringReport.Question37Engine",
+    #     haha_engine = EngineProvider.provide("MonitoringReport.question_37",
     #                                          group=self.admin_group,
     #                                          params=None,
     #                                          keyword_list=["DELL", "HTC"],

@@ -10,7 +10,7 @@ questions = [
             "transaction",
             "customer"
         ],
-        "analysis_engine": "H2O.Question01Engine"
+        "analysis_engine": "H2O.question_01"
     },
     {
         "content": "Which products will be the most popular in the future?",
@@ -35,6 +35,6 @@ questions = [
             "transaction",
             "customer"
         ],
-        "analysis_engine": "H2O.Question01Engine"
+        "analysis_engine": "H2O.question_01"
     }
 ]

@@ -24,11 +24,12 @@ class Question07Engine(BaseEngine):
     }
 
     def __init__(self, group, params, transaction_data=None, customer_data=None):
-        # TODO: Align transaction_data and customer_data with DB schema
         super(Question07Engine, self).__init__(group, params)
-        # TODO: update to get information from param with correct structure
-        self.rule = params['choices'][params['choice_index']]['content']
-        self.rule_param = params.get('choice_input') if 'choice_input' in params else params['choices'][params['choice_index']].get('default_value')
+        if params:  # enable empty params for engine checking
+            selected_param = filter(lambda x: x['content'] == 'churner_definition', params)[0]
+            self.rule = selected_param['choices'][int(selected_param['choice_index'])]['content']
+            self.rule_param = selected_param.get('choice_input') if 'choice_input' in selected_param \
+                else selected_param['choices'][int(selected_param['choice_index'])].get('default_value')
         # self.transaction_data = pd.DataFrame(transaction_data)
         # self.customer_data = pd.DataFrame(customer_data)
 
@@ -94,11 +95,11 @@ class Question07Engine(BaseEngine):
                         "event_type": "question_07",    # Customers that stopped buying in the past 6 months
                         "event_value": dict(total_customers_lost=len(observed_target_customers)),
                         "tabs": {
-                            "month": num_month_observe_list,
+                            "month": map(lambda x: str(x), num_month_observe_list),
                             "characteristics": characteristics
                         },
                         "selected_tab": {
-                            "month": num_month_observe,
+                            "month": str(num_month_observe),
                             "characteristics": characteristic
                         },
                         "event_desc": Question07Engine.get_event_desc(detailed_data, characteristic),
@@ -177,9 +178,9 @@ class Question07Engine(BaseEngine):
         total_transaction = total_transaction.merge(transaction_data.groupby(['User_ID'])['Transaction_Date'].max().reset_index(), on='User_ID')
         total_transaction = total_transaction.rename(index=str, columns={'Transaction_Quantity': 'Total_Quantity', 'Transaction_Date': 'Last_Transaction_Date'})
 
-        target_customers_data = customer_data[customer_data['ID'].isin(observed_target_customers)].copy()
+        target_customers_data = customer_data[customer_data['User_ID'].isin(observed_target_customers)].copy()
 
-        return total_transaction.merge(target_customers_data, left_on='User_ID', right_on='ID') \
+        return total_transaction.merge(target_customers_data, left_on='User_ID', right_on='User_ID') \
             [['User_ID', 'Display_Name', 'Age', 'Gender', 'Country', 'Total_Quantity', 'Last_Transaction_Date']]
 
     @staticmethod
