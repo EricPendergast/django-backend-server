@@ -11,6 +11,8 @@ class Question07Engine(BaseEngine):
     responses = None
     transaction_data = None
     customer_data = None
+    rule = None
+    rule_param = None
     # Constants for age groups
     AGE_BINS = [0, 14, 34, 54, 110]
     AGE_MAPPING = {
@@ -24,7 +26,8 @@ class Question07Engine(BaseEngine):
         # TODO: Align transaction_data and customer_data with DB schema
         super(Question07Engine, self).__init__(group, params)
         # TODO: update to get information from param with correct structure
-        self.params = params = {'duration': 5, 'rule': 'no_sale', 'rule_param': 6}
+        self.rule = params['choices'][params['choice_index']]['content']
+        self.rule_param = params.get('choice_input') if 'choice_input' in params else params['choices'][params['choice_index']].get('default_value')
         # self.transaction_data = pd.DataFrame(transaction_data)
         # self.customer_data = pd.DataFrame(customer_data)
 
@@ -69,8 +72,8 @@ class Question07Engine(BaseEngine):
         responses = []
 
         # Get a list of targeted customers using the user specified rule and param
-        get_ids, merge_data = Question07Engine.get_rules(params['rule'])
-        target_customers = get_ids(transaction_data, customer_data, params['rule_param'])
+        get_ids, merge_data = Question07Engine.get_rules(self.rule)
+        target_customers = get_ids(transaction_data, self.rule_param)
 
         # Generate response to display different number of months of result
         for num_month_observe in num_month_observe_list:
@@ -85,7 +88,7 @@ class Question07Engine(BaseEngine):
                 # total_transaction = total_transaction.rename(index=str, columns={'Transaction_Quantity': 'Total_Quantity', 'Transaction_Date': 'Last_Transaction_Date'})
 
                 # Get detailed records for each customer from merging the transaction and customer records
-                detailed_data = merge_data(transaction_data, customer_data)
+                detailed_data = merge_data(transaction_data, customer_data, observed_target_customers)
 
                 # Construct response
                 responses.append(
@@ -147,9 +150,11 @@ class Question07Engine(BaseEngine):
         e.g. Current month = Oct, num_month_nosale = 5
             The 4th element in the resulting list will be customers lost in June (i.e. customers with no sales in the pass 5 months (Jan - May))
         :param transaction_data: DataFrame, transaction records
-        :param num_month_nosale: int, the number of months for which there are no sale
+        :param num_month_nosale: unicode, the number of months for which there are no sale
         :return: list of series of int, user id of the customers with no sales, with each series representing a month
         """
+        num_month_nosale = int(num_month_nosale)
+
         last_transactions = transaction_data.groupby(['User_ID'])['Transaction_Date'].max().reset_index()
         last_transactions['Transaction_Date'] = pd.to_datetime(last_transactions['Transaction_Date'])
 
@@ -175,9 +180,9 @@ class Question07Engine(BaseEngine):
         total_transaction = total_transaction.merge(transaction_data.groupby(['User_ID'])['Transaction_Date'].max().reset_index(), on='User_ID')
         total_transaction = total_transaction.rename(index=str, columns={'Transaction_Quantity': 'Total_Quantity', 'Transaction_Date': 'Last_Transaction_Date'})
 
-        target_customers_data = customer_data[customer_data['User_ID'].isin(observed_target_customers)].copy()
+        target_customers_data = customer_data[customer_data['ID'].isin(observed_target_customers)].copy()
 
-        return total_transaction.merge(target_customers_data, left_on='User_ID', right_on='User_ID') \
+        return total_transaction.merge(target_customers_data, left_on='User_ID', right_on='ID') \
             [['User_ID', 'Display_Name', 'Age', 'Gender', 'Country', 'Total_Quantity', 'Last_Transaction_Date']]
 
     # @staticmethod
@@ -229,7 +234,7 @@ class Question07Engine(BaseEngine):
         # Total count
         results = [
             {
-                "key": "Total Customers Lost",
+                "key": "total_customer_lost",
                 "value": stats['Count'].sum()
             }
         ]
