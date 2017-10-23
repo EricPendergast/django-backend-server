@@ -234,13 +234,13 @@ class Question07Engine(BaseEngine):
         # Total count
         results = [
             {
-                "key": "total_customer_lost",
+                "key": "total_customers_lost",
                 "value": stats['Count'].sum()
             }
         ]
         # Count for each group
         for index, row in stats.iterrows():
-            results.append({"key": 'Total {0} Customers Lost'.format(row[characteristic]), "value": row['Count']})
+            results.append({"key": 'customers_lost', "value": '{0}: {1}'.format(row[characteristic], row['Count'])})
 
         return results
 
@@ -264,14 +264,14 @@ class Question07Engine(BaseEngine):
         # Overall average
         results = [
             {
-                "key": 'Average Transaction Quantity per Customer Lost',
+                "key": 'average_quantity_per_lost_customers',
                 "value": detailed_data['Total_Quantity'].mean(),
                 "isFullWIDth": True
             }
         ]
         # Average per group
         for index, row in stats.iterrows():
-            results.append({"key": 'Average Transaction Quantity per {0} Customers Lost'.format(row[characteristic]), "value": row['Total_Quantity']})
+            results.append({"key": 'average_quantity_per_lost_customers', "value": '{0}: {1}'.format(row[characteristic], row['Total_Quantity'])})
 
         return results
 
@@ -285,11 +285,11 @@ class Question07Engine(BaseEngine):
         """
         results = [
             {
-                "key": "Involved Dataset (Transaction)",
+                "key": "involved_dataset_transaction",
                 "value": len(transaction_data)
             },
             {
-                "key": "Involved Dataset (Customer)",
+                "key": "involved_dataset_customer",
                 "value": len(customer_data)
             }
         ]
@@ -349,8 +349,8 @@ class Question07Engine(BaseEngine):
         results = {
             "labels": labels,
             "datasets": datasets,
-            "x_label": 'Month',
-            "y_label": 'Number of Improved Customers',
+            "x_label": 'month',
+            "y_label": 'number_lost_customers',
             "x_stacked": True,
             "y_stacked": True
         }
