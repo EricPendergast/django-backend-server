@@ -1,5 +1,5 @@
 from eledata.core_engine.base_engine import BaseEngine
-from eledata.serializers.event import QuestionSerializer, GeneralEventSerializer
+from eledata.serializers.event import GeneralEventSerializer
 import pandas as pd
 import datetime
 from eledata.verifiers.event import *
@@ -12,6 +12,8 @@ class Question07Engine(BaseEngine):
     responses = None
     transaction_data = None
     customer_data = None
+    rule = None
+    rule_param = None
     # Constants for age groups
     AGE_BINS = [0, 14, 34, 54, 110]
     AGE_MAPPING = {
@@ -25,7 +27,8 @@ class Question07Engine(BaseEngine):
         # TODO: Align transaction_data and customer_data with DB schema
         super(Question07Engine, self).__init__(group, params)
         # TODO: update to get information from param with correct structure
-        self.params = params = {'duration': 5, 'rule': 'no_sale', 'rule_param': 6}
+        self.rule = params['choices'][params['choice_index']]['content']
+        self.rule_param = params.get('choice_input') if 'choice_input' in params else params['choices'][params['choice_index']].get('default_value')
         # self.transaction_data = pd.DataFrame(transaction_data)
         # self.customer_data = pd.DataFrame(customer_data)
 
@@ -70,8 +73,8 @@ class Question07Engine(BaseEngine):
         responses = []
 
         # Get a list of targeted customers using the user specified rule and param
-        rule = Question07Engine.get_rule(params['rule'])
-        target_customers = rule(transaction_data, params['rule_param'])
+        get_ids, merge_data = Question07Engine.get_rules(self.rule)
+        target_customers = get_ids(transaction_data, self.rule_param)
 
         event_id = objectid.ObjectId()
         # Generate response to display different number of months of result
@@ -79,15 +82,9 @@ class Question07Engine(BaseEngine):
             # Generate 3 type of responses for each number of months
             for characteristic in characteristics:
                 observed_target_customers = reduce(lambda x, y: x.append(y), target_customers[:num_month_observe])
-                target_customers_data = customer_data[customer_data['User_ID'].isin(observed_target_customers)].copy()
-
-                # Aggregate transaction records for the targeted customers
-                total_transaction = transaction_data[transaction_data['User_ID'].isin(observed_target_customers)].groupby(['User_ID'])['Transaction_Quantity'].sum().reset_index()
-                total_transaction = total_transaction.merge(transaction_data.groupby(['User_ID'])['Transaction_Date'].max().reset_index(), on='User_ID')
-                total_transaction = total_transaction.rename(index=str, columns={'Transaction_Quantity': 'Total_Quantity', 'Transaction_Date': 'Last_Transaction_Date'})
 
                 # Get detailed records for each customer from merging the transaction and customer records
-                detailed_data = Question07Engine.get_detailed_data(total_transaction, target_customers_data)
+                detailed_data = merge_data(transaction_data, customer_data, observed_target_customers)
 
                 # Construct response
                 responses.append(
@@ -131,14 +128,14 @@ class Question07Engine(BaseEngine):
         return start_date
 
     @staticmethod
-    def get_rule(rule):
+    def get_rules(rule):
         """
         Return the corresponding rule to select target customers as a function ref
         :param rule: string, name of the rule, must match one of the keys in the map
         :return: function ref, used to select target customers
         """
         mapping = {
-            'no_sale': Question07Engine.get_nosale_customers,
+            'no_sale': [Question07Engine.get_nosale_customers, Question07Engine.merge_nosale_data]
         }
         return mapping.get(rule)
 
@@ -150,10 +147,11 @@ class Question07Engine(BaseEngine):
         e.g. Current month = Oct, num_month_nosale = 5
             The 4th element in the resulting list will be customers lost in June (i.e. customers with no sales in the pass 5 months (Jan - May))
         :param transaction_data: DataFrame, transaction records
-        :param num_month_observe: int, the number of months of the observed period
-        :param num_month_nosale: int, the number of months for which there are no sale
+        :param num_month_nosale: unicode, the number of months for which there are no sale
         :return: list of series of int, user id of the customers with no sales, with each series representing a month
         """
+        num_month_nosale = int(num_month_nosale)
+
         last_transactions = transaction_data.groupby(['User_ID'])['Transaction_Date'].max().reset_index()
         last_transactions['Transaction_Date'] = pd.to_datetime(last_transactions['Transaction_Date'])
 
@@ -167,14 +165,21 @@ class Question07Engine(BaseEngine):
         return results
 
     @staticmethod
-    def get_detailed_data(total_transaction, target_customers_data):
+    def merge_nosale_data(transaction_data, customer_data, observed_target_customers):
         """
-        Merge the transaction and targeted customers records with only the relevant columns
-        :param total_transaction:  DataFrame, transaction records that has been aggregated for Total_Quantity and Last_Transaction_Date per customer
-        :param target_customers_data: DataFrame, targeted customer records
-        :return: DataFrame: merged records with only the relevant columns
+        Merge the transaction and customer records for the supplied customer IDs and return a DataFrame with the relevant columns
+        :param transaction_data: DataFrame, transaction records
+        :param customer_data: DataFrame, customer records
+        :param observed_target_customers: list of int, customer IDs to return
+        :return: DataFrame, merged records
         """
-        return total_transaction.merge(target_customers_data, left_on='User_ID', right_on='User_ID') \
+        total_transaction = transaction_data[transaction_data['User_ID'].isin(observed_target_customers)].groupby(['User_ID'])['Transaction_Quantity'].sum().reset_index()
+        total_transaction = total_transaction.merge(transaction_data.groupby(['User_ID'])['Transaction_Date'].max().reset_index(), on='User_ID')
+        total_transaction = total_transaction.rename(index=str, columns={'Transaction_Quantity': 'Total_Quantity', 'Transaction_Date': 'Last_Transaction_Date'})
+
+        target_customers_data = customer_data[customer_data['ID'].isin(observed_target_customers)].copy()
+
+        return total_transaction.merge(target_customers_data, left_on='User_ID', right_on='ID') \
             [['User_ID', 'Display_Name', 'Age', 'Gender', 'Country', 'Total_Quantity', 'Last_Transaction_Date']]
 
     @staticmethod
@@ -215,13 +220,13 @@ class Question07Engine(BaseEngine):
         # Total count
         results = [
             {
-                "key": "Total Customers Lost",
+                "key": "total_customers_lost",
                 "value": stats['Count'].sum()
             }
         ]
         # Count for each group
         for index, row in stats.iterrows():
-            results.append({"key": 'Total {0} Customers Lost'.format(row[characteristic]), "value": row['Count']})
+            results.append({"key": 'customers_lost', "value": '{0}: {1}'.format(row[characteristic], row['Count'])})
 
         return results
 
@@ -245,14 +250,14 @@ class Question07Engine(BaseEngine):
         # Overall average
         results = [
             {
-                "key": 'Average Transaction Quantity per Customer Lost',
+                "key": 'average_quantity_per_lost_customers',
                 "value": detailed_data['Total_Quantity'].mean(),
                 "isFullWIDth": True
             }
         ]
         # Average per group
         for index, row in stats.iterrows():
-            results.append({"key": 'Average Transaction Quantity per {0} Customers Lost'.format(row[characteristic]), "value": row['Total_Quantity']})
+            results.append({"key": 'average_quantity_per_lost_customers', "value": '{0}: {1}'.format(row[characteristic], row['Total_Quantity'])})
 
         return results
 
@@ -266,11 +271,11 @@ class Question07Engine(BaseEngine):
         """
         results = [
             {
-                "key": "Involved Dataset (Transaction)",
+                "key": "involved_dataset_transaction",
                 "value": len(transaction_data)
             },
             {
-                "key": "Involved Dataset (Customer)",
+                "key": "involved_dataset_customer",
                 "value": len(customer_data)
             }
         ]
@@ -330,8 +335,8 @@ class Question07Engine(BaseEngine):
         results = {
             "labels": labels,
             "datasets": datasets,
-            "x_label": 'Month',
-            "y_label": 'Number of Improved Customers',
+            "x_label": 'month',
+            "y_label": 'number_lost_customers',
             "x_stacked": True,
             "y_stacked": True
         }

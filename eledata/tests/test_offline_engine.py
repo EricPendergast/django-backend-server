@@ -52,7 +52,19 @@ class OfflineEngineTest(TestCase):
 
     # def test_engine_1(self):
     #     mock_response = {'some_key': 'some_value'}
-    #     params = {'duration': 5, 'rule': 'no_sale', 'rule_param': 6}
+    #     params = {
+    #         u'content': u'churner_definition',
+    #         u'choice_index': 1,
+    #         u'choice_input': u'6',
+    #         u'floating_label': u'churner_definition',
+    #         u'required_question_labels': [u'question_07'],
+    #         u'choices': [
+    #             {u'content': u'defaultChoice'},
+    #             {u'content': u'no_sale', u'default_value': u'3'}
+    #         ],
+    #         u'enabled': True,
+    #         u'label': u'churner_definition'
+    #     }
     #
     #     engine = EngineProvider.provide("Question.question_07", self.admin_group, params,
     #                                     pd.read_csv(self.transactionFilename, sep='\t'),
