@@ -171,21 +171,14 @@ class Question34Engine(BaseEngine):
                             item["relationship"] = "competitor"
                         else:
                             item["relationship"] = ""
-                    data = self.do_data(serializer.data)
-
-                    desc_data = {
-                        "platform": selected_platform,
-                        "order": order,
-                        "data": data
-                    }
-
+                    product_data = serializer.data
                     event = {
                         "event_id": event_id,
                         "event_category": CONSTANTS.EVENT.CATEGORY.get("INSIGHT"),
                         "event_type": "question_34",
-                        "event_value": desc_data["data"]["captured_products"],
-                        "event_desc": len(desc_data["data"]["captured_products"]["mine"]),
-                        "detailed_desc": desc_data["data"]["detailed"],
+                        "event_value": self.get_event_desc(product_data).get["rank_list"],
+                        "event_desc": self.get_event_desc(product_data).get["counts"],
+                        "detailed_desc": self.get_detailed_desc(product_data),
                         "analysis_desc": self.get_analysis_desc(),
                         "chart_type": "Table",  # For the time being
                         "chart": {},
@@ -194,7 +187,7 @@ class Question34Engine(BaseEngine):
                             "platform": self.platform,
                         },
                         "selected_tab": {
-                            "search_order": desc_data["order"],
+                            "search_order": order,
                             "platform": selected_platform,
                         },
                         "detailed_data": serializer.data,
@@ -211,13 +204,101 @@ class Question34Engine(BaseEngine):
                         # TODO: report errors
                         print(serializer.errors)
 
-    def get_event_desc(self):
-        # TODO: move the logic to get event desc here
-        pass
+    def get_event_desc(self,list):
+        mine_list_l = []
+        competitors_list_l = []
+        for item in list:
+            if "relationship" in item and item["relationship"] == "mine":
+                mine_list_l.append(item["search_rank"])
+            if "relationship" in item and item["relationship"] == "competitor":
+                competitors_list_l.append(item["search_rank"])
+        mine_list_l = self.check_list(mine_list_l)
+        competitors_list_l = self.check_list(competitors_list_l)
+        captured_products = {
+            "rank_list":{
+                "mine": mine_list_l,
+                "competitors": competitors_list_l
+            },
+            "counts":{
+                "mine_count": len(mine_list_l),
+                "competitors_count": len(competitors_list_l)
+            }
+        }
+        return captured_products
 
-    def get_detailed_desc(self):
-        # TODO: move the logic to get detailed desc here
-        pass
+
+    def get_detailed_desc(self,list):
+        price_list_l = []
+        comment_list_l = []
+        price_list_mine = []
+        comments_list_mine = []
+        price_list_competitors = []
+        comments_list_copetitors = []
+        for item in list:
+            comment_list_l.append(item["comments_count"])
+            price_list_l.append(item['default_price'])
+            if "relationship" in item and item["relationship"] == "mine":
+                price_list_mine.append(item["default_price"])
+                comments_list_mine.append(item["comments_count"])
+            if "relationship" in item and item["relationship"] == "competitor":
+                price_list_competitors.append(item["default_price"])
+                comments_list_copetitors.append(item["comments_count"])
+        price_list_l = self.check_list(price_list_l)
+        comment_list_l = self.check_list(comment_list_l)
+        price_list_mine = self.check_list(price_list_mine)
+        comments_list_mine = self.check_list(comments_list_mine)
+        price_list_competitors = self.check_list(price_list_competitors)
+        comments_list_copetitors = self.check_list(comments_list_copetitors)
+        comments_status = {
+            "max_comments": max(comment_list_l),
+            "min_comments": min(comment_list_l),
+            "mean_comments": statistics.mean(comment_list_l)
+        }
+        price_status = {
+            "max_price": max(price_list_l),
+            "min_price": min(price_list_l),
+            "mean_price": statistics.mean(price_list_l)
+        }
+        firstpage_status_all = {
+            "price": price_status,
+            "comments": comments_status
+        }
+        price_status_mine = {
+            "max_price": max(price_list_mine),
+            "min_price": min(price_list_mine),
+            "mean_price": statistics.mean(price_list_mine)
+        }
+        comments_status_mine = {
+            "max_comments": max(comments_list_mine),
+            "min_comments": min(comments_list_mine),
+            "mean_comments": statistics.mean(comments_list_mine)
+        }
+        price_status_competitors = {
+            "max_price": max(price_list_competitors),
+            "min_price": min(price_list_competitors),
+            "mean_price": statistics.mean(price_list_competitors)
+        }
+        comments_status_competitors = {
+            "max_comments": max(comments_list_copetitors),
+            "min_comments": min(comments_list_copetitors),
+            "mean_comments": statistics.mean(comments_list_copetitors)
+        }
+
+        firstpage_status_mine = {
+            "price": price_status_mine,
+            "comments": comments_status_mine
+        }
+        firstpage_status_competitors = {
+            "price": price_status_competitors,
+            "comments": comments_status_competitors
+        }
+        detailed = {
+            "firstpage_status_all": firstpage_status_all,
+            "firstpage_status_mine": firstpage_status_mine,
+            "firstpage_status_competitors": firstpage_status_competitors
+        }
+        return detailed
+
 
     @staticmethod
     def get_analysis_desc():
