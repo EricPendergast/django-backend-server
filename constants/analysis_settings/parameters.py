@@ -47,9 +47,6 @@ parameters = [
         # What is your definition of Churners?
         "choices": [
             {
-                "content": "defaultChoice"
-            },
-            {
                 # Users with no sales for __ months
                 "content": 'no_sale',
                 "default_value": '3'
@@ -64,9 +61,6 @@ parameters = [
         # What is your definition of Growthers?
         "choices": [
             {
-                "content": "defaultChoice"
-            },
-            {
                 # In the past 6 months, users with increase of purchase quantity of _ %
                 "content": 'increase_purchase',
                 "default_value": '5'
@@ -80,9 +74,6 @@ parameters = [
     {
         # What is your definition of Repeaters?
         "choices": [
-            {
-                "content": "defaultChoice"
-            },
             {
                 # Users in the past year that purchased more than __ times
                 "content": 'past_year_purchase',

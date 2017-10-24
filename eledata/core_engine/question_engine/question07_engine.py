@@ -39,6 +39,7 @@ class Question07Engine(BaseEngine):
 
         self.transaction_data = pd.DataFrame(transaction)
         self.customer_data = pd.DataFrame(customer)
+        self.transaction_data['Transaction_Date'] = pd.to_datetime(self.transaction_data['Transaction_Date'])
 
         self.responses = self.get_processed(self.transaction_data, self.customer_data, self.params)
 
@@ -154,7 +155,6 @@ class Question07Engine(BaseEngine):
         num_month_nosale = int(num_month_nosale)
 
         last_transactions = transaction_data.groupby(['User_ID'])['Transaction_Date'].max().reset_index()
-        last_transactions['Transaction_Date'] = pd.to_datetime(last_transactions['Transaction_Date'])
 
         results = []
         # Get the user IDs for each month
@@ -178,9 +178,9 @@ class Question07Engine(BaseEngine):
         total_transaction = total_transaction.merge(transaction_data.groupby(['User_ID'])['Transaction_Date'].max().reset_index(), on='User_ID')
         total_transaction = total_transaction.rename(index=str, columns={'Transaction_Quantity': 'Total_Quantity', 'Transaction_Date': 'Last_Transaction_Date'})
 
-        target_customers_data = customer_data[customer_data['User_ID'].isin(observed_target_customers)].copy()
+        target_customers_data = customer_data[customer_data['ID'].isin(observed_target_customers)].copy()
 
-        return total_transaction.merge(target_customers_data, left_on='User_ID', right_on='User_ID') \
+        return total_transaction.merge(target_customers_data, left_on='User_ID', right_on='ID') \
             [['User_ID', 'Display_Name', 'Age', 'Gender', 'Country', 'Total_Quantity', 'Last_Transaction_Date']]
 
     @staticmethod
