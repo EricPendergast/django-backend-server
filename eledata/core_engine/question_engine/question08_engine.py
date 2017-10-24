@@ -101,7 +101,10 @@ class Question08Engine(BaseEngine):
                         "event_id": event_id,
                         "event_category": CONSTANTS.EVENT.CATEGORY.get("INSIGHT"),
                         "event_type": "question_08",
-                        "event_value": dict(total_customers_increased_sale=len(observed_target_customers)),
+                        "event_value": {
+                            "key": 'total_growing_customers',
+                            "value": str(len(observed_target_customers))
+                        },
                         "tabs": {
                             "month": map(lambda x: str(x), num_month_observe_list),
                             "characteristics": characteristics
@@ -241,13 +244,13 @@ class Question08Engine(BaseEngine):
         # Total count
         results = [
             {
-                "key": "total_customers_increased_purchase",
+                "key": "total_growing_customers",
                 "value": stats['Count'].sum()
             }
         ]
         # Count for each group
         for index, row in stats.iterrows():
-            results.append({"key": 'total_customers_increased_purchase', "value": '{0}: {1}'.format(row[characteristic], row['Count'])})
+            results.append({"key": 'total_growing_customers', "value": '{0}: {1}'.format(row[characteristic], row['Count'])})
 
         return results
 
@@ -271,14 +274,14 @@ class Question08Engine(BaseEngine):
         # Overall average
         results = [
             {
-                "key": 'average_percentage_increase_per_increased_purchase_customer',
+                "key": 'average_percentage_increase_per_growing_customers',
                 "value": detailed_data['Transaction_Quantity_Increase'].mean(),
                 "isFullWIDth": True
             }
         ]
         # Average per group
         for index, row in stats.iterrows():
-            results.append({"key": 'average_percentage_increase_per_increased_purchase_customer', "value": '{0}: {1}'.format(row[characteristic], row['Transaction_Quantity_Increase'])})
+            results.append({"key": 'average_percentage_increase_per_growing_customers', "value": '{0}: {1}'.format(row[characteristic], row['Transaction_Quantity_Increase'])})
 
         return results
 
@@ -357,7 +360,7 @@ class Question08Engine(BaseEngine):
             "labels": labels,
             "datasets": datasets,
             "x_label": 'month',
-            "y_label": 'number_increased_purchase_customers',
+            "y_label": 'number_growing_customers',
             "x_stacked": True,
             "y_stacked": True
         }
