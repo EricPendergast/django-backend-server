@@ -236,8 +236,8 @@ class Question37Engine(BaseEngine):
         results = {"data": detailed_data.to_dict(orient='records'), "columns": []}
 
         # Column setting
-        for field in ["platform", "max_final_price", "mean_final_price", "min_final_price", "mean_comments_count",
-                      "product_name", "item_url", "seller_name", "seller_url", "images", ]:
+        for field in ["images", "product_name", "seller_name", "platform", "min_final_price",
+                      "mean_final_price", "max_final_price", "mean_comments_count"]:
             results["columns"].append(
                 {
                     "key": field,
