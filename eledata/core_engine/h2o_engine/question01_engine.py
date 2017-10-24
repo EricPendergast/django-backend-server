@@ -353,11 +353,11 @@ class Question01Engine(H2OEngine):
         def get_chart():
             label_start_date = (date_list[1] - date_list[0]) / 2 + date_list[0]
             label_list = [label_start_date + relativedelta(months=(x * time_shift)) for x in range(len(date_list))]
-
-            actual = {'data': [], 'border': False, 'label': 'actual '}
-            prediction = {'data': [], 'border': True, 'label': 'prediction '}
-            lower = {'data': [], 'border': False, 'label': 'lower '}
-            higher = {'data': [], 'border': False, 'label': 'higher '}
+            label_list = ['{0}-{1}'.format(x.year, x.month) for x in label_list]
+            actual = {'data': [], 'border': False, 'label': 'Actual '}
+            prediction = {'data': [], 'border': True, 'label': 'Prediction '}
+            lower = {'data': [], 'border': False, 'label': 'Lower Quartile (25%)'}
+            higher = {'data': [], 'border': False, 'label': 'Higher Quartile (75%)'}
 
             for x in historical_profile:
                 _shape = x.shape[0]
@@ -373,8 +373,8 @@ class Question01Engine(H2OEngine):
             higher['data'] += [None, ]
             chart = {
                 'labels': label_list,
-                'y_label': 'totalRevenue',
-                'x_label': 'transactionTime',
+                'y_label': 'total_revenue',
+                'x_label': 'transaction_time',
                 'datasets': [actual, prediction, lower, higher],
                 "x_stacked": False,
                 "y_stacked": False

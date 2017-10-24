@@ -94,7 +94,10 @@ class Question07Engine(BaseEngine):
                         "event_id": event_id,
                         "event_category": CONSTANTS.EVENT.CATEGORY.get("INSIGHT"),
                         "event_type": "question_07",    # Customers that stopped buying in the past 6 months
-                        "event_value": dict(total_customers_lost=len(observed_target_customers)),
+                        "event_value": {
+                            "key": "total_customers_lost",
+                            "value": len(observed_target_customers),
+                        },
                         "tabs": {
                             "month": map(lambda x: str(x), num_month_observe_list),
                             "characteristics": characteristics
@@ -178,9 +181,9 @@ class Question07Engine(BaseEngine):
         total_transaction = total_transaction.merge(transaction_data.groupby(['User_ID'])['Transaction_Date'].max().reset_index(), on='User_ID')
         total_transaction = total_transaction.rename(index=str, columns={'Transaction_Quantity': 'Total_Quantity', 'Transaction_Date': 'Last_Transaction_Date'})
 
-        target_customers_data = customer_data[customer_data['ID'].isin(observed_target_customers)].copy()
+        target_customers_data = customer_data[customer_data['User_ID'].isin(observed_target_customers)].copy()
 
-        return total_transaction.merge(target_customers_data, left_on='User_ID', right_on='ID') \
+        return total_transaction.merge(target_customers_data, left_on='User_ID', right_on='User_ID') \
             [['User_ID', 'Display_Name', 'Age', 'Gender', 'Country', 'Total_Quantity', 'Last_Transaction_Date']]
 
     @staticmethod
