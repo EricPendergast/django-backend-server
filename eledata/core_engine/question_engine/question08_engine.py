@@ -4,7 +4,7 @@ import pandas as pd
 import datetime
 from eledata.verifiers.event import *
 from eledata.models.entity import Entity
-from pprint import pprint
+from bson import objectid
 from project.settings import CONSTANTS
 
 
@@ -28,7 +28,7 @@ class Question08Engine(BaseEngine):
         super(Question08Engine, self).__init__(group, params)
 
         if params:  # enable empty params for engine checking
-            selected_param = filter(lambda x: x['content'] == 'churner_definition', params)[0]
+            selected_param = filter(lambda x: x['content'] == 'growthers_definition', params)[0]
             self.rule = selected_param['choices'][int(selected_param['choice_index'])]['content']
             self.rule_param = selected_param.get('choice_input') if 'choice_input' in selected_param \
                 else selected_param['choices'][int(selected_param['choice_index'])].get('default_value')
@@ -80,6 +80,7 @@ class Question08Engine(BaseEngine):
         get_ids, merge_data = Question08Engine.get_rules(self.rule)
         target_customers = get_ids(transaction_data=transaction_data, rule_param=self.rule_param)
 
+        event_id = objectid.ObjectId()
         # Generate response to display different number of months of result
         for num_month_observe in num_month_observe_list:
             # Generate 3 type of responses for each number of months
@@ -97,6 +98,7 @@ class Question08Engine(BaseEngine):
                 # Construct response
                 responses.append(
                     {
+                        "event_id": event_id,
                         "event_category": CONSTANTS.EVENT.CATEGORY.get("INSIGHT"),
                         "event_type": "question_08",
                         "event_value": dict(total_customers_increased_sale=len(observed_target_customers)),
@@ -197,9 +199,9 @@ class Question08Engine(BaseEngine):
         total_transaction = total_transaction.rename(index=str, columns={'Transaction_Quantity': 'After_Transaction_Quantity'})
         total_transaction['Transaction_Quantity_Increase'] = (total_transaction['After_Transaction_Quantity'] - total_transaction['Before_Transaction_Quantity']) * 100 / total_transaction['Before_Transaction_Quantity']
 
-        target_customers_data = customer_data[customer_data['ID'].isin(observed_target_customers)].copy()
+        target_customers_data = customer_data[customer_data['User_ID'].isin(observed_target_customers)].copy()
 
-        return total_transaction.merge(target_customers_data, left_on='User_ID', right_on='ID')[['User_ID', 'Display_Name', 'Age', 'Gender', 'Country', 'Before_Transaction_Quantity', 'After_Transaction_Quantity', 'Transaction_Quantity_Increase']]
+        return total_transaction.merge(target_customers_data, left_on='User_ID', right_on='User_ID')[['User_ID', 'Display_Name', 'Age', 'Gender', 'Country', 'Before_Transaction_Quantity', 'After_Transaction_Quantity', 'Transaction_Quantity_Increase']]
 
     @staticmethod
     def transform_detailed_data(detailed_data):
