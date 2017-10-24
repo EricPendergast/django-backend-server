@@ -16,8 +16,8 @@ class Question37Engine(BaseEngine):
         """
         self.set_our_keyword_list()
         for our_keyword in self.our_keyword_list:
-            # EngineProvider.provide("Monitoring.JD", group=self.group, params=None,
-            #                        keyword=our_keyword, _page_limit=3).execute()
+            EngineProvider.provide("Monitoring.JD", group=self.group, params=None,
+                                   keyword=our_keyword, _page_limit=3).execute()
             EngineProvider.provide("Monitoring.Tao", group=self.group, params=None,
                                    keyword=our_keyword, _page_limit=3).execute()
 

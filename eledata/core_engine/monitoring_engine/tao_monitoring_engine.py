@@ -96,7 +96,6 @@ class TaoMonitoringEngine(MonitoringEngine):
         rank = 0
         for item in items:
             rank = rank + 1
-            pic = item.find('div', {'class': 'pic'})
             '''
             product_name  sku_id item_url
             '''
@@ -105,7 +104,15 @@ class TaoMonitoringEngine(MonitoringEngine):
             sku_id = product_name_item.find('a', {'class': 'J_ClickStat'})['data-nid']
             item_url = 'http:' + product_name_item.find('a', {'class': 'J_ClickStat'})['href']
             img_save_path = self.img_pth
-            img_name = self.save_image(item_url, img_save_path)
+
+            '''
+            thumbnail
+            '''
+            try:
+                img_src = 'http:' + str(item.find('div', {'class': 'pic'}).find('a').find("img")['src'])
+            except KeyError:
+                img_src = 'http:' + str(item.find('div', {'class': 'pic'}).find('a').find("img")['data-ks-lazyload'])
+            # img_name = self.save_image(img_src, img_save_path)
             '''
             seller   include seller_name seller_url  seller_location
             '''
@@ -145,7 +152,7 @@ class TaoMonitoringEngine(MonitoringEngine):
                 'default_price': float(default_price),
                 'final_price': 0,
                 'item_url': item_url,
-                'images': [img_name],
+                'images': [img_src],
                 'sales_count': float(sales_count),
                 'img_pth': self.img_pth,
                 'search_rank': rank,
