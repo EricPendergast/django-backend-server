@@ -66,9 +66,9 @@ parameters = [
                 "default_value": '5'
             }
         ],
-        "label": "growthers_definition",
-        "content": "growthers_definition",
-        "floating_label": "growthers_definition",
+        "label": "growther_definition",
+        "content": "growther_definition",
+        "floating_label": "growther_definition",
         "required_question_labels": ["question_03", "question_08"]
     },
     {
@@ -80,9 +80,9 @@ parameters = [
                 "default_value": '10'
             }
         ],
-        "label": "repeaters_definition",
-        "content": "repeaters_definition",
-        "floating_label": "repeaters_definition",
+        "label": "repeater_definition",
+        "content": "repeater_definition",
+        "floating_label": "repeater_definition",
         "required_question_labels": ["question_04", "question_09"]
     }
 ]
