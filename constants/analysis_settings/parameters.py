@@ -1,23 +1,25 @@
+# -*- coding: utf-8 -*-
 parameters = [
-    {
-        # What is your accepted range of correct prediction
-        "choices": [
-            {
-                "content": "defaultChoice"
-            },
-            {
-                "content": "ratio",
-                "default_value": "0.1"
-            },
-            {
-                "content": "distribution"
-            },
-        ],
-        "label": "allowance",
-        "content": "allowance",
-        "floating_label": "allowance",
-        "required_question_labels": ["question_01", "question_02", "question_03", "question_04", "question_05"]
-    },
+    # Temporary depecreated
+    # {
+    #     # What is your accepted range of correct prediction
+    #     "choices": [
+    #         {
+    #             "content": "defaultChoice"
+    #         },
+    #         {
+    #             "content": "ratio",
+    #             "default_value": "0.1"
+    #         },
+    #         {
+    #             "content": "distribution"
+    #         },
+    #     ],
+    #     "label": "allowance",
+    #     "content": "allowance",
+    #     "floating_label": "allowance",
+    #     "required_question_labels": ["question_01", "question_02", "question_03", "question_04", "question_05"]
+    # },
     {
         # What is your expected prediction window among your predictive questions ?
         "choices": [
@@ -47,9 +49,6 @@ parameters = [
         # What is your definition of Churners?
         "choices": [
             {
-                "content": "defaultChoice"
-            },
-            {
                 # Users with no sales for __ months
                 "content": 'no_sale',
                 "default_value": '3'
@@ -64,34 +63,42 @@ parameters = [
         # What is your definition of Growthers?
         "choices": [
             {
-                "content": "defaultChoice"
-            },
-            {
                 # In the past 6 months, users with increase of purchase quantity of _ %
                 "content": 'increase_purchase',
                 "default_value": '5'
             }
         ],
-        "label": "growthers_definition",
-        "content": "growthers_definition",
-        "floating_label": "growthers_definition",
-        "required_question_labels": ["question_03, question_08"]
+        "label": "growther_definition",
+        "content": "growther_definition",
+        "floating_label": "growther_definition",
+        "required_question_labels": ["question_03", "question_08"]
     },
     {
         # What is your definition of Repeaters?
         "choices": [
-            {
-                "content": "defaultChoice"
-            },
             {
                 # Users in the past year that purchased more than __ times
                 "content": 'past_year_purchase',
                 "default_value": '10'
             }
         ],
-        "label": "repeaters_definition",
-        "content": "repeaters_definition",
-        "floating_label": "repeaters_definition",
-        "required_question_labels": ["question_04, question_09"]
+        "label": "repeater_definition",
+        "content": "repeater_definition",
+        "floating_label": "repeater_definition",
+        "required_question_labels": ["question_04", "question_09"]
+    },
+
+    # FMCG parameters
+    {
+        "choices": [
+            {
+                "content": "our_keyword_list",
+                "default_value": "Samsung Gear VR 5代, Samsung Gear VR 4代",
+            }
+        ],
+        "label": "our_keyword_list",
+        "content": "our_keyword_list",
+        "floating_label": "our_keyword_list",
+        "required_question_labels": ["question_37"]
     }
 ]

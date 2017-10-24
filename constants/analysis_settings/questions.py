@@ -9,7 +9,7 @@ questions = [
         "required_entities": [
             "transaction"
         ],
-        "analysis_engine": "H2O.Question01Engine"
+        "analysis_engine": "H2O.question_01"
     },
     {
         "label": "question_02",
@@ -71,7 +71,20 @@ questions = [
             "transaction",
             "customer"
         ],
-        "analysis_engine": "Question.Question07Engine"
+        "analysis_engine": "Question.question_07"
+    },
+    {
+        "label": "question_08",
+        "content": "question_08",
+        "enabled": False,
+        "selected": False,
+        "orientation": "customer",
+        "type": "descriptive",
+        "required_entities": [
+            "transaction",
+            "customer"
+        ],
+        "analysis_engine": "Question.question_08"
     },
     {
         "label": "question_37",
@@ -81,6 +94,6 @@ questions = [
         "orientation": "pricing",
         "type": "descriptive",
         "required_entities": [],
-        "analysis_engine": "Continuous.Question37Engine"
+        "analysis_engine": "ContinuousMonitoring.question_37"
     }
 ]

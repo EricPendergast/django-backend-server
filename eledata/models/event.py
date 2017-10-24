@@ -25,6 +25,7 @@ class EventDetailData(EmbeddedDocument):
 
 
 class Event(Document):
+    event_id = ObjectIdField()  # We create a manual ObjectIdField for update
     event_category = StringField()
     event_type = StringField()  # We can check if event_type is under event category
     event_value = DictField()  # Update string to key value pair, for i18n purpose mainly
@@ -102,6 +103,16 @@ class Job(Document):
 
     created_at = DateTimeField(default=datetime.datetime.now)
     updated_at = DateTimeField(default=datetime.datetime.now)
+
+    @queryset_manager
+    def objects(self, _queryset):
+        """
+        Reset query object with default order by updated_at
+
+        This may actually also be done by defining a default ordering for
+        the document, but this illustrates the use of manager methods
+        """
+        return _queryset.order_by('-updated_at')
 
     def save(self, *args, **kwargs):
         self.updated_at = datetime.datetime.now()

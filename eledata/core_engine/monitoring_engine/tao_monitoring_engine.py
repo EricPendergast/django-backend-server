@@ -6,13 +6,12 @@ import time
 import re
 from bs4 import BeautifulSoup
 import requests
-from pymongo import MongoClient
+from eledata.serializers.watcher import GeneralWatcherSerializer
 from datetime import datetime
 
 
 class TaoMonitoringEngine(MonitoringEngine):
     # TODO: Auto Updating Proxy Url
-    driver = None
     keyword = None
     url = None
     results = []
@@ -71,12 +70,11 @@ class TaoMonitoringEngine(MonitoringEngine):
         self.url = _url.replace('CHANGEME', _keyword)
         for num in range(0, _page_limit):
             if not _order:
-                # TODO: Handle Ordering
-                self.order_list.append(None)
-                self.url_list.append("https://s.taobao.com/search?" + "q=" + _keyword + "&s=" + str((num + 1) * 44))
+                self.order_list.append('default')
+                self.url_list.append("https://s.taobao.com/search?" + "q=" + _keyword + "&s=" + str(num * 44))
             else:
                 for order in _order:
-                    self.url_list.append("https://s.taobao.com/search?" + "q=" + _keyword + "&s=" + str((num + 1) * 44)
+                    self.url_list.append("https://s.taobao.com/search?" + "q=" + _keyword + "&s=" + str(num * 44)
                                          + self.ORDER_MAPPING.get(order))
                     self.order_list.append(order)
 
@@ -121,7 +119,8 @@ class TaoMonitoringEngine(MonitoringEngine):
             sales_item = item.find("div", class_="row row-1 g-clearfix")
             default_price_item = sales_item.find('div', class_='price g_price g_price-highlight').text.strip()
             default_price = int(re.search(r'\d+', default_price_item).group())
-            sales_count = sales_item.find('div', class_='deal-cnt').text.strip()
+            sales_count_text = sales_item.find('div', class_='deal-cnt').text.strip()
+            sales_count = int(re.search(r'\d+', sales_count_text).group())
             '''
             comment_count
             '''
@@ -143,23 +142,28 @@ class TaoMonitoringEngine(MonitoringEngine):
                 'product_name': product_name,
                 'seller_name': seller_name,
                 'sku_id': sku_id,
-                'default_price': default_price,
-                'final_price': 'No discount now',
+                'default_price': float(default_price),
+                'final_price': 0,
                 'item_url': item_url,
                 'images': [img_name],
-                'sales_count': sales_count,
+                'sales_count': float(sales_count),
                 'img_pth': self.img_pth,
                 'search_rank': rank,
+                'search_order': _current_order,
                 'seller_url': seller_url,
                 'comments_count': comments_count
             }
             product_list.append(the_basic_info)
         return product_list
 
-    def out(self, data):
-        self.driver.quit()
-        print(len(data))
-        conn = MongoClient('localhost', 27017)
-        db = conn.testdb
-        # db.X.remove({})
-        db.VR.insert(data)
+    def out(self, _list):
+        serializer = GeneralWatcherSerializer(data=_list, many=True)
+        if serializer.is_valid():
+            # for _data in serializer.validated_data:
+            _data = serializer.create(serializer.validated_data)
+            for data in _data:
+                data.group = self.group
+                data.save()
+        else:
+            # TODO: report errors
+            print(serializer.errors)

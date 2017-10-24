@@ -8,8 +8,8 @@ from .question34_engine import Question34Engine
 
 class MonitoringReportEngineProvider(BaseEngineProvider):
     classes = {
-        'Question37Engine': Question37Engine,
-        'Question34Engine': Question34Engine
+        'question_37': Question37Engine,
+        'question_34': Question34Engine
         # 'Question08Engine': Question08Engine,
         # 'Question09Engine': Question09Engine
     }

@@ -6,9 +6,9 @@ class GeneralEventSerializer(DocumentSerializer):
     class Meta:
         model = Event
         depth = 2
-        fields = ['event_category', 'event_type', 'event_value', 'event_desc', 'event_status', 'detailed_desc',
-                  'analysis_desc', 'chart_type', 'chart', 'detailed_data', 'created_at', 'updated_at', 'tabs',
-                  'selected_tab']
+        fields = ['event_id', 'event_category', 'event_type', 'event_value', 'event_desc', 'event_status',
+                  'detailed_desc', 'analysis_desc', 'chart_type', 'chart', 'detailed_data', 'created_at', 'updated_at',
+                  'tabs', 'selected_tab']
 
 
 class DetailedEventSerializer(DocumentSerializer):

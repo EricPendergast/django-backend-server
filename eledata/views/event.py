@@ -17,6 +17,7 @@ class EventViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
 
     @list_route(methods=['get'])
     def get_general_event(self, request):
+        # TODO: make it only getting pending events?
         """
         Get all general events
         """
@@ -24,21 +25,31 @@ class EventViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
         return Response(response)
 
     @detail_route(methods=['get'])
-    def select_event(self, request, pk=None):
+    def select_event_list(self, request, pk=None):
+        # TODO: make it only getting pending events?
         """
-        Select event list
+        Select list of all events with single event category.
         @param: event_type
         """
-        event = Event.objects(event_category=CONSTANTS.EVENT.CATEGORY.get(pk.upper()), group=request.user.group)
-        if event is None:
-            return Response()
-        serializer = DetailedEventSerializer(event, many=True, required=True)
-        return Response(serializer.data)
+        response = handler.select_event_list(
+            group=request.user.group, event_category=pk
+        )
+        return Response(response)
 
-    """
-    Event is created by Core_Engine but not user request, user can only view and mark action on event status
-    """
+    @detail_route(methods=['get'])
+    def select_event(self, request, pk=None):
+        """
+        Select single event by event_id with detailed value
+        :param query_params: dict, querying param dictionary
+        :param request: object, user request with grouping and credentials
+        :param pk: string, event_id
+        :return: object, detailed single event
+        """
+        query_params = request.query_params
+        response = handler.select_event(event_id=pk, group=request.user.group, query_params=query_params)
+        return Response(response)
 
+    # Event is created by Core_Engine but not user request, user can only view and mark action on event status
     @list_route(methods=['put'])
     def update_event_status(self, request):
         """
