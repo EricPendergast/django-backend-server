@@ -261,7 +261,7 @@ class Question07Engine(BaseEngine):
         ]
         # Average per group
         for index, row in stats.iterrows():
-            results.append({"key": 'average_quantity_per_lost_customers', "value": '{0}: {1}'.format(row[characteristic], row['Total_Quantity'])})
+            results.append({"key": 'average_quantity_per_lost_customers', "value": '{0}: {1:.2f}'.format(row[characteristic], row['Total_Quantity'])})
 
         return results
 

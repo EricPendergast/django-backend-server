@@ -28,7 +28,7 @@ class Question08Engine(BaseEngine):
         super(Question08Engine, self).__init__(group, params)
 
         if params:  # enable empty params for engine checking
-            selected_param = filter(lambda x: x['content'] == 'growthers_definition', params)[0]
+            selected_param = filter(lambda x: x['content'] == 'growther_definition', params)[0]
             self.rule = selected_param['choices'][int(selected_param['choice_index'])]['content']
             self.rule_param = selected_param.get('choice_input') if 'choice_input' in selected_param \
                 else selected_param['choices'][int(selected_param['choice_index'])].get('default_value')
@@ -281,7 +281,7 @@ class Question08Engine(BaseEngine):
         ]
         # Average per group
         for index, row in stats.iterrows():
-            results.append({"key": 'average_percentage_increase_per_growing_customers', "value": '{0}: {1}'.format(row[characteristic], row['Transaction_Quantity_Increase'])})
+            results.append({"key": 'average_percentage_increase_per_growing_customers', "value": '{0}: {1:.2f}'.format(row[characteristic], row['Transaction_Quantity_Increase'])})
 
         return results
 
