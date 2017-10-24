@@ -10,6 +10,7 @@ import uuid
 
 
 class MonitoringEngine(BaseEngine):
+    driver = None
     keyword = None
     page_limit = 0
     order = None
@@ -104,6 +105,7 @@ class MonitoringEngine(BaseEngine):
             self.out(response)
             if self.limit_current == self.limit_total:
                 break
+        self.driver.close()
 
     def event_init(self):
         """
@@ -174,4 +176,4 @@ class MonitoringEngine(BaseEngine):
         path = _save_path + "/" + _filename + '.jpg'
         with open(path, 'wb') as handler:
             handler.write(img_data)
-        return _save_path
+        return path

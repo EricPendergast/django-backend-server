@@ -94,6 +94,6 @@ questions = [
         "orientation": "pricing",
         "type": "descriptive",
         "required_entities": [],
-        "analysis_engine": "Continuous.question_37"
+        "analysis_engine": "ContinuousMonitoring.question_37"
     }
 ]

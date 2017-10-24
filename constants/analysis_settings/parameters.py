@@ -1,23 +1,25 @@
+# -*- coding: utf-8 -*-
 parameters = [
-    {
-        # What is your accepted range of correct prediction
-        "choices": [
-            {
-                "content": "defaultChoice"
-            },
-            {
-                "content": "ratio",
-                "default_value": "0.1"
-            },
-            {
-                "content": "distribution"
-            },
-        ],
-        "label": "allowance",
-        "content": "allowance",
-        "floating_label": "allowance",
-        "required_question_labels": ["question_01", "question_02", "question_03", "question_04", "question_05"]
-    },
+    # Temporary depecreated
+    # {
+    #     # What is your accepted range of correct prediction
+    #     "choices": [
+    #         {
+    #             "content": "defaultChoice"
+    #         },
+    #         {
+    #             "content": "ratio",
+    #             "default_value": "0.1"
+    #         },
+    #         {
+    #             "content": "distribution"
+    #         },
+    #     ],
+    #     "label": "allowance",
+    #     "content": "allowance",
+    #     "floating_label": "allowance",
+    #     "required_question_labels": ["question_01", "question_02", "question_03", "question_04", "question_05"]
+    # },
     {
         # What is your expected prediction window among your predictive questions ?
         "choices": [
@@ -84,5 +86,19 @@ parameters = [
         "content": "repeaters_definition",
         "floating_label": "repeaters_definition",
         "required_question_labels": ["question_04", "question_09"]
+    },
+
+    # FMCG parameters
+    {
+        "choices": [
+            {
+                "content": "our_keyword_list",
+                "default_value": "Samsung Gear VR 5代, Samsung Gear VR 4代",
+            }
+        ],
+        "label": "our_keyword_list",
+        "content": "our_keyword_list",
+        "floating_label": "our_keyword_list",
+        "required_question_labels": ["question_37"]
     }
 ]
