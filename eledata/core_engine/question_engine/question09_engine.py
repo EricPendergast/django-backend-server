@@ -96,7 +96,7 @@ class Question09Engine(BaseEngine):
                         "event_category": CONSTANTS.EVENT.CATEGORY.get("INSIGHT"),
                         "event_type": "question_09",    # Customers that stopped buying in the past 6 months
                         "event_value": {
-                            "key": 'total_repeat_lost',
+                            "key": 'total_repeat_customers',
                             "value": str(len(observed_target_customers))
                         },
                         "tabs": {
@@ -235,13 +235,13 @@ class Question09Engine(BaseEngine):
         # Total count
         results = [
             {
-                "key": "total_repeat_lost",
+                "key": "total_repeat_customers",
                 "value": stats['Count'].sum()
             }
         ]
         # Count for each group
         for index, row in stats.iterrows():
-            results.append({"key": 'repeat_lost', "value": '{0}: {1}'.format(row[characteristic], row['Count'])})
+            results.append({"key": 'repeat_customers', "value": '{0}: {1}'.format(row[characteristic], row['Count'])})
 
         return results
 
