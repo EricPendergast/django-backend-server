@@ -148,7 +148,7 @@ class Question37Engine(BaseEngine):
     @staticmethod
     def get_event_value(selected_product_data):
         product_count = selected_product_data['count'].sum()
-        return dict(captured_products=product_count)
+        return dict(key="captured_products", value=product_count)
 
     @staticmethod
     def get_event_desc(selected_product_data, lowest_price_seller):
@@ -157,10 +157,22 @@ class Question37Engine(BaseEngine):
         lowest_price_seller_name = lowest_price_seller.iloc[0]['seller_name']
         lowest_price = lowest_price_seller.iloc[0]['min_final_price']
         return [
-            {"product_count": product_count},
-            {"reseller_count": reseller_count},
-            {"lowest_price_seller_name": lowest_price_seller_name},
-            {"lowest_price": lowest_price}
+            {
+                "key": "product_count",
+                "value": product_count
+            },
+            {
+                "key": "reseller_count",
+                "value": reseller_count
+            },
+            {
+                "key": "lowest_price_seller_name",
+                "value": lowest_price_seller_name
+            },
+            {
+                "key": "lowest_price",
+                "value": lowest_price
+            }
         ]
 
     @staticmethod
@@ -175,18 +187,36 @@ class Question37Engine(BaseEngine):
         unpopular_seller_name = unpopular_seller.iloc[0]['seller_name']
         unpopular_comments = unpopular_seller.iloc[0]['min_comments_count']
         return [
-            {"highest_price_seller_name": highest_price_seller_name},
-            {"highest_price": highest_price},
-            {"popular_seller_name": popular_seller_name},
-            {"popular_comments": popular_comments},
-            {"unpopular_seller_name": unpopular_seller_name},
-            {"unpopular_comments": unpopular_comments}
+            {
+                "key": "highest_price_seller_name",
+                "value": highest_price_seller_name
+            },
+            {
+                "key": "highest_price",
+                "value": highest_price
+            },
+            {
+                "key": "popular_seller_name",
+                "value": popular_seller_name
+            },
+            {
+                "key": "popular_comments",
+                "value": popular_comments
+            },
+            {
+                "key": "unpopular_seller_name",
+                "value": unpopular_seller_name
+            },
+            {
+                "key": "unpopular_comments",
+                "value": unpopular_comments
+            }
         ]
 
     @staticmethod
     def get_analysis_desc():
         next_update_time = datetime.datetime.now() + relativedelta(days=1)
-        return [dict(next_update_time=next_update_time.strftime("%Y-%m-%d %H:%M:%S"))]
+        return [dict(key="next_update_time", value=next_update_time.strftime("%Y-%m-%d %H:%M:%S"))]
 
     @staticmethod
     def transform_detailed_data(detailed_data):
