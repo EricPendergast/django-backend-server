@@ -148,11 +148,11 @@ class JDMonitoringEngine(MonitoringEngine):
             try:
                 seller_name = seller_item.find('a').get('title', '')
             except:
-                seller_name = ''
+                seller_name = 'JD'
             try:
                 seller_url = 'http:' + seller_item.find('a').get('href', '')
             except:
-                seller_url = ''
+                seller_url = 'http://www.jd.com'
 
             # Get comment count
             comment_item = li.find('div', class_="p-commit")
