@@ -253,7 +253,7 @@ class Question07Engine(BaseEngine):
             {
                 "key": 'average_quantity_per_lost_customers',
                 "value": detailed_data['Total_Quantity'].mean(),
-                "isFullWIDth": True
+                "isFullWidth": True
             }
         ]
         # Average per group

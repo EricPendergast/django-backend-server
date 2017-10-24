@@ -49,7 +49,8 @@ class Question01Engine(H2OEngine):
 
         return response
 
-    def get_descriptive_attributes(self, user_list, start_date, end_date, total_window_length, supervising_window_length):
+    def get_descriptive_attributes(self, user_list, start_date, end_date, total_window_length,
+                                   supervising_window_length):
         # Prepare Features
         rmf_list = self.get_dynamic_rmf_in_window(user_list=user_list, start_date=start_date, end_date=end_date,
                                                   supervising_window_length=supervising_window_length,
@@ -278,38 +279,41 @@ class Question01Engine(H2OEngine):
         expiry_date = d1
 
         def get_event_value():
-            return dict(predicted_revenue="{:,.2f}".format(prediction_frame['predict_clv'].sum()))
+            return dict(key="predicted_revenue", value="{:,.2f}".format(prediction_frame['predict_clv'].sum()))
 
         def get_event_desc():
             predicted_revenue = prediction_frame['predict_clv'].sum()
             captured_user = prediction_frame.shape[0]
-            # average_predicted_revenue = prediction_frame['predict_clv'].mean()
-            # average_historical_revenue = historical_profile[-1]['monetary_amount'].sum() / prediction_frame.shape[0]
 
             returning_dict = [
-                {'predicted_revenue': "{:,.2f}".format(predicted_revenue)},
-                {'captured_user': "{:,}".format(captured_user)},
-                # {'average_predicted_revenue': average_predicted_revenue},
-                # {'average_historical_revenue': average_historical_revenue},
-                {'expiry_date': str(expiry_date)},
+                {
+                    'key': 'predicted_revenue',
+                    'value': "{:,.2f}".format(predicted_revenue)
+                },
+                {
+                    'key': 'captured_user',
+                    'value': "{:,}".format(captured_user)
+                },
+                {
+                    'key': 'expiry_date',
+                    'value': str(expiry_date)
+                },
             ]
             return returning_dict
 
         def get_detail_desc():
-            # predicted_revenue = prediction_frame['predict_clv'].sum()
-            # captured_user = prediction_frame.shape[0]
             average_predicted_revenue = prediction_frame['predict_clv'].mean()
             average_historical_revenue = historical_profile[-1]['monetary_amount'].sum() / prediction_frame.shape[0]
-            # d1 = datetime.date.today()
-            # d1 + relativedelta(days=(time_shift * 15))
-            # expiry_date = d1
 
             returning_dict = [
-                # {'predicted_revenue': predicted_revenue},
-                # {'captured_user': captured_user},
-                {'average_predicted_revenue': "{:,.2f}".format(average_predicted_revenue)},
-                {'average_historical_revenue': "{:,.2f}".format(average_historical_revenue)},
-                # {'expiry_date': expiry_date},
+                {
+                    'key': 'average_predicted_revenue',
+                    'value': "{:,.2f}".format(average_predicted_revenue)
+                },
+                {
+                    'key': 'average_historical_revenue',
+                    'value': "{:,.2f}".format(average_historical_revenue)
+                },
             ]
             return returning_dict
 
@@ -321,11 +325,29 @@ class Question01Engine(H2OEngine):
             training_transaction_size = sum([x['frequency'].sum() for x in historical_profile[:-1]])
             testing_transaction_size = sum([x['frequency'].sum() for x in historical_profile[:-1]]) * 0.2
 
-            returning_dict = [{'accuracy': "{:,.2f}".format(accuracy)},
-                              {'testing_customer_size': "{:,}".format(training_customer_size)},
-                              {'testing_transaction_size': "{:,}".format(testing_customer_size)},
-                              {'training_customer_size': "{:,}".format(training_transaction_size)},
-                              {'training_transaction_size': "{:,}".format(testing_transaction_size)}]
+            returning_dict = [
+                {
+                    'key': 'accuracy',
+                    'value': "{:,.2f}".format(accuracy),
+                    'isFullWidth': True
+                },
+                {
+                    'key': 'testing_customer_size',
+                    'value': "{:,}".format(training_customer_size)
+                },
+                {
+                    'key': 'testing_transaction_size',
+                    'value': "{:,}".format(testing_customer_size)
+                },
+                {
+                    'key': 'training_customer_size',
+                    'value': "{:,}".format(training_transaction_size)
+                },
+                {
+                    'key': 'training_transaction_size',
+                    'value': "{:,}".format(testing_transaction_size)
+                }
+            ]
             return returning_dict
 
         def get_chart():
