@@ -27,18 +27,21 @@ class Question08Engine(BaseEngine):
         # TODO: Align transaction_data and customer_data with DB schema
         super(Question08Engine, self).__init__(group, params)
 
-        self.rule = params['choices'][params['choice_index']]['content']
-        self.rule_param = params.get('choice_input') if 'choice_input' in params else params['choices'][params['choice_index']].get('default_value')
-        self.transaction_data = pd.DataFrame(transaction_data)
-        self.customer_data = pd.DataFrame(customer_data)
-        self.transaction_data['Transaction_Date'] = pd.to_datetime(self.transaction_data['Transaction_Date'])
+        if params:  # enable empty params for engine checking
+            selected_param = filter(lambda x: x['content'] == 'churner_definition', params)[0]
+            self.rule = selected_param['choices'][int(selected_param['choice_index'])]['content']
+            self.rule_param = selected_param.get('choice_input') if 'choice_input' in selected_param \
+                else selected_param['choices'][int(selected_param['choice_index'])].get('default_value')
+        # self.transaction_data = pd.DataFrame(transaction_data)
+        # self.customer_data = pd.DataFrame(customer_data)
+        # self.transaction_data['Transaction_Date'] = pd.to_datetime(self.transaction_data['Transaction_Date'])
 
     def execute(self):
-        # transaction = Entity.objects(group=self.group, type='transaction').first()[u'data']
-        # customer = Entity.objects(group=self.group, type='customer').first()[u'data']
-        #
-        # self.transaction_data = pd.DataFrame(transaction)
-        # self.customer_data = pd.DataFrame(customer)
+        transaction = Entity.objects(group=self.group, type='transaction').first()[u'data']
+        customer = Entity.objects(group=self.group, type='customer').first()[u'data']
+
+        self.transaction_data = pd.DataFrame(transaction)
+        self.customer_data = pd.DataFrame(customer)
 
         self.responses = self.get_processed(self.transaction_data, self.customer_data, self.params)
 

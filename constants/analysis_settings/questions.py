@@ -74,6 +74,19 @@ questions = [
         "analysis_engine": "Question.question_07"
     },
     {
+        "label": "question_08",
+        "content": "question_08",
+        "enabled": False,
+        "selected": False,
+        "orientation": "customer",
+        "type": "descriptive",
+        "required_entities": [
+            "transaction",
+            "customer"
+        ],
+        "analysis_engine": "Question.question_08"
+    },
+    {
         "label": "question_37",
         "content": "question_37",
         "enabled": True,

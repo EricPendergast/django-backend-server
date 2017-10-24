@@ -75,7 +75,7 @@ parameters = [
         "label": "growthers_definition",
         "content": "growthers_definition",
         "floating_label": "growthers_definition",
-        "required_question_labels": ["question_03, question_08"]
+        "required_question_labels": ["question_03", "question_08"]
     },
     {
         # What is your definition of Repeaters?
@@ -92,6 +92,6 @@ parameters = [
         "label": "repeaters_definition",
         "content": "repeaters_definition",
         "floating_label": "repeaters_definition",
-        "required_question_labels": ["question_04, question_09"]
+        "required_question_labels": ["question_04", "question_09"]
     }
 ]
