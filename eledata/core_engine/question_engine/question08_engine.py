@@ -281,7 +281,7 @@ class Question08Engine(BaseEngine):
         ]
         # Average per group
         for index, row in stats.iterrows():
-            results.append({"key": 'average_percentage_increase_per_growing_customers', "value": '{0}: {1}'.format(row[characteristic], row['Transaction_Quantity_Increase'])})
+            results.append({"key": 'average_percentage_increase_per_growing_customers', "value": '{0}: {1:.2f}'.format(row[characteristic], row['Transaction_Quantity_Increase'])})
 
         return results
 
