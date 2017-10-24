@@ -346,7 +346,7 @@ class Question08Engine(BaseEngine):
 
         # Construct data for the chart
         datasets = []
-        for record in chart_stats:
+        for record in reversed(chart_stats):
             datasets.append(
                 {
                     "label": record[0],
