@@ -98,11 +98,11 @@ class Question08Engine(BaseEngine):
                         "event_type": "question_08",
                         "event_value": dict(total_customers_increased_sale=len(observed_target_customers)),
                         "tabs": {
-                            "month": num_month_observe_list,
+                            "month": map(lambda x: str(x), num_month_observe_list),
                             "characteristics": characteristics
                         },
                         "selected_tab": {
-                            "month": num_month_observe,
+                            "month": str(num_month_observe),
                             "characteristics": characteristic
                         },
                         "event_desc": Question08Engine.get_event_desc(detailed_data, characteristic),
