@@ -41,6 +41,6 @@ class Question37Engine(BaseEngine):
         """
         try:
             our_keyword_list_param = filter(lambda _x: _x.get('label') == "our_keyword_list", self.params)[0]
-            self.our_keyword_list = our_keyword_list_param[u'choice_input'].split(',')
+            self.our_keyword_list = [x.strip() for x in our_keyword_list_param[u'choice_input'].split(',')]
         except (IndexError, ValueError) as e:
             raise EngineExecutingError(e)

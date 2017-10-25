@@ -9,7 +9,7 @@ def get_past_date(generator, start_date, end_date=datetime.date.today()):
 
 generator = Faker('en_US')
 
-num_customers = random.randint(400, 1000)
+num_customers = random.randint(1000, 1200)
 num_transaction = num_customers * random.randint(0, 40)
 
 with open('transaction_records.tsv', 'w') as transaction_file:
@@ -44,7 +44,7 @@ with open('transaction_records.tsv', 'w') as transaction_file:
                 )
             )
 
-            for j in range(random.randint(0, 40)):
+            for j in range(random.randint(0, 50)):
                 transaction_id += 1
                 quantity = random.randint(1, 20)
 

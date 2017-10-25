@@ -69,8 +69,7 @@ class Question37Engine(BaseEngine):
 
         event_id = objectid.ObjectId()
         for keyword in self.search_key:
-            selected_product_data = product_data[product_data['search_keyword'] == keyword].copy()
-
+            selected_product_data = product_data[product_data['search_keyword'] == keyword]
             selected_product_data['images'].apply(lambda x: x[0])
 
             # Compressing df by seller_url in pandas in case
@@ -142,6 +141,7 @@ class Question37Engine(BaseEngine):
             )
 
         serializer = GeneralEventSerializer(data=responses, many=True)
+
         if serializer.is_valid():
             # for _data in serializer.validated_data:
             _data = serializer.create(serializer.validated_data)
@@ -237,7 +237,7 @@ class Question37Engine(BaseEngine):
 
         # Column setting
         for field in ["images", "product_name", "seller_name", "platform", "min_final_price",
-                      "mean_final_price", "max_final_price", "mean_comments_count"]:
+                      "mean_final_price", "max_final_price", "mean_comments_count", "count"]:
             results["columns"].append(
                 {
                     "key": field,
