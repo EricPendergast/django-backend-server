@@ -32,6 +32,7 @@ class Question07Engine(BaseEngine):
                 else selected_param['choices'][int(selected_param['choice_index'])].get('default_value')
         # self.transaction_data = pd.DataFrame(transaction_data)
         # self.customer_data = pd.DataFrame(customer_data)
+        # self.transaction_data['Transaction_Date'] = pd.to_datetime(self.transaction_data['Transaction_Date'])
 
     def execute(self):
         transaction = Entity.objects(group=self.group, type='transaction').first()[u'data']
@@ -39,7 +40,6 @@ class Question07Engine(BaseEngine):
 
         self.transaction_data = pd.DataFrame(transaction)
         self.customer_data = pd.DataFrame(customer)
-        self.transaction_data['Transaction_Date'] = pd.to_datetime(self.transaction_data['Transaction_Date'])
 
         self.responses = self.get_processed(self.transaction_data, self.customer_data, self.params)
 
@@ -162,8 +162,8 @@ class Question07Engine(BaseEngine):
         results = []
         # Get the user IDs for each month
         for month_observe in range(1, 13):
-            transaction_startdate = Question07Engine.get_start_date(month_observe + num_month_nosale)
-            transaction_enddate = Question07Engine.get_start_date(month_observe + num_month_nosale - 1).replace(day=1)
+            transaction_startdate = Question07Engine.get_start_date(month_observe + num_month_nosale + 1)
+            transaction_enddate = Question07Engine.get_start_date(month_observe + num_month_nosale).replace(day=1)
             results.append(last_transactions.loc[
                 (last_transactions['Transaction_Date'] >= transaction_startdate) & (last_transactions['Transaction_Date'] < transaction_enddate), 'User_ID'].astype(str))
         return results
@@ -219,18 +219,19 @@ class Question07Engine(BaseEngine):
             stats[characteristic] = stats[characteristic].astype(str).replace(Question07Engine.AGE_MAPPING)
         else:
             stats = detailed_data.groupby(detailed_data[characteristic]).size().reset_index()
-        stats = stats.rename(columns={0: 'Count'})
+        stats = stats.rename(columns={0: 'Count'}).sort_values(['Count'], ascending=False).reset_index(drop=True)
 
         # Total count
         results = [
             {
                 "key": "total_customers_lost",
-                "value": stats['Count'].sum()
+                "value": stats['Count'].sum(),
+                "isFullWidth": True
             }
         ]
         # Count for each group
         for index, row in stats.iterrows():
-            results.append({"key": 'customers_lost', "value": '{0}: {1}'.format(row[characteristic], row['Count'])})
+            results.append({"key": 'tab', "value": '{0}. {1}: {2}'.format(index+1, row[characteristic], row['Count']), "isFullWidth": True})
 
         return results
 
@@ -250,18 +251,19 @@ class Question07Engine(BaseEngine):
             stats['Total_Quantity'] = stats['Total_Quantity'].fillna(value=0).astype(int)
         else:
             stats = detailed_data.groupby(detailed_data[characteristic]).mean()['Total_Quantity'].reset_index()
+        stats = stats.sort_values(['Total_Quantity'], ascending=False).reset_index(drop=True)
 
         # Overall average
         results = [
             {
                 "key": 'average_quantity_per_lost_customers',
-                "value": detailed_data['Total_Quantity'].mean(),
+                "value": '{0:.2f}'.format(detailed_data['Total_Quantity'].mean()),
                 "isFullWidth": True
             }
         ]
         # Average per group
         for index, row in stats.iterrows():
-            results.append({"key": 'average_quantity_per_lost_customers', "value": '{0}: {1:.2f}'.format(row[characteristic], row['Total_Quantity'])})
+            results.append({"key": 'tab', "value": '{0}. {1}: {2:.2f}'.format(index + 1, row[characteristic], row['Total_Quantity']), "isFullWidth": True})
 
         return results
 
@@ -332,7 +334,7 @@ class Question07Engine(BaseEngine):
             datasets.append(
                 {
                     "label": record[0],
-                    "data": record[1],
+                    "data": reversed(record[1]),
                     "fill": False
                 }
             )
@@ -340,7 +342,7 @@ class Question07Engine(BaseEngine):
         # Construct the chart with the data, labels and other meta fields
         results = {
             "labels": reversed(labels),
-            "datasets": reversed(datasets),
+            "datasets": datasets,
             "x_label": 'month',
             "y_label": 'number_lost_customers',
             "x_stacked": True,
