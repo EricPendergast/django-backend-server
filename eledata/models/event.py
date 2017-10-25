@@ -104,16 +104,6 @@ class Job(Document):
     created_at = DateTimeField(default=datetime.datetime.now)
     updated_at = DateTimeField(default=datetime.datetime.now)
 
-    @queryset_manager
-    def objects(self, _queryset):
-        """
-        Reset query object with default order by updated_at
-
-        This may actually also be done by defining a default ordering for
-        the document, but this illustrates the use of manager methods
-        """
-        return _queryset.order_by('-updated_at')
-
     def save(self, *args, **kwargs):
         self.updated_at = datetime.datetime.now()
 
