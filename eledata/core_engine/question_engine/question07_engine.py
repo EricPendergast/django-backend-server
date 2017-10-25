@@ -219,18 +219,19 @@ class Question07Engine(BaseEngine):
             stats[characteristic] = stats[characteristic].astype(str).replace(Question07Engine.AGE_MAPPING)
         else:
             stats = detailed_data.groupby(detailed_data[characteristic]).size().reset_index()
-        stats = stats.rename(columns={0: 'Count'})
+        stats = stats.rename(columns={0: 'Count'}).sort_values(['Count'], ascending=False).reset_index(drop=True)
 
         # Total count
         results = [
             {
                 "key": "total_customers_lost",
-                "value": stats['Count'].sum()
+                "value": stats['Count'].sum(),
+                "isFullWidth": True
             }
         ]
         # Count for each group
         for index, row in stats.iterrows():
-            results.append({"key": 'customers_lost', "value": '{0}: {1}'.format(row[characteristic], row['Count'])})
+            results.append({"key": 'tab', "value": '{0}. {1}: {2}'.format(index+1, row[characteristic], row['Count'])})
 
         return results
 
@@ -250,18 +251,19 @@ class Question07Engine(BaseEngine):
             stats['Total_Quantity'] = stats['Total_Quantity'].fillna(value=0).astype(int)
         else:
             stats = detailed_data.groupby(detailed_data[characteristic]).mean()['Total_Quantity'].reset_index()
+        stats = stats.sort_values(['Total_Quantity'], ascending=False).reset_index(drop=True)
 
         # Overall average
         results = [
             {
                 "key": 'average_quantity_per_lost_customers',
-                "value": detailed_data['Total_Quantity'].mean(),
+                "value": '{0:.2f}'.format(detailed_data['Total_Quantity'].mean()),
                 "isFullWidth": True
             }
         ]
         # Average per group
         for index, row in stats.iterrows():
-            results.append({"key": 'average_quantity_per_lost_customers', "value": '{0}: {1:.2f}'.format(row[characteristic], row['Total_Quantity'])})
+            results.append({"key": 'tab', "value": '{0}. {1}: {2:.2f}'.format(index + 1, row[characteristic], row['Total_Quantity'])})
 
         return results
 
