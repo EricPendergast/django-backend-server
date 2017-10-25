@@ -36,6 +36,7 @@ class Question09Engine(BaseEngine):
 
         # self.transaction_data = pd.DataFrame(transaction_data)
         # self.customer_data = pd.DataFrame(customer_data)
+        # self.transaction_data['Transaction_Date'] = pd.to_datetime(self.transaction_data['Transaction_Date'])
 
     def execute(self):
         transaction = Entity.objects(group=self.group, type='transaction').first()[u'data']
@@ -43,7 +44,6 @@ class Question09Engine(BaseEngine):
 
         self.transaction_data = pd.DataFrame(transaction)
         self.customer_data = pd.DataFrame(customer)
-        # self.transaction_data['Transaction_Date'] = pd.to_datetime(self.transaction_data['Transaction_Date'])
 
         self.responses = self.get_processed(self.transaction_data, self.customer_data, self.params)
 
@@ -349,7 +349,7 @@ class Question09Engine(BaseEngine):
             datasets.append(
                 {
                     "label": record[0],
-                    "data": record[1],
+                    "data": reversed(record[1]),
                     "fill": False
                 }
             )
@@ -357,7 +357,7 @@ class Question09Engine(BaseEngine):
         # Construct the chart with the data, labels and other meta fields
         results = {
             "labels": reversed(labels),
-            "datasets": reversed(datasets),
+            "datasets": datasets,
             "x_label": 'month',
             "y_label": 'number_repeat_customers',
             "x_stacked": True,
