@@ -26,6 +26,7 @@ class Question37Engine(BaseEngine):
 
         # Querying from MongoDB. Grouping by sku_id, search_keyword and platform
         pipeline = [
+            {"$sort": {"last_crawling_timestamp": -1}},
             {
                 "$group": {
                     "_id": {
@@ -41,14 +42,25 @@ class Question37Engine(BaseEngine):
                     "search_keyword": {"$first": "$search_keyword"},
                     "platform": {"$first": "$platform"},
 
-                    "count": {"$first": 1}
-                    ,
+                    # Showing latest time in table instead
+                    "latest_updated_price": {"$first": "$default_price"},
+                    "latest_comment_count": {"$first": "$comments_count"},
+                    "latest_updated_time": {"$first": "$last_crawling_timestamp"},
+
+                    # TODO: get mini chart from price_trend pushed column
+                    # "price_trend": {
+                    #     "$push": {
+                    #         "price": "$default_price",
+                    #         "time": "$last_crawling_timestamp"
+                    #     }
+                    # },
+                    # We keep summary stats for more detailed presentation
                     "max_final_price": {"$max": "$default_price"},
-                    "mean_final_price": {"$avg": "$default_price"},
+                    # "mean_final_price": {"$avg": "$default_price"},  DEPRECATED
                     "min_final_price": {"$min": "$default_price"},
 
                     "max_comments_count": {"$max": "$comments_count"},
-                    "mean_comments_count": {"$avg": "$comments_count"},
+                    # "mean_comments_count": {"$avg": "$comments_count"},  DEPRECATED
                     "min_comments_count": {"$min": "$comments_count"},
 
                     # Assumed the below fields are identical
@@ -72,29 +84,29 @@ class Question37Engine(BaseEngine):
             selected_product_data = product_data[product_data['search_keyword'] == keyword]
             selected_product_data['images'].apply(lambda x: x[0])
 
-            # Compressing df by seller_url in pandas in case
-            selected_product_data = selected_product_data.groupby('seller_name').agg({
-                "sku_id": ['first'],
-                "search_keyword": ['first'],
-                "platform": ['first'],
-                "count": ['sum'],
-                "max_final_price": ['max'],
-                "mean_final_price": ['mean'],
-                "min_final_price": ['min'],
-
-                "max_comments_count": ['max'],
-                "mean_comments_count": ['mean'],
-                "min_comments_count": ['min'],
-                # Assumed the below fields are identical
-                "product_name": ['first'],
-                "item_url": ['first'],
-                "seller_name": ['first'],
-                "seller_url": ['first'],
-                "images": ['first'],
-            }).reset_index()
-
-            # Flatten hierarchical index in columns
-            selected_product_data.columns = selected_product_data.columns.get_level_values(0)
+            # # Compressing df by seller_url in pandas in case  DEPRECATED
+            # selected_product_data = selected_product_data.groupby('seller_name').agg({
+            #     "sku_id": ['first'],
+            #     "search_keyword": ['first'],
+            #     "platform": ['first'],
+            #     "count": ['sum'],
+            #     "max_final_price": ['max'],
+            #     "mean_final_price": ['mean'],
+            #     "min_final_price": ['min'],
+            #
+            #     "max_comments_count": ['max'],
+            #     "mean_comments_count": ['mean'],
+            #     "min_comments_count": ['min'],
+            #     # Assumed the below fields are identical
+            #     "product_name": ['first'],
+            #     "item_url": ['first'],
+            #     "seller_name": ['first'],
+            #     "seller_url": ['first'],
+            #     "images": ['first'],
+            # }).reset_index()
+            #
+            # # Flatten hierarchical index in columns
+            # selected_product_data.columns = selected_product_data.columns.get_level_values(0)
 
             # Break event saving for empty data frame, no corresponding records in watcher.
             if selected_product_data.empty:
@@ -154,23 +166,18 @@ class Question37Engine(BaseEngine):
 
     @staticmethod
     def get_event_value(selected_product_data):
-        product_count = selected_product_data['count'].sum()
+        product_count = len(selected_product_data)
         return dict(key="captured_products", value=product_count)
 
     @staticmethod
     def get_event_desc(selected_product_data, lowest_price_seller):
-        product_count = selected_product_data['count'].sum()
-        reseller_count = len(selected_product_data)
+        product_count = len(selected_product_data)
         lowest_price_seller_name = lowest_price_seller.iloc[0]['seller_name']
         lowest_price = lowest_price_seller.iloc[0]['min_final_price']
         return [
             {
                 "key": "product_count",
                 "value": product_count
-            },
-            {
-                "key": "reseller_count",
-                "value": reseller_count
             },
             {
                 "key": "lowest_price_seller_name",
@@ -236,8 +243,8 @@ class Question37Engine(BaseEngine):
         results = {"data": detailed_data.to_dict(orient='records'), "columns": []}
 
         # Column setting
-        for field in ["images", "product_name", "seller_name", "platform", "min_final_price",
-                      "mean_final_price", "max_final_price", "mean_comments_count", "count"]:
+        for field in ["images", "product_name", "seller_name", "platform", "latest_updated_price",
+                      "latest_comment_count", "latest_updated_time", "price_trend"]:
             results["columns"].append(
                 {
                     "key": field,
