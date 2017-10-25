@@ -72,7 +72,8 @@ class Question37Engine(BaseEngine):
                 }
             }
         ]
-        self.response = list(Watcher.objects(search_keyword__in=self.search_key, group=self.group).aggregate(*pipeline))
+        self.response = list(Watcher.objects(search_keyword__in=self.search_key, group=self.group, default_price__gt=0
+                                             ).aggregate(*pipeline))
 
     def event_init(self):
         responses = []
@@ -239,8 +240,14 @@ class Question37Engine(BaseEngine):
         :param detailed_data: DataFrame, targeted customer records, should be output from get_detailed_data
         :return: python structure matching the Event model, contains detailed data
         """
-
-        results = {"data": detailed_data.to_dict(orient='records'), "columns": []}
+        present_data = detailed_data.copy()
+        del present_data['min_comments_count']
+        del present_data['sku_id']
+        del present_data['max_comments_count']
+        del present_data['_id']
+        del present_data['min_final_price']
+        del present_data['max_final_price']
+        results = {"data": present_data.to_dict(orient='records'), "columns": []}
 
         # Column setting
         for field in ["images", "product_name", "seller_name", "platform", "latest_updated_price",
