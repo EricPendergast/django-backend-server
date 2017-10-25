@@ -356,26 +356,31 @@ class Question01Engine(H2OEngine):
             label_list = ['{0}-{1}'.format(x.year, x.month) for x in label_list]
             actual = {'data': [], 'border': False, 'label': 'Actual '}
             prediction = {'data': [], 'border': True, 'label': 'Prediction '}
-            lower = {'data': [], 'border': False, 'label': 'Lower Quartile (25%)'}
-            higher = {'data': [], 'border': False, 'label': 'Higher Quartile (75%)'}
+            # DEPRECATED:
+            # lower = {'data': [], 'border': False, 'label': 'Lower Quartile (25%)'}
+            # higher = {'data': [], 'border': False, 'label': 'Higher Quartile (75%)'}
 
             for x in historical_profile:
                 _shape = x.shape[0]
                 actual['data'] += [x['monetary_amount'].sum(), ]
                 prediction['data'] += [None, ]
-                lower['data'] += [x['monetary_amount'].quantile(.25) * _shape, ]
-                higher['data'] += [x['monetary_amount'].quantile(.75) * _shape, ]
+                # DEPRECATED:
+                # lower['data'] += [x['monetary_amount'].quantile(.25) * _shape, ]
+                # higher['data'] += [x['monetary_amount'].quantile(.75) * _shape, ]
 
             prediction['data'][-1] = actual['data'][-1]
             actual['data'] += [None, ]
             prediction['data'] += [prediction_frame['predict_clv'].sum(), ]
-            lower['data'] += [None, ]
-            higher['data'] += [None, ]
+            # DEPRECATED:
+            # lower['data'] += [None, ]
+            # higher['data'] += [None, ]
             chart = {
                 'labels': label_list,
                 'y_label': 'total_revenue',
                 'x_label': 'transaction_time',
-                'datasets': [actual, prediction, lower, higher],
+                # DEPRECATED
+                # 'datasets': [actual, prediction, lower, higher],
+                'datasets': [actual, prediction],
                 "x_stacked": False,
                 "y_stacked": False
             }
