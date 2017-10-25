@@ -9,11 +9,11 @@ def get_past_date(generator, start_date, end_date=datetime.date.today()):
 
 generator = Faker('en_US')
 
-num_customers = random.randint(400, 1000)
+num_customers = random.randint(1500, 2000)
 num_transaction = num_customers * random.randint(0, 40)
 
 with open('transaction_records.tsv', 'w') as transaction_file:
-    transaction_file.write('ID\tUser_ID\tTransaction_Date\tTransaction_Quantity\tTransaction_Value\tProduct_Measure\tProduct_Size\tBrand\tCategory\tChain\n')
+    transaction_file.write('Transaction_ID\tUser_ID\tTransaction_Date\tTransaction_Quantity\tTransaction_Value\tProduct_Measure\tProduct_Size\tBrand\tCategory\tChain\n')
     transaction_id = 0
     measures = ['Box(s)', 'Unit(s)']
     brands = ['Vinda', 'Airwaves', 'Nike', 'Whatever']
@@ -21,7 +21,7 @@ with open('transaction_records.tsv', 'w') as transaction_file:
     countries = ['China', 'Japan', 'Hong Kong', 'Korea']
 
     with open('customer_records.tsv', 'w') as customer_file:
-        customer_file.write('ID\tContact_Number\tContact_Email\tLast_Name\tFirst_Name\tDisplay_Name\tAge\tGender\tAddress\tCreate_Date\tLast_Modified_Date\tCountry\n')
+        customer_file.write('User_ID\tContact_Number\tContact_Email\tLast_Name\tFirst_Name\tDisplay_Name\tAge\tGender\tAddress\tCreate_Date\tLast_Modified_Date\tCountry\n')
         for i in range(1, num_customers+1):
             gender = 'Male' if random.randint(0,2) == 0 else 'Female'
             create_date = get_past_date(generator, start_date=datetime.date.today()-datetime.timedelta(days=730))
