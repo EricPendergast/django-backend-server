@@ -9,6 +9,7 @@ coverage==4.4.1
 Django==1.11.2
 django-rest-framework-mongoengine==3.3.1
 djangorestframework==3.6.3
+docutils==0.14
 Faker==0.8.6
 future==0.16.0
 h2o==3.10.4.8
@@ -28,6 +29,7 @@ PyYAML==3.11
 requests==2.18.4
 selenium==3.5.0
 six==1.10.0
+statistics==1.0.3.5
 tabulate==0.7.7
 tbselenium==0.2.1
 text-unidecode==1.0

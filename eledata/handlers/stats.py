@@ -26,6 +26,17 @@ def get_event_dashboard_summary(pending_events):
     :return: dictionary, Summary of pending events
     """
     # Initialize variables and count for all pending
+    # TODO: Aggregate to group the event_id
+    # pipeline = [
+    #     {
+    #         "$group": {
+    #             "_id": {
+    #                 "event_id": "$event_id",
+    #             },
+    #             "first": {"$first": "$$ROOT"},
+    #         }
+    #     }
+    # ]
     pending_opportunity = 0
     pending_risk = 0
     pending_count = len(pending_events)

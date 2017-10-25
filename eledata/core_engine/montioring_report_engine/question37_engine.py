@@ -56,7 +56,7 @@ class Question37Engine(BaseEngine):
                     "item_url": {"$first": "$item_url"},
                     "seller_name": {"$first": "$seller_name"},
                     "seller_url": {"$first": "$seller_url"},
-                    "image": {"$first": "image"},
+                    "images": {"$first": "$images"},
                 }
             }
         ]
@@ -69,7 +69,8 @@ class Question37Engine(BaseEngine):
 
         event_id = objectid.ObjectId()
         for keyword in self.search_key:
-            selected_product_data = product_data[product_data['search_keyword'] == keyword].copy()
+            selected_product_data = product_data[product_data['search_keyword'] == keyword]
+            selected_product_data['images'].apply(lambda x: x[0])
 
             # Compressing df by seller_url in pandas in case
             selected_product_data = selected_product_data.groupby('seller_name').agg({
@@ -89,11 +90,16 @@ class Question37Engine(BaseEngine):
                 "item_url": ['first'],
                 "seller_name": ['first'],
                 "seller_url": ['first'],
-                "image": ['first'],
+                "images": ['first'],
             }).reset_index()
 
             # Flatten hierarchical index in columns
             selected_product_data.columns = selected_product_data.columns.get_level_values(0)
+
+            # Break event saving for empty data frame, no corresponding records in watcher.
+            if selected_product_data.empty:
+                # TODO: report for mission abort?
+                continue
 
             # Get seller with lowest price
             lowest_price_seller = selected_product_data.loc[
@@ -135,6 +141,7 @@ class Question37Engine(BaseEngine):
             )
 
         serializer = GeneralEventSerializer(data=responses, many=True)
+
         if serializer.is_valid():
             # for _data in serializer.validated_data:
             _data = serializer.create(serializer.validated_data)
@@ -225,14 +232,17 @@ class Question37Engine(BaseEngine):
         :param detailed_data: DataFrame, targeted customer records, should be output from get_detailed_data
         :return: python structure matching the Event model, contains detailed data
         """
+
         results = {"data": detailed_data.to_dict(orient='records'), "columns": []}
-        for field in ["platform", "max_final_price", "mean_final_price", "min_final_price", "mean_comments_count",
-                      "product_name", "item_url", "seller_name", "seller_url", "image", ]:
+
+        # Column setting
+        for field in ["images", "product_name", "seller_name", "platform", "min_final_price",
+                      "mean_final_price", "max_final_price", "mean_comments_count", "count"]:
             results["columns"].append(
                 {
                     "key": field,
                     "sortable": True,
-                    "label": '',
+                    "label": field,
                 }
             )
         return results

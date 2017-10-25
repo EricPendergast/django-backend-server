@@ -72,9 +72,7 @@ class JDMonitoringEngine(MonitoringEngine):
         pass
 
     def set_cookie(self, _key_1, _key_2):
-        """
-        We do nothing here.
-        """
+        self.driver = webdriver.PhantomJS(executable_path=r'constants/phantomjs')  # Prefer phantom over chrome in production
         return
 
     """
@@ -82,7 +80,7 @@ class JDMonitoringEngine(MonitoringEngine):
     """
     def get_soup(self, _url):
         # driver = webdriver.Chrome()
-        driver = webdriver.PhantomJS(executable_path=r'constants/phantomjs')  # Prefer phantom over chrome in production
+        driver = self.driver
         driver.get(_url)
 
         def execute_times(times):
@@ -150,11 +148,11 @@ class JDMonitoringEngine(MonitoringEngine):
             try:
                 seller_name = seller_item.find('a').get('title', '')
             except:
-                seller_name = ''
+                seller_name = 'JD'
             try:
                 seller_url = 'http:' + seller_item.find('a').get('href', '')
             except:
-                seller_url = ''
+                seller_url = 'http://www.jd.com'
 
             # Get comment count
             comment_item = li.find('div', class_="p-commit")
@@ -168,8 +166,8 @@ class JDMonitoringEngine(MonitoringEngine):
             except:
                 img_src = 'http:' + str(img_item.find("a").find("img")['data-lazy-img'])
             save_path = self.img_pth
-            file_name = self.save_image(img_src, save_path)
-            img_list.append(file_name)
+            # file_name = self.save_image(img_src, save_path)
+            img_list.append(img_src)
             _http = "http:" + '//item.jd.com/' + _data_pid + '.html'
 
             # Get product name in list
@@ -190,8 +188,8 @@ class JDMonitoringEngine(MonitoringEngine):
                     except:
                         img_detail_src = 'http:' + str(detail_i.find('img')['data-lazy-img'])
                     detail_save_path = self.img_pth
-                    detail_file_name = self.save_image(img_detail_src, detail_save_path)
-                    img_list.append(detail_file_name)
+                    # detail_file_name = self.save_image(img_detail_src, detail_save_path)
+                    img_list.append(img_detail_src)
 
             # get information from js
             ss = this_soup.find_all('script')[0:1]
@@ -346,7 +344,7 @@ class JDMonitoringEngine(MonitoringEngine):
                 'final_price': 0,
                 'item_url': _http,
                 'comments_count': comment_count,
-                'images': img_list,
+                'images': [img_list[0]],
                 'current_stock': stock_list,
                 'support': support,
                 'advertisements': ad_info_text,

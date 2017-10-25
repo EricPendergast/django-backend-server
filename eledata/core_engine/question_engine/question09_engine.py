@@ -5,7 +5,9 @@ import datetime
 from eledata.verifiers.event import *
 from eledata.models.entity import Entity
 from pprint import pprint
+from bson import objectid
 from project.settings import CONSTANTS
+
 
 class Question09Engine(BaseEngine):
     responses = None
@@ -76,6 +78,8 @@ class Question09Engine(BaseEngine):
         characteristics = ['Age', 'Gender', 'Country']
         responses = []
 
+        event_id = objectid.ObjectId()
+
         # Get a list of targeted customers using the user specified rule and param
         # TODO: merge the 2 functions
         get_ids, merge_data = Question09Engine.get_rules(self.rule)
@@ -93,6 +97,7 @@ class Question09Engine(BaseEngine):
                 # Construct response
                 responses.append(
                     {
+                        "event_id": event_id,
                         "event_category": CONSTANTS.EVENT.CATEGORY.get("INSIGHT"),
                         "event_type": "question_09",    # Customers that stopped buying in the past 6 months
                         "event_value": {
@@ -308,6 +313,8 @@ class Question09Engine(BaseEngine):
         :param target_customers: targeted customer IDs returned by the specified rule
         :return: python structure matching the Event model, contains chart portion of the response
         """
+        # TODO: make this function reusable
+        # TODO: ordering issue still exist
         labels = []
         start_date = datetime.date.today().replace(day=1)
         chart_stats = []
@@ -338,7 +345,7 @@ class Question09Engine(BaseEngine):
 
         # Construct data for the chart
         datasets = []
-        for record in reversed(chart_stats):
+        for record in chart_stats:
             datasets.append(
                 {
                     "label": record[0],
@@ -349,8 +356,8 @@ class Question09Engine(BaseEngine):
 
         # Construct the chart with the data, labels and other meta fields
         results = {
-            "labels": labels,
-            "datasets": datasets,
+            "labels": reversed(labels),
+            "datasets": reversed(datasets),
             "x_label": 'month',
             "y_label": 'number_repeat_customers',
             "x_stacked": True,

@@ -44,7 +44,7 @@ with open('transaction_records.tsv', 'w') as transaction_file:
                 )
             )
 
-            for j in range(random.randint(0, 40)):
+            for j in range(random.randint(0, 50)):
                 transaction_id += 1
                 quantity = random.randint(1, 20)
 

@@ -141,18 +141,23 @@ def create_new_initializing_job(jobs):
 def start_all_initializing_job(_group):
     def sync_engine_executor(s_job):
         try:
+            engine_prefix, engine_postfix = s_job.job_engine.split('.')
+
+            # TODO: handle overwriting and multi instance continuous engine
+            # if engine_prefix == 'ContinuousMonitoring' and THERE_EXIST_IDENTICAL RUNNING ENGINE
+
             s_job.job_status = CONSTANTS.JOB.STATUS.get("PENDING")
             s_job.save()
             s_engine = EngineProvider.provide(s_job.job_engine, group=_group, params=s_job.parameter)
 
-            # TODO: Show more detailed engine process by passing s_job to s_engine to update
+            # TODO: Show more detailed engine process by passing s_job to s_engine to update.
             s_engine.execute()
+
+            # TODO: Event_status should be used in the event_init(); Exception should have been threw in case for KeyError.
             s_engine.event_init()
 
-            # event_status should be used in the event_init() Exception should have been threw in case for KeyError
-            pre_name, post_name = s_job.job_engine.split('.')
-
-            if pre_name is "Continuous":
+            # Use engine prefix in provider to identify
+            if engine_prefix == "ContinuousMonitoring":
                 s_engine.job_status = CONSTANTS.JOB.STATUS.get("CONTINUOUS")
             else:
                 s_engine.job_status = CONSTANTS.JOB.STATUS.get("UPDATED")

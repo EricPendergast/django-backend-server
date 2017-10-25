@@ -316,6 +316,8 @@ class Question08Engine(BaseEngine):
         :param target_customers: targeted customer IDs returned by the specified rule
         :return: python structure matching the Event model, contains chart portion of the response
         """
+        # TODO: make this function reusable
+        # TODO: ordering issue still exist
         labels = []
         start_date = datetime.date.today().replace(day=1)
         chart_stats = []
@@ -346,7 +348,7 @@ class Question08Engine(BaseEngine):
 
         # Construct data for the chart
         datasets = []
-        for record in reversed(chart_stats):
+        for record in chart_stats:
             datasets.append(
                 {
                     "label": record[0],
@@ -357,8 +359,8 @@ class Question08Engine(BaseEngine):
 
         # Construct the chart with the data, labels and other meta fields
         results = {
-            "labels": labels,
-            "datasets": datasets,
+            "labels": reversed(labels),
+            "datasets": reversed(datasets),
             "x_label": 'month',
             "y_label": 'number_growing_customers',
             "x_stacked": True,
