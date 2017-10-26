@@ -1,12 +1,10 @@
 # coding:utf-8
 import re
-import urllib2
 from bs4 import BeautifulSoup
 from selenium import webdriver
 import time
 from .monitoring_engine import MonitoringEngine
 from datetime import datetime
-from pymongo import MongoClient
 from eledata.serializers.watcher import GeneralWatcherSerializer
 
 
@@ -93,11 +91,11 @@ class JDMonitoringEngine(MonitoringEngine):
         _soup = BeautifulSoup(html, 'html.parser')
         return _soup
 
-    @staticmethod
-    def read_url_detail(_http, _format):
-        req_this = urllib2.Request(_http)
-        this_html = urllib2.urlopen(req_this)
-        this_content = this_html.read()
+    def read_url_detail(self, _http, _format):
+        driver = self.driver
+        driver.get(_http)
+        time.sleep(2)
+        this_content = driver.page_source
         this_soup = BeautifulSoup(this_content, _format)
         return this_soup
 
@@ -332,7 +330,6 @@ class JDMonitoringEngine(MonitoringEngine):
             if not _current_order:
                 _current_order = ''
 
-            # TODO create a item that called suit can get suit information
             the_basic_info = {
                 'search_keyword': self.keyword,
                 'last_crawling_timestamp': datetime.now(),
@@ -362,7 +359,6 @@ class JDMonitoringEngine(MonitoringEngine):
     def out(self, _list):
         serializer = GeneralWatcherSerializer(data=_list, many=True)
         if serializer.is_valid():
-            # for _data in serializer.validated_data:
             _data = serializer.create(serializer.validated_data)
             for data in _data:
                 data.group = self.group
