@@ -23,6 +23,7 @@ from eledata.views.analysis_questions import *
 from eledata.views.event import *
 from eledata.views.stats import *
 from eledata.views.users import GroupAdminActions, UserLogin, UserActions
+from eledata.views.job import JobViewSet
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
@@ -33,6 +34,7 @@ router.register(r'users', GroupAdminActions, r'users')
 router.register(r'users', UserLogin, r'users2')
 router.register(r'users', UserActions, r'users2')
 router.register(r'stats', StatsViewSet, r'stats')
+router.register(r'event', JobViewSet, r'job')
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),

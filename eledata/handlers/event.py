@@ -1,4 +1,5 @@
 from eledata.serializers.event import *
+from eledata.serializers.job import *
 from eledata.verifiers.event import *
 from project.settings import CONSTANTS
 from eledata.core_engine.provider import EngineProvider
