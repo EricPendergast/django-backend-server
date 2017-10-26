@@ -22,6 +22,14 @@ class Question07Engine(BaseEngine):
         '(34, 54]': '35 - 54 Years Old',
         '(54, 110]': '> 54 Years Old'
     }
+    NUMBER_MAPPING = {
+        1: 'one',
+        2: 'two',
+        3: 'three',
+        4: 'four',
+        5: 'five',
+        6: 'six'
+    }
 
     def __init__(self, group, params, transaction_data=None, customer_data=None):
         super(Question07Engine, self).__init__(group, params)
@@ -231,7 +239,7 @@ class Question07Engine(BaseEngine):
         ]
         # Count for each group
         for index, row in stats.iterrows():
-            results.append({"key": '{0}'.format(index+1), "value": '{0}: {1}'.format(row[characteristic], row['Count']), "isFullWidth": True})
+            results.append({"key": '{0}'.format(Question07Engine.NUMBER_MAPPING(index+1)), "value": '{0}: {1}'.format(row[characteristic], row['Count']), "isFullWidth": True})
 
         return results
 
@@ -263,7 +271,7 @@ class Question07Engine(BaseEngine):
         ]
         # Average per group
         for index, row in stats.iterrows():
-            results.append({"key": '{0}'.format(index+1), "value": '{0}: {2:.2f}'.format(row[characteristic], row['Total_Quantity']), "isFullWidth": True})
+            results.append({"key": '{0}'.format(Question07Engine.NUMBER_MAPPING(index+1)), "value": '{0}: {2:.2f}'.format(row[characteristic], row['Total_Quantity']), "isFullWidth": True})
 
         return results
 
