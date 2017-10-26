@@ -22,6 +22,6 @@ class JobViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
         Select list of all job.
         @param: event_type
         """
-        data = Job.objects(group=request.user.group)
+        data = Job.objects(group=request.user.group).order_by('-updated_at')
         serializer = DetailedJobSerializer(data, many=True, required=True)
         return Response([x for x in serializer.data])

@@ -6,7 +6,7 @@ class GeneralJobSerializer(DocumentSerializer):
     class Meta:
         model = Job
         depth = 2
-        fields = ['job_engine', 'job_status', 'group', 'parameter']
+        fields = ['job_engine', 'job_status', 'group', 'parameter', 'event_type']
 
 
 class DetailedJobSerializer(DocumentSerializer):

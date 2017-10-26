@@ -165,15 +165,13 @@ def start_all_initializing_job(_group):
             # Use engine prefix in provider to identify
             if engine_prefix == "ContinuousMonitoring":
                 s_job.event_id = _event_id
-                s_job.event_type = event.event_type
                 s_job.job_status = CONSTANTS.JOB.STATUS.get("CONTINUOUS")
             else:
                 s_job.event_id = _event_id
-                s_job.event_type = event.event_type
                 s_job.job_status = CONSTANTS.JOB.STATUS.get("UPDATED")
             s_job.save()
         # Use custom Exception case to wrap all the exception from Engine Execution
-        except EngineExecutingError as _e:
+        except (KeyError, EngineExecutingError) as _e:
             s_job.job_status = CONSTANTS.JOB.STATUS.get("FAILED")
             s_job.job_error_message = _e
             s_job.save()
