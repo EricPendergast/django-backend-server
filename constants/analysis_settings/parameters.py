@@ -99,6 +99,30 @@ parameters = [
         "label": "our_keyword_list",
         "content": "our_keyword_list",
         "floating_label": "our_keyword_list",
-        "required_question_labels": ["question_37"]
+        "required_question_labels": ["question_34", "question_37"]
+    },
+    {
+        "choices": [
+            {
+                "content": "competitor_keyword_list",
+                "default_value": "Samsung Gear VR 5代, Samsung Gear VR 4代",
+            }
+        ],
+        "label": "competitor_keyword_list",
+        "content": "competitor_keyword_list",
+        "floating_label": "competitor_keyword_list",
+        "required_question_labels": ["question_34"]
+    },
+    {
+        "choices": [
+            {
+                "content": "first_page_keyword_list",
+                "default_value": "VR Gear, VR 眼鏡",
+            }
+        ],
+        "label": "first_page_keyword_list",
+        "content": "first_page_keyword_list",
+        "floating_label": "first_page_keyword_list",
+        "required_question_labels": ["question_34"]
     }
 ]
