@@ -23,9 +23,9 @@ class Question08Engine(BaseEngine):
         '(54, 110]': '> 54 Years Old'
     }
 
-    def __init__(self, group, params, transaction_data=None, customer_data=None):
+    def __init__(self, event_id, group, params, transaction_data=None, customer_data=None):
         # TODO: Align transaction_data and customer_data with DB schema
-        super(Question08Engine, self).__init__(group, params)
+        super(Question08Engine, self).__init__(event_id, group, params)
 
         if params:  # enable empty params for engine checking
             selected_param = filter(lambda x: x['content'] == 'growther_definition', params)[0]
@@ -80,7 +80,6 @@ class Question08Engine(BaseEngine):
         get_ids, merge_data = Question08Engine.get_rules(self.rule)
         target_customers = get_ids(transaction_data=transaction_data, rule_param=self.rule_param)
 
-        event_id = objectid.ObjectId()
         # Generate response to display different number of months of result
         for num_month_observe in num_month_observe_list:
             # Generate 3 type of responses for each number of months
@@ -98,7 +97,7 @@ class Question08Engine(BaseEngine):
                 # Construct response
                 responses.append(
                     {
-                        "event_id": event_id,
+                        "event_id": self.event_id,
                         "event_category": CONSTANTS.EVENT.CATEGORY.get("INSIGHT"),
                         "event_type": "question_08",
                         "event_value": {
