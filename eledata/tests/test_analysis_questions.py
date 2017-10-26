@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from django.test import TestCase
 from django.test import Client
 from eledata.models.users import User, Group
-from eledata.models.event import Job
+from eledata.models.job import Job
 from eledata.models.entity import Entity
 
 from eledata.util import from_json

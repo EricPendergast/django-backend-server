@@ -387,7 +387,7 @@ class Question01Engine(H2OEngine):
             return chart
 
         event_dict = dict(
-            event_id=objectid.ObjectId(),
+            event_id=self.event_id,
             event_category=CONSTANTS.EVENT.CATEGORY.get('INSIGHT'),
             event_type='question_01',
             event_value=get_event_value(),

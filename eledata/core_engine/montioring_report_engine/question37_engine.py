@@ -14,8 +14,8 @@ class Question37Engine(BaseEngine):
     result_list = None
     platform = None
 
-    def __init__(self, group, params, keyword_list):
-        super(Question37Engine, self).__init__(group, params)
+    def __init__(self, event_id, group, params, keyword_list):
+        super(Question37Engine, self).__init__(event_id, group, params)
         self.search_key = keyword_list
 
     def execute(self):
@@ -80,7 +80,6 @@ class Question37Engine(BaseEngine):
         raw_product_data = self.response
         product_data = pd.DataFrame(raw_product_data)
 
-        event_id = objectid.ObjectId()
         for keyword in self.search_key:
             selected_product_data = product_data[product_data['search_keyword'] == keyword]
             selected_product_data['images'].apply(lambda x: x[0])
@@ -133,7 +132,7 @@ class Question37Engine(BaseEngine):
             # Construct response
             responses.append(
                 {
-                    "event_id": event_id,
+                    "event_id": self.event_id,
                     "event_category": CONSTANTS.EVENT.CATEGORY.get("INSIGHT"),
                     "event_type": "question_37",
                     "event_value": self.get_event_value(selected_product_data),

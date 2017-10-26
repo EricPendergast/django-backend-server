@@ -1,7 +1,8 @@
 from django.core.management import BaseCommand
 from eledata.models.entity import Entity, Change
 from eledata.models.users import User, Group
-from eledata.models.event import Event, Job
+from eledata.models.event import Event
+from eledata.models.job import Job
 
 # from eledata.models.analysis_questions import AnalysisQuestion, AnalysisParameter
 

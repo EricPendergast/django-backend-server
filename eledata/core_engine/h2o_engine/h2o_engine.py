@@ -11,8 +11,8 @@ import h2o
 class H2OEngine(BaseEngine):
     gc_list = []
 
-    def __init__(self, group, params):
-        super(H2OEngine, self).__init__(group, params)
+    def __init__(self, event_id, group, params):
+        super(H2OEngine, self).__init__(event_id, group, params)
 
     """
     Workflow functions

@@ -26,6 +26,12 @@
 
 - `python manage.py runserver`
 
+### Known Issue
+- Environment setup for phantom-js on linux:
+    ```
+    sudo apt-get install build-essential chrpath libssl-dev libxft-dev libfreetype6-dev libfreetype6 libfontconfig1-dev libfontconfig1 -y
+    ```
+
 ## Libraries
 - [Django](https://github.com/django/django)
 - [MongoEngine](https://github.com/MongoEngine/mongoengine)

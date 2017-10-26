@@ -1,7 +1,7 @@
 from django.core.management import BaseCommand
 from eledata.models.entity import Entity, Change
 from eledata.models.users import User, Group
-from eledata.models.event import Event, Job
+from eledata.models.job import Job
 from project.settings import CONSTANTS
 from eledata.core_engine.provider import EngineProvider
 from eledata.core_engine.h2o_engine.h2o_engine import H2OEngine
