@@ -38,19 +38,23 @@ class TaoMonitoringEngine(MonitoringEngine):
         self._u_key = _key_1
         self._p_key = _key_2
 
+        # PhantomJS with proxy
         # service_args = [
         #     '--proxy=217.156.252.118:8080',
         #     '--proxy-type=https',
         # ]
         # driver = webdriver.PhantomJS(service_args=service_args)
 
-        profile = webdriver.FirefoxProfile()
-        profile.set_preference("network.proxy.type", 1)
-        profile.set_preference("network.proxy.http", "116.48.136.128")
-        profile.set_preference("network.proxy.http_port", 8080)
-        profile.update_preferences()
+        # Firefox with proxy
+        # profile = webdriver.FirefoxProfile()
+        # profile.set_preference("network.proxy.type", 1)
+        # profile.set_preference("network.proxy.http", "116.48.136.128")
+        # profile.set_preference("network.proxy.http_port", 8080)
+        # profile.update_preferences()　
+        # driver = webdriver.Firefox(executable_path=r'constants/geckodriver', firefox_profile=profile)
 
-        driver = webdriver.Firefox(executable_path=r'constants/geckodriver', firefox_profile=profile)
+        # Plain PhantomJS
+        driver = webdriver.PhantomJS()
         driver.get("https://login.taobao.com/member/login.jhtml")
         time.sleep(2)
         # 用户名 密码
