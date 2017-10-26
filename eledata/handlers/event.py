@@ -125,7 +125,7 @@ def create_new_initializing_job(jobs):
         # Assert all engine is valid in this stage
         assert EngineProvider.provide(job.get('job_engine'), None, None, None)
 
-        serializers = DetailedJobSerializer(data=job)
+        serializers = GeneralJobSerializer(data=job)
 
         assert serializers.is_valid()
 
