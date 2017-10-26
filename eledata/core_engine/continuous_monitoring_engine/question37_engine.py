@@ -6,8 +6,8 @@ from eledata.util import EngineExecutingError
 class Question37Engine(BaseEngine):
     our_keyword_list = []
 
-    def __init__(self, group, params):
-        super(Question37Engine, self).__init__(group, params)
+    def __init__(self, event_id, group, params):
+        super(Question37Engine, self).__init__(event_id, group, params)
 
     def execute(self):
         """
@@ -16,9 +16,9 @@ class Question37Engine(BaseEngine):
         """
         self.set_our_keyword_list()
         for our_keyword in self.our_keyword_list:
-            EngineProvider.provide("Monitoring.JD", group=self.group, params=None,
+            EngineProvider.provide("Monitoring.JD", event_id=self.event_id, group=self.group, params=None,
                                    keyword=our_keyword, _page_limit=3).execute()
-            EngineProvider.provide("Monitoring.Tao", group=self.group, params=None,
+            EngineProvider.provide("Monitoring.Tao", event_id=self.event_id, group=self.group, params=None,
                                    keyword=our_keyword, _page_limit=3).execute()
 
     def event_init(self):
@@ -27,6 +27,7 @@ class Question37Engine(BaseEngine):
         :return:
         """
         report_engine = EngineProvider.provide("MonitoringReport.question_37",
+                                               event_id=self.event_id,
                                                group=self.group,
                                                params=None,
                                                keyword_list=self.our_keyword_list)

@@ -26,8 +26,8 @@ class Question34Engine(BaseEngine):
     competitors_sku_list = None
     platform = None
 
-    def __init__(self, group, params, mine, competitors, category):
-        super(Question34Engine, self).__init__(group, params)
+    def __init__(self, event_id, group, params, mine, competitors, category):
+        super(Question34Engine, self).__init__(event_id, group, params)
         self.mine = mine
         self.competitors = competitors
         self.category = category
@@ -155,7 +155,6 @@ class Question34Engine(BaseEngine):
         return desc_order_platform
 
     def event_init(self):
-        event_id = objectid.ObjectId()
         for selected_platform in self.platform:
             _order_list = self.get_orderlist(selected_platform)
             for order in _order_list:
@@ -173,7 +172,7 @@ class Question34Engine(BaseEngine):
                             item["relationship"] = ""
                     product_data = serializer.data
                     event = {
-                        "event_id": event_id,
+                        "event_id": self.event_id,
                         "event_category": CONSTANTS.EVENT.CATEGORY.get("INSIGHT"),
                         "event_type": "question_34",
                         "event_value": self.get_event_desc(product_data).get["rank_list"],

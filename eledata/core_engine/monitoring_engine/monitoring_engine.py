@@ -26,13 +26,13 @@ class MonitoringEngine(BaseEngine):
     """
     Environment Setting Functions
     """
-    def __init__(self, group, params, keyword=None, location=None, _u_key='CHANGE_ME', _p_key='CHANGE_ME',
+    def __init__(self, event_id, group, params, keyword=None, location=None, _u_key='CHANGE_ME', _p_key='CHANGE_ME',
                  _page_limit=None, order=None):
         # TODO: get keywords, locations from params
         # TODO: get page, order from params??
         # if not keyword:
         #     keyword = get_keyword_from_group_param
-        super(MonitoringEngine, self).__init__(group, params)
+        super(MonitoringEngine, self).__init__(event_id, group, params)
         self.keyword = keyword
         self.page_limit = _page_limit
         self.set_location(location)

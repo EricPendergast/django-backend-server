@@ -20,7 +20,8 @@ class BaseEngine(object):
     response = None
     params = None
 
-    def __init__(self, group, params):
+    def __init__(self, event_id, group, params):
+        self.event_id = event_id
         self.group = group
         self.params = params
 

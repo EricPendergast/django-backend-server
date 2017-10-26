@@ -30,8 +30,8 @@ class Question36Engine(BaseEngine):
     competitors_keylist = []
     excute_results = []
 
-    def __init__(self, group, params, mine_keylist):
-        super(Question36Engine, self).__init__(group, params)
+    def __init__(self, event_id, group, params, mine_keylist):
+        super(Question36Engine, self).__init__(event_id, group, params)
         self.mine_keylist = mine_keylist
         for item in self.dic:
             if item["mine"] in mine_keylist:

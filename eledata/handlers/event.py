@@ -123,7 +123,7 @@ def create_new_initializing_job(jobs):
     _job = []
     for job in jobs:
         # Assert all engine is valid in this stage
-        assert EngineProvider.provide(job.get('job_engine'), None, None)
+        assert EngineProvider.provide(job.get('job_engine'), None, None, None)
 
         serializers = DetailedJobSerializer(data=job)
 
@@ -144,12 +144,15 @@ def start_all_initializing_job(_group):
         try:
             engine_prefix, engine_postfix = s_job.job_engine.split('.')
 
+            _event_id = objectid.ObjectId()
+
             # TODO: handle overwriting and multi instance continuous engine
             # if engine_prefix == 'ContinuousMonitoring' and THERE_EXIST_IDENTICAL RUNNING ENGINE
 
             s_job.job_status = CONSTANTS.JOB.STATUS.get("PENDING")
             s_job.save()
-            s_engine = EngineProvider.provide(s_job.job_engine, group=_group, params=s_job.parameter)
+            s_engine = EngineProvider.provide(s_job.job_engine, event_id=_event_id,
+                                              group=_group, params=s_job.parameter)
 
             # TODO: Show more detailed engine process by passing s_job to s_engine to update.
             s_engine.execute()
@@ -157,12 +160,18 @@ def start_all_initializing_job(_group):
             # TODO: Event_status should be used in the event_init(); Exception should have been threw in case for KeyError.
             s_engine.event_init()
 
+            event = Event.objects(event_id=_event_id).first()
+
             # Use engine prefix in provider to identify
             if engine_prefix == "ContinuousMonitoring":
-                s_engine.job_status = CONSTANTS.JOB.STATUS.get("CONTINUOUS")
+                s_job.event_id = _event_id
+                s_job.event_type = event.event_type
+                s_job.job_status = CONSTANTS.JOB.STATUS.get("CONTINUOUS")
             else:
-                s_engine.job_status = CONSTANTS.JOB.STATUS.get("UPDATED")
-
+                s_job.event_id = _event_id
+                s_job.event_type = event.event_type
+                s_job.job_status = CONSTANTS.JOB.STATUS.get("UPDATED")
+            s_job.save()
         # Use custom Exception case to wrap all the exception from Engine Execution
         except EngineExecutingError as _e:
             s_job.job_status = CONSTANTS.JOB.STATUS.get("FAILED")

@@ -129,230 +129,233 @@ class JDMonitoringEngine(MonitoringEngine):
         rank = 0
 
         for li in lis:
-            rank = rank + 1
-            stock_list = []
-            img_list = []
-
-            # Get product sku_id
-            _data_pid = li.get("data-sku")
-
-            # Get final price in the list
-            price_item = li.find('div', class_="p-price")
-            final_price = price_item.strong.i.string
-
-            # Get seller name
-            seller_item = li.find('div', class_="p-shop")
-            # TODO: we can enhance it if have time
             try:
-                seller_name = seller_item.find('a').get('title', '')
-            except:
-                seller_name = 'JD'
-            try:
-                seller_url = 'http:' + seller_item.find('a').get('href', '')
-            except:
-                seller_url = 'http://www.jd.com'
+                rank = rank + 1
+                stock_list = []
+                img_list = []
 
-            # Get comment count
-            comment_item = li.find('div', class_="p-commit")
-            _comment_count = comment_item.strong.a.string
-            comment_count = self.comment_quantity_change(_comment_count)
+                # Get product sku_id
+                _data_pid = li.get("data-sku")
 
-            # Get and save img in list
-            img_item = li.find('div', class_="p-img")
-            try:
-                img_src = 'http:' + str(img_item.find("a").find("img")['src'])
-            except:
-                img_src = 'http:' + str(img_item.find("a").find("img")['data-lazy-img'])
-            save_path = self.img_pth
-            # file_name = self.save_image(img_src, save_path)
-            img_list.append(img_src)
-            _http = "http:" + '//item.jd.com/' + _data_pid + '.html'
+                # Get final price in the list
+                price_item = li.find('div', class_="p-price")
+                final_price = price_item.strong.i.string
 
-            # Get product name in list
-            name_item = li.find('div', class_="p-name")
-            product_name = name_item.find('a').find('em').text
+                # Get seller name
+                seller_item = li.find('div', class_="p-shop")
+                # TODO: we can enhance it if have time
+                try:
+                    seller_name = seller_item.find('a').get('title', '')
+                except:
+                    seller_name = 'JD'
+                try:
+                    seller_url = 'http:' + seller_item.find('a').get('href', '')
+                except:
+                    seller_url = 'http://www.jd.com'
 
-            # Get details form this line
-            this_soup = self.read_url_detail(_http, 'html.parser')
+                # Get comment count
+                comment_item = li.find('div', class_="p-commit")
+                _comment_count = comment_item.strong.a.string
+                comment_count = self.comment_quantity_change(_comment_count)
 
-            # Save and save detail images to file
-            detail_imgs = this_soup.find("ul", class_='lh')
+                # Get and save img in list
+                img_item = li.find('div', class_="p-img")
+                try:
+                    img_src = 'http:' + str(img_item.find("a").find("img")['src'])
+                except:
+                    img_src = 'http:' + str(img_item.find("a").find("img")['data-lazy-img'])
+                save_path = self.img_pth
+                # file_name = self.save_image(img_src, save_path)
+                img_list.append(img_src)
+                _http = "http:" + '//item.jd.com/' + _data_pid + '.html'
 
-            if detail_imgs:
-                detail_img = detail_imgs.find_all('li')
-                for detail_i in detail_img:
-                    try:
-                        img_detail_src = 'http:' + str(detail_i.find('img')['src'])
-                    except:
-                        img_detail_src = 'http:' + str(detail_i.find('img')['data-lazy-img'])
-                    detail_save_path = self.img_pth
-                    # detail_file_name = self.save_image(img_detail_src, detail_save_path)
-                    img_list.append(img_detail_src)
+                # Get product name in list
+                name_item = li.find('div', class_="p-name")
+                product_name = name_item.find('a').find('em').text
 
-            # get information from js
-            ss = this_soup.find_all('script')[0:1]
-            strss = str(ss)
-            m = re.search(r"(?s)var\s+pageConfig\s*=\s*(\{.*?\});", strss)
-            jsonstr = m.group(1)
-            # cat
-            _a = re.search(r"cat: ([\[\d,\]]+),", jsonstr)
-            _astr = _a.group(1)[1:-1]
-            # venderid
-            _ven = re.search(r"venderId:(\d+)", jsonstr)
-            _venderid = _ven.group(1)
-            # brandid
-            _brand = re.search(r"brand: (\d+)", jsonstr)
-            _brandid = _brand.group(1)
-            # shopid
-            _shop = re.search(r"shopId:\'(\d+)\'", jsonstr)
-            _shopid = _shop.group(1)
+                # Get details form this line
+                this_soup = self.read_url_detail(_http, 'html.parser')
 
-            # support
-            support = []
-            jsoncall_yan = 'http://cd.jd.com/yanbao/v3?skuId=' + _data_pid + '&cat=' + _astr + '&area=' + \
-                           self.locations[0]['id'] + '&brandId=' + _brandid
-            try:
-                yanbao_info = self.auto_recovered_fetch_json(_url=jsoncall_yan)
-                if yanbao_info == {}:
+                # Save and save detail images to file
+                detail_imgs = this_soup.find("ul", class_='lh')
+
+                if detail_imgs:
+                    detail_img = detail_imgs.find_all('li')
+                    for detail_i in detail_img:
+                        try:
+                            img_detail_src = 'http:' + str(detail_i.find('img')['src'])
+                        except:
+                            img_detail_src = 'http:' + str(detail_i.find('img')['data-lazy-img'])
+                        detail_save_path = self.img_pth
+                        # detail_file_name = self.save_image(img_detail_src, detail_save_path)
+                        img_list.append(img_detail_src)
+
+                # get information from js
+                ss = this_soup.find_all('script')[0:1]
+                strss = str(ss)
+                m = re.search(r"(?s)var\s+pageConfig\s*=\s*(\{.*?\});", strss)
+                jsonstr = m.group(1)
+                # cat
+                _a = re.search(r"cat: ([\[\d,\]]+),", jsonstr)
+                _astr = _a.group(1)[1:-1]
+                # venderid
+                _ven = re.search(r"venderId:(\d+)", jsonstr)
+                _venderid = _ven.group(1)
+                # brandid
+                _brand = re.search(r"brand: (\d+)", jsonstr)
+                _brandid = _brand.group(1)
+                # shopid
+                _shop = re.search(r"shopId:\'(\d+)\'", jsonstr)
+                _shopid = _shop.group(1)
+
+                # support
+                support = []
+                jsoncall_yan = 'http://cd.jd.com/yanbao/v3?skuId=' + _data_pid + '&cat=' + _astr + '&area=' + \
+                               self.locations[0]['id'] + '&brandId=' + _brandid
+                try:
+                    yanbao_info = self.auto_recovered_fetch_json(_url=jsoncall_yan)
+                    if yanbao_info == {}:
+                        support.append({
+                            'support_name': '',
+                            'support_price': ''
+                        })
+                    else:
+                        yanbaolist = yanbao_info[_data_pid]
+                        for item in yanbaolist:
+                            for item_detail in item['details']:
+                                support.append({
+                                    'support_name': item_detail['bindSkuName'],
+                                    'support_price': item_detail['price'],
+                                })
+                except:
                     support.append({
                         'support_name': '',
                         'support_price': ''
                     })
-                else:
-                    yanbaolist = yanbao_info[_data_pid]
-                    for item in yanbaolist:
-                        for item_detail in item['details']:
-                            support.append({
-                                'support_name': item_detail['bindSkuName'],
-                                'support_price': item_detail['price'],
-                            })
-            except:
-                support.append({
-                    'support_name': '',
-                    'support_price': ''
-                })
 
-            # Get suit
-            jsoncall_suit = 'http://c.3.cn/recommend?sku=' + _data_pid + '&cat=' + _astr + '&area=' + self.locations[0][
-                'id'] + '&methods=suitv2'
-            suit_list = []
-            try:
-                suit_info = self.auto_recovered_fetch_json(_url=jsoncall_suit)
-                suitlist_data = suit_info['suit']['data']
-                if 'packList' not in suitlist_data:
-                    suit_list = []
-                else:
-                    suitlist = suit_info['suit']['data']['packList']
-                    for item in suitlist:
-                        suit = {
-                            'suitname': item['packName'],
-                            'suitOriginPrice': item['packOriginalPrice'],
-                            'suitPromoPrice': item['packPromotionPrice'],
-                            'suitid': item['packId'],
-                        }
-                        suit_list.append(suit)
-            except:
-                suit_list.append({
-                    'suitname': '',
-                    'suitOriginPrice': '',
-                    'suitPromoPrice': '',
-                    'suitid': ''
-                })
-
-            # Get advertisements
-            _call_ad = 'http://cd.jd.com/promotion/v2?skuId=' + _data_pid + '&area=' + self.locations[0][
-                'id'] + '&shopId=' + _shopid + '&venderId=' + _venderid + '&cat=' + _astr
-            ad_info = self.auto_recovered_fetch_json(_url=_call_ad)
-            ad_info_text = []
-            for g in ad_info['ads']:
-                ad_info_text.append(g['ad'])
-
-            # getGmodel
-            _call_model = 'https://c.3.cn/recommend?methods=accessories&sku=' + _data_pid + '&cat=' + _astr
-            model_info = self.auto_recovered_fetch_json(_url=_call_model)
-            accessories_info = model_info.get('accessories', None)
-            model_dic = {}
-            if accessories_info and ('data' in accessories_info):
-                if 'model' in model_info['accessories']['data']:
-                    model_dic['model'] = model_info['accessories']['data']['model']
-                if 'chBrand' in model_info['accessories']['data']:
-                    model_dic['brand'] = model_info['accessories']['data']['chBrand']
-                if 'wName' in model_info['accessories']['data']:
-                    model_dic['wName'] = model_info['accessories']['data']['wName']
-            else:
-                model_dic = {
-                    'model': '',
-                    'brand': '',
-                    'wName': ''
-                }
-
-            # Get stock value from locations
-            for item in self.locations:
-                tl = item['id']
-                jsoncall = 'http://c0.3.cn/stock?skuId=' + _data_pid + '&venderId=' + _venderid + '&cat=' + _astr + '&area=' + tl + '&buyNum=1&extraParam={%22originid%22:%221%22}'
+                # Get suit
+                jsoncall_suit = 'http://c.3.cn/recommend?sku=' + _data_pid + '&cat=' + _astr + '&area=' + self.locations[0][
+                    'id'] + '&methods=suitv2'
+                suit_list = []
                 try:
-                    stock_info = self.auto_recovered_fetch_json(_url=jsoncall)
-                    if stock_info is not {}:
-                        # print stock_info
-                        stock = stock_info[u'stock'][u'stockDesc'].replace('<strong>', '').replace('</strong>', '')
-                        the_stock_value = {
-                            'tn': item['name'],
-                            'stock': stock
-                        }
-                        stock_list.append(the_stock_value)
+                    suit_info = self.auto_recovered_fetch_json(_url=jsoncall_suit)
+                    suitlist_data = suit_info['suit']['data']
+                    if 'packList' not in suitlist_data:
+                        suit_list = []
                     else:
-                        print 'no stock info '
+                        suits = suit_info['suit']['data']['packList']
+                        for item in suits:
+                            suit = {
+                                'suitname': item['packName'],
+                                'suitOriginPrice': item['packOriginalPrice'],
+                                'suitPromoPrice': item['packPromotionPrice'],
+                                'suitid': item['packId'],
+                            }
+                            suit_list.append(suit)
                 except:
-                    stock_list.append({
-                        'tn': item['name'],
-                        'stock': ''
+                    suit_list.append({
+                        'suitname': '',
+                        'suitOriginPrice': '',
+                        'suitPromoPrice': '',
+                        'suitid': ''
                     })
-            # get tab from details
-            detail_list = []
-            detail = this_soup.find('div', class_='detail')
-            tab = detail.find('div', class_='tab-con')
-            tab_item = tab.find_all("div", {"data-tab": "item"})
-            for item in tab_item[:1]:
-                ul_list = item.find_all('ul')
-                for ul in ul_list:
-                    li_list = ul.find_all('li')
-                    for li in li_list:
-                        li_txt = li.text.strip().encode("utf-8")
-                        if '：' in li_txt:
-                            words = li_txt.split('：')
-                            key = words[0].strip()
-                            value = words[1].strip()
-                            detail_list.append({
-                                'key': key,
-                                'value': value
-                            })
 
-            if not _current_order:
-                _current_order = ''
+                # Get advertisements
+                _call_ad = 'http://cd.jd.com/promotion/v2?skuId=' + _data_pid + '&area=' + self.locations[0][
+                    'id'] + '&shopId=' + _shopid + '&venderId=' + _venderid + '&cat=' + _astr
+                ad_info = self.auto_recovered_fetch_json(_url=_call_ad)
+                ad_info_text = []
+                for g in ad_info['ads']:
+                    ad_info_text.append(g['ad'])
 
-            the_basic_info = {
-                'search_keyword': self.keyword,
-                'last_crawling_timestamp': datetime.now(),
-                'platform': 'JD',
-                'product_name': product_name,
-                'seller_name': seller_name,
-                'sku_id': _data_pid,
-                'default_price': float(final_price),
-                'final_price': 0,
-                'item_url': _http,
-                'comments_count': comment_count,
-                'images': [img_list[0]],
-                'current_stock': stock_list,
-                'support': support,
-                'advertisements': ad_info_text,
-                'bundle': suit_list,
-                'model': model_dic,
-                'detail': detail_list,
-                'search_rank': rank,
-                'search_order': _current_order,
-                'seller_url': seller_url
-            }
-            product_list.append(the_basic_info)
+                # getGmodel
+                _call_model = 'https://c.3.cn/recommend?methods=accessories&sku=' + _data_pid + '&cat=' + _astr
+                model_info = self.auto_recovered_fetch_json(_url=_call_model)
+                accessories_info = model_info.get('accessories', None)
+                model_dic = {}
+                if accessories_info and ('data' in accessories_info):
+                    if 'model' in model_info['accessories']['data']:
+                        model_dic['model'] = model_info['accessories']['data']['model']
+                    if 'chBrand' in model_info['accessories']['data']:
+                        model_dic['brand'] = model_info['accessories']['data']['chBrand']
+                    if 'wName' in model_info['accessories']['data']:
+                        model_dic['wName'] = model_info['accessories']['data']['wName']
+                else:
+                    model_dic = {
+                        'model': '',
+                        'brand': '',
+                        'wName': ''
+                    }
+
+                # Get stock value from locations
+                for item in self.locations:
+                    tl = item['id']
+                    jsoncall = 'http://c0.3.cn/stock?skuId=' + _data_pid + '&venderId=' + _venderid + '&cat=' + _astr + '&area=' + tl + '&buyNum=1&extraParam={%22originid%22:%221%22}'
+                    try:
+                        stock_info = self.auto_recovered_fetch_json(_url=jsoncall)
+                        if stock_info is not {}:
+                            # print stock_info
+                            stock = stock_info[u'stock'][u'stockDesc'].replace('<strong>', '').replace('</strong>', '')
+                            the_stock_value = {
+                                'tn': item['name'],
+                                'stock': stock
+                            }
+                            stock_list.append(the_stock_value)
+                        else:
+                            print 'no stock info '
+                    except:
+                        stock_list.append({
+                            'tn': item['name'],
+                            'stock': ''
+                        })
+                # get tab from details
+                detail_list = []
+                detail = this_soup.find('div', class_='detail')
+                tab = detail.find('div', class_='tab-con')
+                tab_item = tab.find_all("div", {"data-tab": "item"})
+                for item in tab_item[:1]:
+                    ul_list = item.find_all('ul')
+                    for ul in ul_list:
+                        li_list = ul.find_all('li')
+                        for li in li_list:
+                            li_txt = li.text.strip().encode("utf-8")
+                            if '：' in li_txt:
+                                words = li_txt.split('：')
+                                key = words[0].strip()
+                                value = words[1].strip()
+                                detail_list.append({
+                                    'key': key,
+                                    'value': value
+                                })
+
+                if not _current_order:
+                    _current_order = ''
+
+                the_basic_info = {
+                    'search_keyword': self.keyword,
+                    'last_crawling_timestamp': datetime.now(),
+                    'platform': 'JD',
+                    'product_name': product_name,
+                    'seller_name': seller_name,
+                    'sku_id': _data_pid,
+                    'default_price': float(final_price),
+                    'final_price': 0,
+                    'item_url': _http,
+                    'comments_count': comment_count,
+                    'images': [img_list[0]],
+                    'current_stock': stock_list,
+                    'support': support,
+                    'advertisements': ad_info_text,
+                    'bundle': suit_list,
+                    'model': model_dic,
+                    'detail': detail_list,
+                    'search_rank': rank,
+                    'search_order': _current_order,
+                    'seller_url': seller_url
+                }
+                product_list.append(the_basic_info)
+            except (AttributeError, KeyError, ValueError) as e:
+                print(e)
         self.results = product_list
         return product_list
 
