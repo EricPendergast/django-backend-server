@@ -231,7 +231,7 @@ class Question07Engine(BaseEngine):
         ]
         # Count for each group
         for index, row in stats.iterrows():
-            results.append({"key": 'tab', "value": '{0}. {1}: {2}'.format(index+1, row[characteristic], row['Count']), "isFullWidth": True})
+            results.append({"key": '{0}'.format(index+1), "value": '{0}: {1}'.format(row[characteristic], row['Count']), "isFullWidth": True})
 
         return results
 
@@ -263,7 +263,7 @@ class Question07Engine(BaseEngine):
         ]
         # Average per group
         for index, row in stats.iterrows():
-            results.append({"key": 'tab', "value": '{0}. {1}: {2:.2f}'.format(index + 1, row[characteristic], row['Total_Quantity']), "isFullWidth": True})
+            results.append({"key": '{0}'.format(index+1), "value": '{0}: {2:.2f}'.format(row[characteristic], row['Total_Quantity']), "isFullWidth": True})
 
         return results
 
