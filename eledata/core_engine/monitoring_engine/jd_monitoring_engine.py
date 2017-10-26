@@ -79,7 +79,7 @@ class JDMonitoringEngine(MonitoringEngine):
     Overriding Monitoring Core Functions
     """
     def get_soup(self, _url):
-        self.driver = webdriver.Chrome()
+        # self.driver = webdriver.Chrome()
         driver = self.driver
         driver.get(_url)
 
