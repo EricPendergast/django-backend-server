@@ -82,11 +82,12 @@ class JDMonitoringEngine(MonitoringEngine):
         # self.driver = webdriver.Chrome()
         driver = self.driver
         driver.get(_url)
+        time.sleep(5)
 
         def execute_times(times):
             for i in range(times + 1):
                 driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-                time.sleep(1)
+                time.sleep(5)
 
         execute_times(3)
         html = driver.page_source
