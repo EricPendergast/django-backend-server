@@ -21,7 +21,7 @@ class Job(Document):
     job_status = StringField()
     job_error_message = StringField()
 
-    event_id = StringField()
+    event_id = ObjectIdField()
     event_type = StringField()
 
     group = ReferenceField(Group)

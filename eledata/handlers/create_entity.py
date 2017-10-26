@@ -118,6 +118,9 @@ class EntityViewSetHandler(object):
         except KeyError as e:
             # TODO: do logging against e
             raise HandlerError('mappingError')
+        except ValueError as e:
+            # TODO: do logging against e
+            raise HandlerError('mappingTypeError')
 
         # Generating Entity Summary and Chart Summary after mapping is confirmed.
         summary_entity_stats_engine = EngineProvider \

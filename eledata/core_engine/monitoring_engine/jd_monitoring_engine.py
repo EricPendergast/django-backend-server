@@ -1,5 +1,7 @@
 # coding:utf-8
 import re
+import urllib2
+
 from bs4 import BeautifulSoup
 from selenium import webdriver
 import time
@@ -77,14 +79,15 @@ class JDMonitoringEngine(MonitoringEngine):
     Overriding Monitoring Core Functions
     """
     def get_soup(self, _url):
-        # driver = webdriver.Chrome()
+        # self.driver = webdriver.Chrome()
         driver = self.driver
         driver.get(_url)
+        time.sleep(5)
 
         def execute_times(times):
             for i in range(times + 1):
                 driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-                time.sleep(1)
+                time.sleep(5)
 
         execute_times(3)
         html = driver.page_source
@@ -92,10 +95,15 @@ class JDMonitoringEngine(MonitoringEngine):
         return _soup
 
     def read_url_detail(self, _http, _format):
-        driver = self.driver
-        driver.get(_http)
-        time.sleep(2)
-        this_content = driver.page_source
+        # Direct urllib fetching
+        req_this = urllib2.Request(_http)
+        this_html = urllib2.urlopen(req_this)
+        this_content = this_html.read()
+        # # Selenium
+        # driver = self.driver
+        # driver.get(_http)
+        # time.sleep(30)
+        # this_content = driver.page_source　
         this_soup = BeautifulSoup(this_content, _format)
         return this_soup
 

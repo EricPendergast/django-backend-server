@@ -34,7 +34,7 @@ router.register(r'users', GroupAdminActions, r'users')
 router.register(r'users', UserLogin, r'users2')
 router.register(r'users', UserActions, r'users2')
 router.register(r'stats', StatsViewSet, r'stats')
-router.register(r'event', JobViewSet, r'job')
+router.register(r'job', JobViewSet, r'job')
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
