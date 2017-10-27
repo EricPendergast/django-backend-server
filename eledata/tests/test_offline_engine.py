@@ -23,6 +23,9 @@ class OfflineEngineTest(TestCase):
     transactionFilename = 'misc/test_files/transaction_records.tsv'
     bigTransactionFilename = 'misc/test_files/core_test/big_transaction.csv'
     customerFilename = 'misc/test_files/customer_records.tsv'
+    campaignFilename = 'misc/test_files/campaign_records.tsv'
+    conversionFilename = 'misc/test_files/conversion_records.tsv'
+    channelFilename = 'misc/test_files/channel_records.tsv'
 
     '''
     Environment Setup for test cases
@@ -108,6 +111,27 @@ class OfflineEngineTest(TestCase):
     #     with open('data.txt', 'w') as outfile:
     #         json.dump(responses, outfile)
     #     # self.assertEquals(response, mock_response)
+
+    def test_engine_12(self):
+        mock_response = {'some_key': 'some_value'}
+
+        engine = EngineProvider.provide("Question.question_12", 10001, self.admin_group, {},
+                                        pd.read_csv(self.transactionFilename, sep='\t', parse_dates=['Transaction_Date']),
+                                        pd.read_csv(self.customerFilename, sep='\t'),
+                                        pd.read_csv(self.campaignFilename, sep='\t', parse_dates=['Start_Date', 'End_Date']),
+                                        pd.read_csv(self.conversionFilename, sep='\t'),
+                                        pd.read_csv(self.channelFilename, sep='\t'))
+
+        engine.execute()
+
+        responses = engine.responses
+        engine.event_init()
+        # print(response.keys())
+        # print or compare response with static data
+        import json
+        with open('data.txt', 'w') as outfile:
+            json.dump(responses, outfile)
+        # self.assertEquals(response, mock_response)
 
     #
     #     # TODO: test engine.event_init()
