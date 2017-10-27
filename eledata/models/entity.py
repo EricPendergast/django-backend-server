@@ -393,7 +393,7 @@ class Entity(Document):
 
     @property
     def is_processing(self):
-        return self.state is 1
+        return self.state in [1, 3]
 
     @property
     def is_completed(self):

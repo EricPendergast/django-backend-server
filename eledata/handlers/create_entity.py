@@ -175,6 +175,32 @@ class EntityViewSetHandler(object):
         return response_data
 
     @staticmethod
+    def entity_data_update(request_data, request_file, pk, group):
+        entity = Entity.objects.get(pk=pk)
+
+        filename = "temp/" + str(uuid.uuid4()) + "." + str(request_file)
+
+        with open(filename, "w") as fi:
+            fi.write(request_file.read())
+
+        # Parsing the entity JSON passed in into a dictionary
+        entity["source"] = {
+            "file": {"filename": filename,
+                     "is_header_included": request_data["isHeaderIncluded"]}}
+
+        entity['state'] = 3
+
+        entity_data = util.file_to_list_of_dictionaries(
+            open(entity["source"]["file"]["filename"]),
+            numLines=100,
+            is_header_included=util.string_caster["bool"](
+                entity["source"]["file"]["is_header_included"]))
+
+        entity['temp_data'] = entity_data
+
+        entity.save()
+
+    @staticmethod
     def remove_stage1_entity(request_data, verifier, group):
 
         verifier.verify(0, request_data)
@@ -187,3 +213,17 @@ class EntityViewSetHandler(object):
         entity.delete()
 
         return {"msg": "Remove successful"}
+
+    @staticmethod
+    def rollback_stage3_entity(request_data, verifier, group):
+
+        verifier.verify(0, request_data)
+        verifier.verify(1, request_data)
+
+        entity = Entity.objects.get(group=group, type=request_data['entity_type'])
+
+        verifier.verify(2, entity)
+        entity['state'] = 2
+        entity.save()
+
+        return {"msg": "Rollback successful"}

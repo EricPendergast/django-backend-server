@@ -96,22 +96,23 @@ class EntityViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
                     response_data['count'] = count_query_set[0][u'count']
         return Response(response_data)
 
-    """
-    Creates an entity (without mapping information). Adds it to the group of
-    the user who made the request
-    
-    If there is an error, the response will contain an "error" key, which will
-    map to the error message. Otherwise it will send a response with the
-    following:
-    
-        "entity_id", which maps to the id of the newly created entity
-        "data", which maps to the first 100 lines of data parsed from the input
-            file, with the original headers, or generated headers if no headers
-            were given
-    """
-
     @list_route(methods=['post'])
     def create_entity(self, request):
+        """
+        Creates an entity (without mapping information). Adds it to the group of
+        the user who made the request
+
+        If there is an error, the response will contain an "error" key, which will
+        map to the error message. Otherwise it will send a response with the
+        following:
+        :param request:
+        :return: {
+            "entity_id": which maps to the id of the newly created entity
+            "data": which maps to the first 100 lines of data parsed from the input
+                file, with the original headers, or generated headers if no headers
+                were given
+            }
+        """
         # 0. checking (to be developed afterwards)
         # 1. getting csv/tsv information, header information, uploaded data
         # 2. save file to temp dir
@@ -132,13 +133,14 @@ class EntityViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
         except:
             return Response({"error": "fileError"}, status=400)
 
-
-    """
-    Creating entity (with mapping information)
-    """
-
     @detail_route(methods=['post'])
     def create_entity_mapped(self, request, pk=None):
+        """
+        Creating entity (with mapping information)
+        :param request:
+        :param pk:
+        :return:
+        """
         # 0. checking (to be developed afterwards)
         # 1. getting targeted entity from data
         # 2. getting header_name/ column_type mapping information from data
@@ -153,6 +155,20 @@ class EntityViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
                 group=request.user.group)
 
             assert verifier.verified
+            return Response(response_data, status=200)
+
+        except HandlerError as e:
+            # TODO: do logging against e
+            return Response({"error": str(e)}, status=400)
+
+    @detail_route(methods=['put'])
+    def entity_data_update(self, request, pk=None):
+        try:
+            response_data = EntityViewSetHandler.entity_data_update(
+                request_data=request.data,
+                request_file=request.FILES['file'],
+                pk=pk,
+                group=request.user.group)
             return Response(response_data, status=200)
 
         except HandlerError as e:
