@@ -173,7 +173,7 @@ def start_all_initializing_job(_group):
         # Use custom Exception case to wrap all the exception from Engine Execution
         except (KeyError, EngineExecutingError) as _e:
             s_job.job_status = CONSTANTS.JOB.STATUS.get("FAILED")
-            s_job.job_error_message = _e
+            s_job.job_error_message = _e.message
             s_job.save()
 
     _initializing_jobs = Job.objects(group=_group, job_status=CONSTANTS.JOB.STATUS.get("INITIALIZING"))

@@ -5,6 +5,9 @@ from eledata.util import EngineExecutingError
 
 class Question34Engine(BaseEngine):
     our_keyword_list = []
+    competitor_keyword_list = []
+    first_page_keyword_list = []
+    order_list = ['integrated', 'price', 'sales', 'hot']
 
     def __init__(self, event_id, group, params):
         super(Question34Engine, self).__init__(event_id, group, params)
@@ -17,11 +20,38 @@ class Question34Engine(BaseEngine):
         # TODO: choose what and how much to be scraped by checking overall enabled question in group
         self.set_our_keyword_list()
         self.set_competitor_keyword_list()
+        self.set_first_page_keyword_list()
         for our_keyword in self.our_keyword_list:
+            # print("Monitoring JD with keyword: {}/{}".format(our_keyword.encode('utf-8'), len(self.our_keyword_list)))
             EngineProvider.provide("Monitoring.JD", event_id=self.event_id, group=self.group, params=None,
                                    keyword=our_keyword, _page_limit=3).execute()
+
+            # print("Monitoring Tao with keyword: {}/{}".format(our_keyword.encode('utf-8'), len(self.our_keyword_list)))
             EngineProvider.provide("Monitoring.Tao", event_id=self.event_id, group=self.group, params=None,
                                    keyword=our_keyword, _page_limit=3).execute()
+
+        for competitor_keyword in self.competitor_keyword_list:
+            # print("Monitoring JD with keyword: {}/{}".format(competitor_keyword.encode('utf-8'),
+            #                                                  len(self.competitor_keyword_list)))
+            EngineProvider.provide("Monitoring.JD", event_id=self.event_id, group=self.group, params=None,
+                                   keyword=competitor_keyword, _page_limit=3).execute()
+
+            # print("Monitoring Tao with keyword: {}/{}".format(competitor_keyword.encode('utf-8'),
+            #                                                   len(self.competitor_keyword_list)))
+            EngineProvider.provide("Monitoring.Tao", event_id=self.event_id, group=self.group, params=None,
+                                   keyword=competitor_keyword, _page_limit=3).execute()
+
+        for first_page_keyword in self.first_page_keyword_list:
+            # print("45")
+            # print("Monitoring Tao with keyword: {}/{}".format(first_page_keyword.encode('utf-8'),
+            #                                                   len(self.first_page_keyword_list)))
+            EngineProvider.provide("Monitoring.JD", event_id=self.event_id, group=self.group, params=None,
+                                   keyword=first_page_keyword, _page_limit=1, order=self.order_list).execute()
+
+            # print("Monitoring Tao with keyword: {}/{}".format(first_page_keyword.encode('utf-8'),
+            #                                                   len(self.first_page_keyword_list)))
+            EngineProvider.provide("Monitoring.Tao", event_id=self.event_id, group=self.group, params=None,
+                                   keyword=first_page_keyword, _page_limit=1, order=self.order_list).execute()
 
     def event_init(self):
         """
@@ -32,7 +62,9 @@ class Question34Engine(BaseEngine):
                                                event_id=self.event_id,
                                                group=self.group,
                                                params=None,
-                                               keyword_list=self.our_keyword_list)
+                                               our_keyword_list=self.our_keyword_list,
+                                               competitor_keyword_list=self.competitor_keyword_list,
+                                               first_page_keyword_list=self.first_page_keyword_list)
 
         report_engine.execute()
         report_engine.event_init()
@@ -55,6 +87,17 @@ class Question34Engine(BaseEngine):
         """
         try:
             our_keyword_list_param = filter(lambda _x: _x.get('label') == "competitor_keyword_list", self.params)[0]
-            self.our_keyword_list = [x.strip() for x in our_keyword_list_param[u'choice_input'].split(',')]
+            self.competitor_keyword_list = [x.strip() for x in our_keyword_list_param[u'choice_input'].split(',')]
+        except (IndexError, ValueError) as e:
+            raise EngineExecutingError(e)
+
+    def set_first_page_keyword_list(self):
+        """
+        Obtain first-page-keyword-list form user param, only for question 34 engine.
+        :return:
+        """
+        try:
+            our_keyword_list_param = filter(lambda _x: _x.get('label') == "first_page_keyword_list", self.params)[0]
+            self.first_page_keyword_list = [x.strip() for x in our_keyword_list_param[u'choice_input'].split(',')]
         except (IndexError, ValueError) as e:
             raise EngineExecutingError(e)
