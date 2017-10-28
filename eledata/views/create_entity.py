@@ -188,7 +188,6 @@ class EntityViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
             # TODO: do logging against e
             return Response({"error": str(e)}, status=400)
 
-
     @list_route(methods=['post'])
     def remove_stage1_entity(self, request):
         verifier = RemoveStage1EntityVerifier()
@@ -212,3 +211,9 @@ class EntityViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
         except HandlerError as e:
             # TODO: do logging against e
             return Response({"error": str(e)}, status=200)
+
+    @list_route(methods=['get'])
+    def get_general_change(self, request):
+        changes = Change.objects(group=request.user.group).order_by('-created_at')
+        serializer = GeneralEntityChangeSerializer(changes, many=True, required=True)
+        return Response(serializer.data)
