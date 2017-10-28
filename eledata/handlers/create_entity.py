@@ -47,6 +47,7 @@ class EntityViewSetHandler(object):
             fi.write(request_file.read())
         # Parsing the entity JSON passed in into a dictionary
         entity_dict = util.from_json(request_data["entity"])
+        # del entity_dict['update_mechanism']
 
         entity_dict["source"] = {
             "file": {"filename": filename,
@@ -176,29 +177,115 @@ class EntityViewSetHandler(object):
 
     @staticmethod
     def entity_data_update(request_data, request_file, pk, group):
-        entity = Entity.objects.get(pk=pk)
+        entity = Entity.objects(pk=pk, group=group)
 
         filename = "temp/" + str(uuid.uuid4()) + "." + str(request_file)
-
         with open(filename, "w") as fi:
             fi.write(request_file.read())
 
         # Parsing the entity JSON passed in into a dictionary
-        entity["source"] = {
-            "file": {"filename": filename,
-                     "is_header_included": request_data["isHeaderIncluded"]}}
-
-        entity['state'] = 3
+        entity_dict = util.from_json(request_data["entity"])
 
         entity_data = util.file_to_list_of_dictionaries(
-            open(entity["source"]["file"]["filename"]),
+            open(filename),
             numLines=100,
-            is_header_included=util.string_caster["bool"](
-                entity["source"]["file"]["is_header_included"]))
+            is_header_included=request_data["isHeaderIncluded"])
 
-        entity['temp_data'] = entity_data
+        # Parsing the entity JSON passed in into a dictionary
+        entity.update_one(set__source__file__filename=filename,
+                          set__source__file__is_header_included=request_data["isHeaderIncluded"],
+                          set__source__update_mechanism=entity_dict['update_mechanism'],
+                          set__state=3,
+                          set__temp_data=entity_data
+                          )
 
-        entity.save()
+        # Reload changed entity
+        updated_entity = Entity.objects(pk=pk, group=group).first()
+        updated_entity.reload()
+
+        response_data = {
+            'entity_id': str(updated_entity.id),
+            'data': entity_data,
+            'header_option': CONSTANTS.ENTITY.HEADER_OPTION.get(updated_entity.type.upper())
+        }
+        # Loading the first 100 lines of data from the request file
+        # Passing header option from constants file
+
+        return response_data
+
+    @staticmethod
+    def entity_date_update_stage2(verifier, pk, group):
+        entity = Entity.objects(pk=pk).first()
+
+        # We will create a dummy entity whose only purpose is to serialize the
+        # two fields we give it, so we can add them to the actual entity. The
+        # dummy starts as a dictionary and then becomes an Entity.
+        data_header = entity.data_header
+
+        assert os.path.isfile(entity.source.file.filename)
+        data = util.file_to_list_of_dictionaries(
+            open(entity.source.file.filename, 'r'),
+            is_header_included=entity.source.file.is_header_included)
+
+        # Changing the user created field names in data to the new mapped names
+        try:
+            for item in data:
+                for mapping in data_header:
+                    item[mapping["mapped"]] = item[mapping["source"]]
+                    # Avoid deleting data when mapped is source
+                    if mapping["mapped"] != mapping["source"]:
+                        del item[mapping["source"]]
+
+            # Casting everything in data from strings to their proper data type
+            # according to request.data['data_header']
+            for item in data:
+                for mapping in data_header:
+                    item[mapping["mapped"]] = \
+                        string_caster[mapping["data_type"]](item[mapping["mapped"]])
+        except KeyError as e:
+            print(e.message)
+            # TODO: do logging against e
+            raise HandlerError('mappingError')
+        except ValueError as e:
+            print(e.message)
+            # TODO: do logging against e
+            raise HandlerError('mappingTypeError')
+
+        is_replace = False if entity.source.update_mechanism == 'incremental' else True
+        entity.add_change(data, replace=is_replace)
+        entity.save_data_changes()
+
+        # Generating Entity Summary and Chart Summary after mapping is confirmed.
+        summary_entity_stats_engine = EngineProvider \
+            .provide("EntityStats.Summary",
+                     group=group,
+                     params=None,
+                     entity_data=entity.data,
+                     entity_type=entity.type)
+        chart_entity_stats_engine = EngineProvider \
+            .provide("EntityStats.Chart",
+                     group=group,
+                     params=None,
+                     entity_data=entity.data,
+                     entity_type=entity.type)
+        try:
+            summary_entity_stats_engine.execute()
+            chart_entity_stats_engine.execute()
+        except ValueError as e:
+            # TODO: do logging against e
+            raise HandlerError('mappingTypeError')
+
+        os.remove(entity.source.file.filename)
+
+        Entity.objects(pk=pk).update_one(
+            set__data_summary=summary_entity_stats_engine.get_processed(),
+            set__data_summary_chart=chart_entity_stats_engine.get_processed(),
+            set__source__file=None,
+            set__state=2
+        )
+        entity.reload()
+
+        return {"msg": "Updated successful"}
 
     @staticmethod
     def remove_stage1_entity(request_data, verifier, group):
@@ -215,15 +302,13 @@ class EntityViewSetHandler(object):
         return {"msg": "Remove successful"}
 
     @staticmethod
-    def rollback_stage3_entity(request_data, verifier, group):
+    def rollback_stage3_entity(pk, verifier, group):
 
-        verifier.verify(0, request_data)
-        verifier.verify(1, request_data)
+        entity = Entity.objects(pk=pk, group=group)
 
-        entity = Entity.objects.get(group=group, type=request_data['entity_type'])
+        entity.update_one(set__state=2)
 
-        verifier.verify(2, entity)
-        entity['state'] = 2
-        entity.save()
+        # Reload changed entity
+        Entity.objects(pk=pk, group=group).first().reload()
 
         return {"msg": "Rollback successful"}

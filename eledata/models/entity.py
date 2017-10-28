@@ -37,6 +37,7 @@ class DataSource(EmbeddedDocument):
     link = StringField()
     account = StringField()
     password = StringField(max_length=255)
+    update_mechanism = StringField()
 
     def check_password(self, raw_password):
         """

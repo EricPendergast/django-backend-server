@@ -37,7 +37,7 @@ class EntityViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
 
     @list_route(methods=['get'])
     def get_entity_list(self, request):
-        processing_query_set = Entity.objects(group=request.user.group, state=1).fields(type=1)
+        processing_query_set = Entity.objects(group=request.user.group, state__in=[1, 3]).fields(type=1)
         completed_query_set = Entity.objects(group=request.user.group, state=2).fields(type=1)
         response_data = EntityViewSetHandler.get_entity_list(processing_query_set, completed_query_set)
         return Response(response_data)
@@ -175,6 +175,20 @@ class EntityViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
             # TODO: do logging against e
             return Response({"error": str(e)}, status=400)
 
+    @detail_route(methods=['put'])
+    def entity_date_update_stage2(self, request, pk=None):
+        try:
+            response_data = EntityViewSetHandler.entity_date_update_stage2(
+                verifier=None,
+                pk=pk,
+                group=request.user.group)
+            return Response(response_data, status=200)
+
+        except HandlerError as e:
+            # TODO: do logging against e
+            return Response({"error": str(e)}, status=400)
+
+
     @list_route(methods=['post'])
     def remove_stage1_entity(self, request):
         verifier = RemoveStage1EntityVerifier()
@@ -185,3 +199,16 @@ class EntityViewSet(CustomLoginRequiredMixin, viewsets.ViewSet):
 
         assert verifier.verified
         return Response(response_data, status=200)
+
+    @detail_route(methods=['put'])
+    def rollback_stage3_entity(self, request, pk=None):
+        try:
+            response_data = EntityViewSetHandler.rollback_stage3_entity(
+                pk=pk,
+                verifier=None,
+                group=request.user.group)
+            return Response(response_data, status=200)
+
+        except HandlerError as e:
+            # TODO: do logging against e
+            return Response({"error": str(e)}, status=200)

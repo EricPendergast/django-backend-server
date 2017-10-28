@@ -52,7 +52,7 @@ class CreateEntityMappedVerifier(Verifier):
         for header in headers:
             Verifier.ver_dict(header, required, options)
 
-        if entity_source_file == None:
+        if not entity_source_file:
             raise InvalidInputError("Can't find the entity source file.")
 
     def stage3(self, serializer):
