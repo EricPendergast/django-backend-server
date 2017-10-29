@@ -107,11 +107,11 @@ class Question07Engine(BaseEngine):
                         },
                         "tabs": {
                             "month": map(lambda x: str(x), num_month_observe_list),
-                            "characteristics": characteristics
+                            "dimension": characteristics
                         },
                         "selected_tab": {
                             "month": str(num_month_observe),
-                            "characteristics": characteristic
+                            "dimension": characteristic
                         },
                         "event_desc": Question07Engine.get_event_desc(detailed_data, characteristic),
                         "detailed_desc": Question07Engine.get_detailed_event_desc(detailed_data, characteristic),
@@ -229,10 +229,11 @@ class Question07Engine(BaseEngine):
         stats = stats.rename(columns={0: 'Count'}).sort_values(['Count'], ascending=False).reset_index(drop=True)
 
         # Total count
+        total_count = stats['Count'].sum()
         results = [
             {
                 "key": "total_customers_lost",
-                "value": stats['Count'].sum(),
+                "value": total_count,
                 "isFullWidth": True
             }
         ]
@@ -240,7 +241,7 @@ class Question07Engine(BaseEngine):
         for index, row in stats.iterrows():
             results.append({
                 "key": '{0}'.format(Question07Engine.NUMBER_MAPPING.get(index+1)),
-                "value": '{0}: {1}'.format(row[characteristic], row['Count']),
+                "value": '{0}: {1} ({2:.2f}%)'.format(row[characteristic], row['Count'], row['Count'] * 100 / total_count),
                 "isFullWidth": True
             })
 
