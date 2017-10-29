@@ -11,7 +11,7 @@ question, where each choice may have additional typed input.
 class AnalysisParameter(EmbeddedDocument):
     class AnalysisParameterChoice(EmbeddedDocument):
         content = StringField()
-        default_value = StringField()
+        default_value = DynamicField()
 
     label = StringField()
     content = StringField()
@@ -23,7 +23,7 @@ class AnalysisParameter(EmbeddedDocument):
 
     # The value the user inputted to the choice. This value may be null, since
     # not all choices take inputs.
-    choice_input = StringField()
+    choice_input = DynamicField()
 
     # For internal validation
     enabled = BooleanField()

@@ -1,5 +1,5 @@
 from rest_framework_mongoengine.serializers import DocumentSerializer
-from eledata.models.entity import Entity, DataHeader
+from eledata.models.entity import Entity, DataHeader, Change
 
 
 class EntitySummarySerializer(DocumentSerializer):
@@ -24,3 +24,10 @@ class EntityDetailedSerializer(DocumentSerializer):
         depth = 2
         fields = ['id', 'state', 'type', 'source_type', 'source', 'data_summary', 'data_summary_chart', 'data_header',
                   'created_at', 'updated_at', 'data', 'temp_data', 'temp_header']
+
+
+class GeneralEntityChangeSerializer(DocumentSerializer):
+    class Meta:
+        model = Change
+        depth = 2
+        fields = ['id', 'type', 'change_type', 'created_at']
