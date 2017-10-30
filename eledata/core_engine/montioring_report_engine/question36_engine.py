@@ -145,6 +145,7 @@ class Question36Engine(BaseEngine):
                         },
                         "detailed_data": self.transform_detailed_data(selected_product_data),
                         "event_status": CONSTANTS.EVENT.STATUS.get('PENDING'),
+                        "scheduled_at": datetime.datetime.now() + relativedelta(hours=12)
                     }
                 )
 

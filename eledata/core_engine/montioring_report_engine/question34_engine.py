@@ -201,6 +201,7 @@ class Question34Engine(BaseEngine):
                         },
                         "detailed_data": self.transform_detailed_data(pd.DataFrame(product_data)),
                         "event_status": CONSTANTS.EVENT.STATUS.get('PENDING'),
+                        "scheduled_at": datetime.datetime.now() + relativedelta(hours=12)
                     }
                     final_data.append(event)
                 else:
@@ -306,10 +307,8 @@ class Question34Engine(BaseEngine):
         results = {"data": present_data.sort_values('search_rank').to_dict(orient='records'), "columns": []}
 
         # Column setting
-        for field in ['relationship', 'product_name', 'seller_name', 'default_price', 'search_rank',
-                      'last_crawling_timestamp'
-                      'comments_count',
-                      'sales_count']:
+        for field in ['product_name', 'seller_name', 'default_price', 'search_rank',
+                      'last_crawling_timestamp', 'comments_count', 'sales_count']:
             results["columns"].append(
                 {
                     "key": field,
