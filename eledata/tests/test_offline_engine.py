@@ -11,6 +11,7 @@ import datetime
 from eledata.core_engine.provider import EngineProvider
 import pandas as pd
 import pprint
+import uniout
 
 
 class OfflineEngineTest(TestCase):
@@ -29,17 +30,17 @@ class OfflineEngineTest(TestCase):
     '''
 
     def doCleanups(self):
-        Event.drop_collection()
+        # Event.drop_collection()
         Group.drop_collection()
         User.drop_collection()
 
     def setUp(self):
         Group.drop_collection()
         User.drop_collection()
-        Event.drop_collection()
+        # Event.drop_collection()
         assert len(Group.objects) == 0
         assert len(User.objects) == 0
-        assert len(Event.objects) == 0
+        # assert len(Event.objects) == 0
 
         self.admin = User.create_admin(username="admin", password="pass", group_name="dummy_group")
         self.admin_group = Group.objects.get(name="dummy_group")
@@ -110,24 +111,33 @@ class OfflineEngineTest(TestCase):
     #     # self.assertEquals(response, mock_response)
 
     #
-    #     # TODO: test engine.event_init()
+
     #
-    # def test_engine_2(self):
-    #     # j_engine = EngineProvider.provide("Monitoring.JD",
-    #     #                                   group=self.admin_group,
-    #     #                                   params=None,
-    #     #                                   keyword="HTC",
-    #     #                                   _page_limit=3
-    #     #                                   )
-    #     # j_engine.execute()
-    #
-    #     haha_engine = EngineProvider.provide("MonitoringReport.question_37",
-    #                                          group=self.admin_group,
-    #                                          params=None,
-    #                                          keyword_list=["DELL", "HTC"],
-    #                                          )
-    #     haha_engine.execute()
-    #     haha_engine.event_init()
+    def test_engine_2(self):
+        # j_engine = EngineProvider.provide("Monitoring.JD",
+        #                                   group=self.admin_group,
+        #                                   params=None,
+        #                                   keyword="DELL",
+        #                                   _page_limit=1
+        #                                   )
+        # j_engine.execute()
+
+        haha_engine = EngineProvider.provide("MonitoringReport.question_36",
+                                             event_id=None,
+                                             group=self.admin_group,
+                                             params=None,
+                                             mine_keylist=["HTC VIVE", "暴风魔镜S1"],
+                                             )
+        haha_engine.execute()
+        haha_engine.event_init()
+
+        # haha_engine1 = EngineProvider.provide("MonitoringReport.question_37",
+        #                                      group=self.admin_group,
+        #                                      params=None,
+        #                                      keyword_list=["HTC VIVE"]
+        #                                      )
+        # haha_engine1.execute()
+        # haha_engine1.event_init()
     #
     # def test_engine_3(self):
     #     t_engine = EngineProvider.provide("Monitoring.Tao",
