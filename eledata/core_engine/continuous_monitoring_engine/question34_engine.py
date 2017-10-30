@@ -21,14 +21,15 @@ class Question34Engine(BaseEngine):
         self.set_our_keyword_list()
         self.set_competitor_keyword_list()
         self.set_first_page_keyword_list()
-        for our_keyword in self.our_keyword_list:
-            # print("Monitoring JD with keyword: {}/{}".format(our_keyword.encode('utf-8'), len(self.our_keyword_list)))
-            EngineProvider.provide("Monitoring.JD", event_id=self.event_id, group=self.group, params=None,
-                                   keyword=our_keyword, _page_limit=3).execute()
 
-            # print("Monitoring Tao with keyword: {}/{}".format(our_keyword.encode('utf-8'), len(self.our_keyword_list)))
-            EngineProvider.provide("Monitoring.Tao", event_id=self.event_id, group=self.group, params=None,
-                                   keyword=our_keyword, _page_limit=3).execute()
+        # Find if question_37 is selected in self.group, and scarp our keyword by condition
+        if not self.group.analysis_question.analysis_settings.get_question('question_37').selected:
+            for our_keyword in self.our_keyword_list:
+                EngineProvider.provide("Monitoring.JD", event_id=self.event_id, group=self.group, params=None,
+                                       keyword=our_keyword, _page_limit=3).execute()
+
+                EngineProvider.provide("Monitoring.Tao", event_id=self.event_id, group=self.group, params=None,
+                                       keyword=our_keyword, _page_limit=3).execute()
 
         for competitor_keyword in self.competitor_keyword_list:
             # print("Monitoring JD with keyword: {}/{}".format(competitor_keyword.encode('utf-8'),
