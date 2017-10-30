@@ -98,6 +98,7 @@ class OfflineEngineTest(TestCase):
     #
     def test_engine_3(self):
         t_engine = EngineProvider.provide("ContinuousMonitoring.question_34",
+                                          event_id=None,
                                           group=self.admin_group,
                                           params=None,
                                           )
