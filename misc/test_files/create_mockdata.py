@@ -95,8 +95,16 @@ with open('campaign_records.tsv', 'w') as campaign_file, open('conversion_record
         for j in range(random.randint(0, num_customers)):
             conversion_id += 1
             customer_id = random.choice(customer_transaction_mapping.keys())
-            transaction_id = random.choice(customer_transaction_mapping[customer_id])
             response = random.choice(conversion_responses)
+            if response == 'Converted':
+                while len(customer_transaction_mapping[customer_id]) == 0:
+                    customer_id = random.choice(customer_transaction_mapping.keys())
+                transaction_index = random.randint(0, len(customer_transaction_mapping[customer_id])-1)
+                transaction_id = customer_transaction_mapping[customer_id][transaction_index]
+                del customer_transaction_mapping[customer_id][transaction_index]
+            else:
+                transaction_id = None
+
 
             conversion_file.write('{0}\t{1}\t{2}\t{3}\t{4}\n'.format
             (
@@ -104,7 +112,7 @@ with open('campaign_records.tsv', 'w') as campaign_file, open('conversion_record
                 i,
                 customer_id,
                 response,
-                random.choice(customer_transaction_mapping[customer_id]) if response == 'Converted' else None
+                transaction_id
             ))
 
 channels = {'Tencent Social Ads': 'DSP', 'Baidu Advertising': 'Keyword Ads', 'Google AdWords': 'Keyword Ads', 'DoubleClick': 'Ad Exchange', 'EDM': 'EDM'}
