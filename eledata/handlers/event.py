@@ -1,3 +1,5 @@
+from urllib2 import URLError
+
 from eledata.serializers.event import *
 from eledata.serializers.job import *
 from eledata.verifiers.event import *
@@ -8,6 +10,7 @@ from multiprocessing import Process
 import time
 from bson import objectid
 from bson.json_util import dumps
+from dateutil.relativedelta import relativedelta
 
 
 def get_general_event(group):
@@ -160,18 +163,22 @@ def start_all_initializing_job(_group):
             # TODO: Event_status should be used in the event_init(); Exception should have been threw in case for KeyError.
             s_engine.event_init()
 
+            # TODO: what i am doing with this event?
             event = Event.objects(event_id=_event_id).first()
 
             # Use engine prefix in provider to identify
             if engine_prefix == "ContinuousMonitoring":
+                updated_time = datetime.datetime.now()
                 s_job.event_id = _event_id
                 s_job.job_status = CONSTANTS.JOB.STATUS.get("CONTINUOUS")
+                s_job.updated_at = updated_time
+                s_job.scheduled_at = updated_time + relativedelta(hours=12)
             else:
                 s_job.event_id = _event_id
                 s_job.job_status = CONSTANTS.JOB.STATUS.get("UPDATED")
             s_job.save()
         # Use custom Exception case to wrap all the exception from Engine Execution
-        except (KeyError, EngineExecutingError) as _e:
+        except (KeyError, EngineExecutingError, URLError, ValueError, KeyError, IndexError) as _e:
             s_job.job_status = CONSTANTS.JOB.STATUS.get("FAILED")
             s_job.job_error_message = _e.message
             s_job.save()
