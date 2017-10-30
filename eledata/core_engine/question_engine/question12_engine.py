@@ -69,7 +69,7 @@ class Question12Engine(BaseEngine):
         """
         event_id = objectid.ObjectId()
         num_month_observe_list = range(1, 13)
-        metrics = ['Impressions', 'Clicks', 'Spending']
+        dimensions = ['Impressions', 'Clicks', 'Spending']
         responses = []
 
         # Generate response to display different number of months of result
@@ -104,8 +104,8 @@ class Question12Engine(BaseEngine):
             first_sale_count = observed_conversions.groupby(['Channel_ID'])['User_ID'].count().reset_index().rename(index=str, columns={'User_ID': 'First_Sale_Count'})
             detailed_data = detailed_data.merge(first_sale_count, on=['Channel_ID']).merge(channel_data[['Channel_ID', 'Channel_Name']], on=['Channel_ID']).sort_values(['First_Sale_Count']).reset_index(drop=True)
 
-            for metric in metrics:
-                detailed_data['Ratio'] = detailed_data[metric] / detailed_data['First_Sale_Count']
+            for dimension in dimensions:
+                detailed_data['Ratio'] = detailed_data[dimension] / detailed_data['First_Sale_Count']
                 # Construct response
                 responses.append(
                     {
@@ -118,17 +118,17 @@ class Question12Engine(BaseEngine):
                         },
                         "tabs": {
                             "month": map(lambda x: str(x), num_month_observe_list),
-                            "dimension": metrics
+                            "dimension": dimensions
                         },
                         "selected_tab": {
                             "month": str(num_month_observe),
-                            "dimension": metric
+                            "dimension": dimension
                         },
                         "event_desc": Question12Engine.get_event_desc(detailed_data),
-                        "detailed_desc": Question12Engine.get_detailed_event_desc(detailed_data, metric),
+                        "detailed_desc": Question12Engine.get_detailed_event_desc(detailed_data, dimension),
                         "analysis_desc": Question12Engine.get_analysis_desc(transaction=transaction_data, customer=customer_data, campaign=campaign_data, conversion=conversion_data, channel=channel_data),
-                        "chart_type": "Bar",
-                        "chart": Question12Engine.get_chart(campaign_details, metric),
+                        "chart_type": "bubble",
+                        "chart": Question12Engine.get_chart(campaign_details, dimension),
                         "detailed_data": Question12Engine.transform_detailed_data(campaign_details)  # Transform detailed data from DF to a list of dict
                     }
                 )
@@ -238,7 +238,7 @@ class Question12Engine(BaseEngine):
         return results
 
     @staticmethod
-    def get_chart(campaign_details, metric):
+    def get_chart(campaign_details, dimension):
         """
         Calculate the number of lost customers each month, used for the chart portion in the response, return in python structure
         :param detailed_data: DataFrame, targeted customer records, should be output from get_detailed_data
@@ -254,7 +254,7 @@ class Question12Engine(BaseEngine):
         for index, row in campaign_details.iterrows():
             chart_stats[row['Channel_Name']].append(
                 {
-                    'x': row[metric],
+                    'x': row[dimension],
                     'y': row['First_Sale_Count'],
                     'r': 1
                 }
@@ -274,7 +274,7 @@ class Question12Engine(BaseEngine):
         results = {
             "labels": chart_stats.keys(),
             "datasets": datasets,
-            "x_label": metric.lower(),
+            "x_label": dimension.lower(),
             "y_label": 'number_first_sale'
         }
 
