@@ -22,9 +22,17 @@ class Question07Engine(BaseEngine):
         '(34, 54]': '35 - 54 Years Old',
         '(54, 110]': '> 54 Years Old'
     }
+    NUMBER_MAPPING = {
+        1: 'one',
+        2: 'two',
+        3: 'three',
+        4: 'four',
+        5: 'five',
+        6: 'six'
+    }
 
-    def __init__(self, group, params, transaction_data=None, customer_data=None):
-        super(Question07Engine, self).__init__(group, params)
+    def __init__(self, event_id, group, params, transaction_data=None, customer_data=None):
+        super(Question07Engine, self).__init__(event_id, group, params)
         if params:  # enable empty params for engine checking
             selected_param = filter(lambda x: x['content'] == 'churner_definition', params)[0]
             self.rule = selected_param['choices'][int(selected_param['choice_index'])]['content']
@@ -78,7 +86,6 @@ class Question07Engine(BaseEngine):
         get_ids, merge_data = Question07Engine.get_rules(self.rule)
         target_customers = get_ids(transaction_data, self.rule_param)
 
-        event_id = objectid.ObjectId()
         # Generate response to display different number of months of result
         for num_month_observe in num_month_observe_list:
             # Generate 3 type of responses for each number of months
@@ -91,7 +98,7 @@ class Question07Engine(BaseEngine):
                 # Construct response
                 responses.append(
                     {
-                        "event_id": event_id,
+                        "event_id": self.event_id,
                         "event_category": CONSTANTS.EVENT.CATEGORY.get("INSIGHT"),
                         "event_type": "question_07",    # Customers that stopped buying in the past 6 months
                         "event_value": {
@@ -100,11 +107,11 @@ class Question07Engine(BaseEngine):
                         },
                         "tabs": {
                             "month": map(lambda x: str(x), num_month_observe_list),
-                            "characteristics": characteristics
+                            "dimension": characteristics
                         },
                         "selected_tab": {
                             "month": str(num_month_observe),
-                            "characteristics": characteristic
+                            "dimension": characteristic
                         },
                         "event_desc": Question07Engine.get_event_desc(detailed_data, characteristic),
                         "detailed_desc": Question07Engine.get_detailed_event_desc(detailed_data, characteristic),
@@ -222,16 +229,21 @@ class Question07Engine(BaseEngine):
         stats = stats.rename(columns={0: 'Count'}).sort_values(['Count'], ascending=False).reset_index(drop=True)
 
         # Total count
+        total_count = stats['Count'].sum()
         results = [
             {
                 "key": "total_customers_lost",
-                "value": stats['Count'].sum(),
+                "value": total_count,
                 "isFullWidth": True
             }
         ]
         # Count for each group
         for index, row in stats.iterrows():
-            results.append({"key": '{0}'.format(index+1), "value": '{0}: {1}'.format(row[characteristic], row['Count']), "isFullWidth": True})
+            results.append({
+                "key": '{0}'.format(Question07Engine.NUMBER_MAPPING.get(index+1)),
+                "value": '{0}: {1} ({2:.2f}%)'.format(row[characteristic], row['Count'], row['Count'] * 100 / total_count),
+                "isFullWidth": True
+            })
 
         return results
 
@@ -263,7 +275,11 @@ class Question07Engine(BaseEngine):
         ]
         # Average per group
         for index, row in stats.iterrows():
-            results.append({"key": '{0}'.format(index+1), "value": '{0}: {2:.2f}'.format(row[characteristic], row['Total_Quantity']), "isFullWidth": True})
+            results.append({
+                "key": '{0}'.format(Question07Engine.NUMBER_MAPPING.get(index+1)),
+                "value": '{0}: {1:.2f}'.format(row[characteristic], row['Total_Quantity']),
+                "isFullWidth": True
+            })
 
         return results
 

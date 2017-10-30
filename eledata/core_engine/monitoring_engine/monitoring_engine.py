@@ -99,8 +99,28 @@ class MonitoringEngine(BaseEngine):
         Core Function.
         :return:
         """
+        import signal
+
+        class TimeoutException(Exception):  # Custom exception class
+            pass
+
+        def timeout_handler(signum, frame):  # Custom signal handler
+            raise TimeoutException
+
+        # Change the behavior of SIGALRM
+        signal.signal(signal.SIGALRM, timeout_handler)
+
         for _index, url in enumerate(self.url_list):
-            soup = self.get_soup(_url=url)
+
+            # TODO: make it try again in case dead
+            signal.alarm(60)
+            try:
+                soup = self.get_soup(_url=url)
+            except TimeoutException:
+                continue
+            else:
+                signal.alarm(0)
+
             response = self.get_basic_info(soup, self.order_list[_index])
             self.out(response)
             if self.limit_current == self.limit_total:

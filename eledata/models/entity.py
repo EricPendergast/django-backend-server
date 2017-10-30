@@ -37,6 +37,7 @@ class DataSource(EmbeddedDocument):
     link = StringField()
     account = StringField()
     password = StringField(max_length=255)
+    update_mechanism = StringField()
 
     def check_password(self, raw_password):
         """
@@ -59,6 +60,9 @@ class DataSource(EmbeddedDocument):
 
 
 class Change(Document):
+    type = StringField(max_length=20)  # Entity Type
+    change_type = StringField(max_length=20)  # Change Type, create/ update (incremental) / update(overriding)
+
     # The final state of all changed or added rows
     new_rows = ListField(DictField())
     # The original state of all rows that were changed or removed by calling the enact() method
@@ -67,6 +71,9 @@ class Change(Document):
     # This is used to determine whether to populate 'old_rows' with the rows
     # that were changed/removed when calling the enact() method.
     enacted = BooleanField(required=True, default=False)
+    created_at = DateTimeField(default=datetime.datetime.now)
+    updated_at = DateTimeField(default=datetime.datetime.now)
+    group = ReferenceField(Group)
 
     remove_all = BooleanField(required=True)
 
@@ -289,6 +296,14 @@ class Entity(Document):
         self._check_invariants_fast()
         change = Change()
         change.new_rows = data
+        change.type = self.type
+        change.group = self.group
+
+        if self.state == 1:
+            change.change_type = 'create'
+        else:
+            change.change_type = self.source.update_mechanism
+
         # Because of concurrency issues, we don't yet know what data we will be
         # replacing, so old_rows is empty for now. It will be filled when
         # change.enact() is called.
@@ -393,7 +408,7 @@ class Entity(Document):
 
     @property
     def is_processing(self):
-        return self.state is 1
+        return self.state in [1, 3]
 
     @property
     def is_completed(self):

@@ -32,13 +32,27 @@ HEADER_OPTION = dict(
         "Last_Modified_Date"
     ],
     CONVERSION=[
-        "Campaign_ID",
-        "Campaign_Name",
         "Conversion_ID",
+        "Campaign_ID",
         "User_ID",
         "Response",
+        "Transaction_ID"
+    ],
+    CAMPAIGN=[
+        "Campaign_ID",
+        "Channel_ID",
+        "Campaign_Name",
         "Start_Date",
-        "End_Date"
+        "End_Date",
+        "Spending",
+        "Clicks",
+        "Impressions"
+    ],
+    CHANNEL=[
+        "Channel_ID",
+        "Channel_Name",
+        "Country",
+        "Category"
     ],
     OFFLINE_EVENT=[
         "Event_ID",

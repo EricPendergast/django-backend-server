@@ -39,7 +39,7 @@ class JobTestCase(TestCase):
         job.save()
 
         # your get api here
-        response = self.admin_client.get("/event/select_job_list/")
+        response = self.admin_client.get("/job/select_job_list/")
 
         # test your response
         print(response)

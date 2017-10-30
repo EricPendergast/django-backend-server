@@ -21,7 +21,7 @@ class Job(Document):
     job_status = StringField()
     job_error_message = StringField()
 
-    event_id = StringField()
+    event_id = ObjectIdField()
     event_type = StringField()
 
     group = ReferenceField(Group)
@@ -29,6 +29,8 @@ class Job(Document):
 
     created_at = DateTimeField(default=datetime.datetime.now)
     updated_at = DateTimeField(default=datetime.datetime.now)
+
+    scheduled_at = DateTimeField()
 
     def save(self, *args, **kwargs):
         self.updated_at = datetime.datetime.now()

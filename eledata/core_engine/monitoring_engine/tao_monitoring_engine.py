@@ -54,7 +54,8 @@ class TaoMonitoringEngine(MonitoringEngine):
         # driver = webdriver.Firefox(executable_path=r'constants/geckodriver', firefox_profile=profile)
 
         # Plain PhantomJS
-        driver = webdriver.PhantomJS()
+        driver = webdriver.PhantomJS(executable_path=r'constants/phantomjs')
+
         driver.get("https://login.taobao.com/member/login.jhtml")
         time.sleep(2)
         # 用户名 密码

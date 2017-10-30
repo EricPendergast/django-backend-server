@@ -38,6 +38,7 @@ class Event(Document):
     chart = EmbeddedDocumentField(EventChart)
     detailed_data = EmbeddedDocumentField(EventDetailData)
     expiry_date = DateTimeField()  # Only when status is not C
+    scheduled_at = DateTimeField()
     event_status = StringField(default=CONSTANTS.EVENT.STATUS.get('INITIALIZING'))
     # event_status = StringField(
     #     default=constants().get('event').get('category').get(

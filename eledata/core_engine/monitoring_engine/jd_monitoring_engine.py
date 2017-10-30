@@ -82,11 +82,12 @@ class JDMonitoringEngine(MonitoringEngine):
         # self.driver = webdriver.Chrome()
         driver = self.driver
         driver.get(_url)
+        time.sleep(5)
 
         def execute_times(times):
             for i in range(times + 1):
                 driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-                time.sleep(1)
+                time.sleep(5)
 
         execute_times(3)
         html = driver.page_source
@@ -94,16 +95,34 @@ class JDMonitoringEngine(MonitoringEngine):
         return _soup
 
     def read_url_detail(self, _http, _format):
-        # Direct urllib fetching
-        req_this = urllib2.Request(_http)
-        this_html = urllib2.urlopen(req_this)
-        this_content = this_html.read()
-        # # Selenium
-        # driver = self.driver
-        # driver.get(_http)
-        # time.sleep(30)
-        # this_content = driver.page_source　
-        this_soup = BeautifulSoup(this_content, _format)
+        import signal
+
+        class TimeoutException(Exception):  # Custom exception class
+            pass
+
+        def timeout_handler(signum, frame):  # Custom signal handler
+            raise TimeoutException
+
+        # Change the behavior of SIGALRM
+        signal.signal(signal.SIGALRM, timeout_handler)
+
+        # TODO: make it try again in case dead
+        signal.alarm(60)
+        try:
+            # Direct urllib fetching
+            req_this = urllib2.Request(_http)
+            this_html = urllib2.urlopen(req_this)
+            this_content = this_html.read()
+            this_soup = BeautifulSoup(this_content, _format)
+            # # Selenium
+            # driver = self.driver
+            # driver.get(_http)
+            # time.sleep(30)
+            # this_content = driver.page_source　
+        except TimeoutException:
+            return
+        else:
+            signal.alarm(0)
         return this_soup
 
     @staticmethod

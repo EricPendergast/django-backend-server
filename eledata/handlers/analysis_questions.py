@@ -109,6 +109,7 @@ def start_analysis(group, settings, verifier):
         _selected_obj += [dict(
             job_engine=_selected_question.analysis_engine,
             job_status=CONSTANTS.JOB.STATUS.get('INITIALIZING'),
+            event_type=_selected_question.label,
             group=group,
             # Change params to dict before fitting them into List(Dict()) Serializing
             parameter=[x.to_mongo() for x in filtered_param]

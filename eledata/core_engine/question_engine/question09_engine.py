@@ -24,9 +24,9 @@ class Question09Engine(BaseEngine):
         '(54, 110]': '> 54 Years Old'
     }
 
-    def __init__(self, group, params, transaction_data=None, customer_data=None):
+    def __init__(self, event_id, group, params, transaction_data=None, customer_data=None):
         # TODO: Align transaction_data and customer_data with DB schema
-        super(Question09Engine, self).__init__(group, params)
+        super(Question09Engine, self).__init__(event_id, group, params)
 
         if params:  # enable empty params for engine checking
             selected_param = filter(lambda x: x['content'] == 'repeater_definition', params)[0]
@@ -78,8 +78,6 @@ class Question09Engine(BaseEngine):
         characteristics = ['Age', 'Gender', 'Country']
         responses = []
 
-        event_id = objectid.ObjectId()
-
         # Get a list of targeted customers using the user specified rule and param
         # TODO: merge the 2 functions
         get_ids, merge_data = Question09Engine.get_rules(self.rule)
@@ -97,7 +95,7 @@ class Question09Engine(BaseEngine):
                 # Construct response
                 responses.append(
                     {
-                        "event_id": event_id,
+                        "event_id": self.event_id,
                         "event_category": CONSTANTS.EVENT.CATEGORY.get("INSIGHT"),
                         "event_type": "question_09",    # Customers that stopped buying in the past 6 months
                         "event_value": {

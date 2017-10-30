@@ -14,6 +14,7 @@ class Question37Engine(BaseEngine):
         Execute monitoring engine among all platform, update database with our_keyword_list
         :return:
         """
+        # TODO: choose what and how much to be scraped by checking overall enabled question in group
         self.set_our_keyword_list()
         for our_keyword in self.our_keyword_list:
             EngineProvider.provide("Monitoring.JD", event_id=self.event_id, group=self.group, params=None,

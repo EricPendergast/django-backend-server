@@ -10,54 +10,26 @@ from bson import objectid
 
 
 class Question36Engine(BaseEngine):
-    """
-    get dictionary=[
-    {"mine":["HTC VIVE"],
-     "competitors":["SAMSUNG Gear VR 5","SAMSUNG Gear VR 4"]
-    },
-    {"mine":["暴风魔镜"],
-     "competitors":[“小米VR PLAY2”,"小米VR眼镜"]
-    }]
-    """
-    mine_keylist = None
-    dic = [
-        {"mine": u"HTC VIVE",
-         "competitors": [
-             {u"SAMSUNG": [u"SAMSUNG Gear VR 5", u"SAMSUNG Gear VR 4"]},
-             {u"小米": [u"小米VR PLAY2", u"小米VR眼镜"]},
-             {u"蚁视VR":[]}
-         ]
-         },
-        {"mine": u"暴风魔镜S1",
-         "competitors": [
-             {u"SAMSUNG": []},
-             {u"小米": [u"小米VR PLAY2", u"小米VR眼镜"]},
-             {u"蚁视VR": [u"蚁视VR 2代", u"蚁视VR 2s"]}
-         ]
-         }]
-
-    excute_results = []
+    keyword_matrix = []
     products_list = []
     competitors_list = []
-    def __init__(self, event_id, group, params, mine_keylist):
+    excute_results = []
+
+    def __init__(self, event_id, group, params, keyword_matrix):
         super(Question36Engine, self).__init__(event_id, group, params)
-        self.mine_keylist = mine_keylist
+        self.set_keyword_matrix(keyword_matrix)
         products_list = []
         brand = []
-        for item in self.dic:
-            if item["mine"] in mine_keylist:
-                list = item["competitors"]
-                for list_item in list:
-                    brand.append(list_item.keys()[0])
-                    competitors_producs = list_item.values()[0]
-                    # mine_competitors = [item["mine"], list_item.keys()[0]]
-                    dics = {"keyword": item["mine"], "competitor_brand": list_item.keys()[0], "competitors_products": competitors_producs}
-                    # dics = {"mine_competitors": mine_competitors, "competitors_products": competitors_producs}
-                    products_list.append(dics)
+        for item in self.keyword_matrix:
+            competitor_list = item["competitors"]
+            for list_item in competitor_list:
+                brand.append(list_item.keys()[0])
+                competitors_products = list_item.values()[0]
+                product_dict = {"keyword": item["mine"], "competitor_brand": list_item.keys()[0],
+                                "competitors_products": competitors_products}
+                products_list.append(product_dict)
         self.products_list = products_list
         self.competitors_list = sorted(set(brand))
-        print products_list
-
 
     def execute(self):
         """
@@ -72,8 +44,6 @@ class Question36Engine(BaseEngine):
                         "sku_id": "$sku_id",
                         "search_keyword": "$search_keyword",
                         "platform": "$platform",
-                        # Grouping by seller name in MongoDB or pandas
-                        # "seller_name": "$seller_name",
                     },
 
                     # For simplicity, we extract the id content here, assumed identical
@@ -113,7 +83,8 @@ class Question36Engine(BaseEngine):
         ]
 
         for items in self.products_list:
-            competitors_products = list(Watcher.objects(search_keyword__in=items["competitors_products"]).aggregate(*pipeline))
+            competitors_products = list(
+                Watcher.objects(search_keyword__in=items["competitors_products"]).aggregate(*pipeline))
             self.excute_results.append({
                 "competitors_products": competitors_products,
                 "keyword": items['keyword'],
@@ -126,7 +97,6 @@ class Question36Engine(BaseEngine):
         raw_product_data = self.excute_results
         for item in raw_product_data:
             product_data = pd.DataFrame(item["competitors_products"])
-            event_id = objectid.ObjectId()
             keyword = item["keyword"]
             competitor_brand = item["competitor_brand"]
             competitor_list = item["competitor_list"]
@@ -156,9 +126,9 @@ class Question36Engine(BaseEngine):
                 # Construct response
                 responses.append(
                     {
-                        "event_id": event_id,
+                        "event_id": self.event_id,
                         "event_category": CONSTANTS.EVENT.CATEGORY.get("INSIGHT"),
-                        "event_type": "question_37",
+                        "event_type": "question_36",
                         "event_value": self.get_event_value(selected_product_data),
                         "event_desc": self.get_event_desc(selected_product_data, lowest_price_seller),
                         "detailed_desc": self.get_detailed_desc(highest_price_seller, popular_seller, unpopular_seller),
@@ -166,7 +136,7 @@ class Question36Engine(BaseEngine):
                         "chart_type": "Table",  # For the time being
                         "chart": {},
                         "tabs": {
-                            "keyword": self.mine_keylist,
+                            "keyword": map(lambda x: x['keyword'], raw_product_data),
                             "brand": self.competitors_list
                         },
                         "selected_tab": {
@@ -175,6 +145,7 @@ class Question36Engine(BaseEngine):
                         },
                         "detailed_data": self.transform_detailed_data(selected_product_data),
                         "event_status": CONSTANTS.EVENT.STATUS.get('PENDING'),
+                        "scheduled_at": datetime.datetime.now() + relativedelta(hours=12)
                     }
                 )
 
@@ -189,8 +160,6 @@ class Question36Engine(BaseEngine):
         else:
             # TODO: report errors
             print(serializer.errors)
-
-
 
     @staticmethod
     def get_event_value(selected_product_data):
@@ -288,11 +257,27 @@ class Question36Engine(BaseEngine):
             )
         return results
 
-    def get_brand(self,key):
+    def get_brand(self, key):
         lists = []
-        for item in self.dic:
+        for item in self.keyword_matrix:
             list = item["competitors"]
             for item_list in list:
                 if key in item_list.values()[0]:
                     lists.append(item_list.keys()[0])
         return lists[0]
+
+    def set_keyword_matrix(self, keyword_matrix):
+        keyword_matrix_header = keyword_matrix['header']
+        keyword_matrix_body = keyword_matrix['body']
+        result_matrix = []
+        for index, item in enumerate(keyword_matrix_body):
+            mine = item["columns"][0]["value"]
+            competitors_list = []
+            for index_detail, item_detail in enumerate(item["columns"]):
+                competitors_list.append({keyword_matrix_header[index]["value"]: item_detail["value"].split(", ")})
+            del competitors_list[0]
+            result_matrix.append({
+                "mine": mine,
+                "competitors_list": competitors_list
+            })
+        self.keyword_matrix = result_matrix

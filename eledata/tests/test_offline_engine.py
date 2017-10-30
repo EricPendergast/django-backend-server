@@ -24,6 +24,9 @@ class OfflineEngineTest(TestCase):
     transactionFilename = 'misc/test_files/transaction_records.tsv'
     bigTransactionFilename = 'misc/test_files/core_test/big_transaction.csv'
     customerFilename = 'misc/test_files/customer_records.tsv'
+    campaignFilename = 'misc/test_files/campaign_records.tsv'
+    conversionFilename = 'misc/test_files/conversion_records.tsv'
+    channelFilename = 'misc/test_files/channel_records.tsv'
 
     '''
     Environment Setup for test cases
@@ -51,64 +54,28 @@ class OfflineEngineTest(TestCase):
     Demo testing for some stats engine
     """
 
-    # def test_engine_1(self):
-    #     mock_response = {'some_key': 'some_value'}
-    #     params = {
-    #         u'content': u'churner_definition',
-    #         u'choice_index': 0,
-    #         u'choice_input': u'6',
-    #         u'floating_label': u'churner_definition',
-    #         u'required_question_labels': [u'question_07'],
-    #         u'choices': [
-    #             {u'content': u'no_sale', u'default_value': u'3'}
-    #         ],
-    #         u'enabled': True,
-    #         u'label': u'churner_definition'
-    #     }
-    #
-    #     engine = EngineProvider.provide("Question.question_07", self.admin_group, params,
-    #                                     pd.read_csv(self.transactionFilename, sep='\t'),
-    #                                     pd.read_csv(self.customerFilename, sep='\t'))
-    #
-    #     engine.execute()
-    #
-    #     responses = engine.responses
-    #     engine.event_init()
-    #     # print(response.keys())
-    #     # print or compare response with static data
-    #     pprint.pprint(responses)
-    #     # self.assertEquals(response, mock_response)
+    def test_engine_12(self):
+        mock_response = {'some_key': 'some_value'}
 
+        engine = EngineProvider.provide("Question.question_12", 10001, self.admin_group, {},
+                                        pd.read_csv(self.transactionFilename, sep='\t',
+                                                    parse_dates=['Transaction_Date']),
+                                        pd.read_csv(self.customerFilename, sep='\t'),
+                                        pd.read_csv(self.campaignFilename, sep='\t',
+                                                    parse_dates=['Start_Date', 'End_Date']),
+                                        pd.read_csv(self.conversionFilename, sep='\t'),
+                                        pd.read_csv(self.channelFilename, sep='\t'))
 
-    # def test_engine_08(self):
-    #     mock_response = {'some_key': 'some_value'}
-    #     params = {
-    #         u'content': u'growther_definition',
-    #         u'choice_index': 0,
-    #         u'choice_input': u'6',
-    #         u'floating_label': u'growther_definition',
-    #         u'required_question_labels': [u'question_08'],
-    #         u'choices': [
-    #             {u'content': u'increase_purchase', u'default_value': u'5'}
-    #         ],
-    #         u'enabled': True,
-    #         u'label': u'growther_definition'
-    #     }
-    #
-    #     engine = EngineProvider.provide("Question.question_08", self.admin_group, params,
-    #                                     pd.read_csv(self.transactionFilename, sep='\t'),
-    #                                     pd.read_csv(self.customerFilename, sep='\t'))
-    #
-    #     engine.execute()
-    #
-    #     responses = engine.responses
-    #     engine.event_init()
-    #     # print(response.keys())
-    #     # print or compare response with static data
-    #     import json
-    #     with open('data.txt', 'w') as outfile:
-    #         json.dump(responses, outfile)
-    #     # self.assertEquals(response, mock_response)
+        engine.execute()
+
+        responses = engine.responses
+        engine.event_init()
+        # print(response.keys())
+        # print or compare response with static data
+        import json
+        with open('data.txt', 'w') as outfile:
+            json.dump(responses, outfile)
+            # self.assertEquals(response, mock_response)
 
     #
 
@@ -139,13 +106,23 @@ class OfflineEngineTest(TestCase):
         # haha_engine1.execute()
         # haha_engine1.event_init()
     #
-    # def test_engine_3(self):
-    #     t_engine = EngineProvider.provide("Monitoring.Tao",
-    #                                       group=self.admin_group,
-    #                                       params=None,
-    #                                       keyword="DELL",
-    #                                       _page_limit=1,
-    #                                       _u_key='alexkamlivelyimpact',
-    #                                       _p_key='53231323A',
-    #                                       )
-    #     t_engine.execute()
+    def test_engine_3(self):
+        t_engine = EngineProvider.provide("ContinuousMonitoring.question_34",
+                                          event_id=None,
+                                          group=self.admin_group,
+                                          params=None,
+                                          )
+        t_engine.execute()
+        t_engine.event_init()
+
+    # def test_engine_34(self):
+    #     temp = '''{
+    #                "analysisQuestion": ['question34'],
+    #                "analysisParams": [{
+    #                    "label": "clv",
+    #                    "choiceIndex": 1
+    #                }]
+    #            }'''
+    #     self.admin_client.post('/analysis_questions/update_analysis_settings/',
+    #                            data=temp, content_type="application/json",
+    #                            HTTP_X_REQUESTED_WITH='XMLHttpRequest')

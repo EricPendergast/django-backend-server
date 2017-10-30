@@ -99,6 +99,59 @@ parameters = [
         "label": "our_keyword_list",
         "content": "our_keyword_list",
         "floating_label": "our_keyword_list",
-        "required_question_labels": ["question_37"]
+        "required_question_labels": ["question_34", "question_37"]
+    },
+    {
+        "choices": [
+            {
+                "content": "competitor_keyword_list",
+                "default_value": "Samsung Gear VR 5代, Samsung Gear VR 4代",
+            }
+        ],
+        "label": "competitor_keyword_list",
+        "content": "competitor_keyword_list",
+        "floating_label": "competitor_keyword_list",
+        "required_question_labels": ["question_34"]
+    },
+    {
+        "choices": [
+            {
+                "content": "first_page_keyword_list",
+                "default_value": "VR Gear, VR 眼鏡",
+            }
+        ],
+        "label": "first_page_keyword_list",
+        "content": "first_page_keyword_list",
+        "floating_label": "first_page_keyword_list",
+        "required_question_labels": ["question_34"]
+    },
+    {
+        "choices": [
+            {
+                "content": "keyword_matrix",
+                "default_value": [
+                    {
+                        "mine": {"HTC": "HTC VIVE"},
+                        "competitors": [
+                            {"Samsung": ["Samsung Gear VR 5代", "Samsung Gear VR 4代"]},
+                            {"小米": ["小米VR PLAY2", "小米VR眼镜"]},
+                            {"蚁视VR":[]}
+                        ]
+                    },
+                    {
+                         "mine": {"HTC": "暴风魔镜S1"},
+                         "competitors": [
+                             {"Samsung": []},
+                             {"小米": ["小米VR PLAY2", "小米VR眼镜"]},
+                             {"蚁视VR": ["蚁视VR 2代", "蚁视VR 2s"]}
+                         ]
+                    }
+                ],
+            }
+        ],
+        "label": "keyword_matrix",
+        "content": "keyword_matrix",
+        "floating_label": "keyword_matrix",
+        "required_question_labels": ["question_36"]
     }
 ]
