@@ -1,0 +1,157 @@
+# -*- coding: utf-8 -*-
+parameters = [
+    # Temporary depecreated
+    # {
+    #     # What is your accepted range of correct prediction
+    #     "choices": [
+    #         {
+    #             "content": "defaultChoice"
+    #         },
+    #         {
+    #             "content": "ratio",
+    #             "default_value": "0.1"
+    #         },
+    #         {
+    #             "content": "distribution"
+    #         },
+    #     ],
+    #     "label": "allowance",
+    #     "content": "allowance",
+    #     "floating_label": "allowance",
+    #     "required_question_labels": ["question_01", "question_02", "question_03", "question_04", "question_05"]
+    # },
+    {
+        # What is your expected prediction window among your predictive questions ?
+        "choices": [
+            {
+                "content": "defaultChoice"
+            },
+            {
+                "content": 'monthly'
+            },
+            {
+                "content": 'quarterly'
+            },
+            {
+                "content": 'yearly',
+            },
+            {
+                "content": "expectedTimeWindow",
+                "default_value": "3"
+            }
+        ],
+        "label": "prediction_window",
+        "content": "prediction_window",
+        "floating_label": "prediction_window",
+        "required_question_labels": ["question_01", "question_02", "question_03", "question_04", "question_05"]
+    },
+    {
+        # What is your definition of Churners?
+        "choices": [
+            {
+                # Users with no sales for __ months
+                "content": 'no_sale',
+                "default_value": '3'
+            }
+        ],
+        "label": "churner_definition",
+        "content": "churner_definition",
+        "floating_label": "churner_definition",
+        "required_question_labels": ["question_02", "question_07"]
+    },
+    {
+        # What is your definition of Growthers?
+        "choices": [
+            {
+                # In the past 6 months, users with increase of purchase quantity of _ %
+                "content": 'increase_purchase',
+                "default_value": '5'
+            }
+        ],
+        "label": "growther_definition",
+        "content": "growther_definition",
+        "floating_label": "growther_definition",
+        "required_question_labels": ["question_03", "question_08"]
+    },
+    {
+        # What is your definition of Repeaters?
+        "choices": [
+            {
+                # Users in the past year that purchased more than __ times
+                "content": 'past_year_purchase',
+                "default_value": '10'
+            }
+        ],
+        "label": "repeater_definition",
+        "content": "repeater_definition",
+        "floating_label": "repeater_definition",
+        "required_question_labels": ["question_04", "question_09"]
+    },
+
+    # FMCG parameters
+    {
+        "choices": [
+            {
+                "content": "our_keyword_list",
+                "default_value": "Samsung Gear VR 5代, Samsung Gear VR 4代",
+            }
+        ],
+        "label": "our_keyword_list",
+        "content": "our_keyword_list",
+        "floating_label": "our_keyword_list",
+        "required_question_labels": ["question_34", "question_37"]
+    },
+    {
+        "choices": [
+            {
+                "content": "competitor_keyword_list",
+                "default_value": "Samsung Gear VR 5代, Samsung Gear VR 4代",
+            }
+        ],
+        "label": "competitor_keyword_list",
+        "content": "competitor_keyword_list",
+        "floating_label": "competitor_keyword_list",
+        "required_question_labels": ["question_34"]
+    },
+    {
+        "choices": [
+            {
+                "content": "first_page_keyword_list",
+                "default_value": "VR Gear, VR 眼鏡",
+            }
+        ],
+        "label": "first_page_keyword_list",
+        "content": "first_page_keyword_list",
+        "floating_label": "first_page_keyword_list",
+        "required_question_labels": ["question_34"]
+    },
+    {
+        "choices": [
+            {
+                "content": "keyword_matrix",
+                "default_value": [
+                    {
+                        "mine": {"HTC": "HTC VIVE"},
+                        "competitors": [
+                            {"Samsung": ["Samsung Gear VR 5代", "Samsung Gear VR 4代"]},
+                            {"小米": ["小米VR PLAY2", "小米VR眼镜"]},
+                            {"蚁视VR":[]}
+                        ]
+                    },
+                    {
+                         "mine": {"HTC": "暴风魔镜S1"},
+                         "competitors": [
+                             {"Samsung": []},
+                             {"小米": ["小米VR PLAY2", "小米VR眼镜"]},
+                             {"蚁视VR": ["蚁视VR 2代", "蚁视VR 2s"]}
+                         ]
+                    }
+                ],
+            }
+        ],
+        "label": "keyword_matrix",
+        "content": "keyword_matrix",
+        "floating_label": "keyword_matrix",
+        "required_question_labels": ["question_36"]
+    }
+]

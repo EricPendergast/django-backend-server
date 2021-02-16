@@ -15,17 +15,22 @@
 
 ## Setup
 - Install Mongodb (confirmed to work with MongoDB version 3.4.5)
-    -  Windows:
-        - Download the latest .msi
-        https://www.mongodb.com/download-center#community
-        - Setup and Starting MongoDB
-        https://docs.mongodb.com/manual/tutorial/install-mongodb-on-windows/
-
+    - Setup testing database
+       ```
+       use django_test
+       db.createUser( { user: "admin", pwd: "password", roles: [ { role: "clusterAdmin", db: "admin" }, { role: "readAnyDatabase", db: "admin" }, "readWrite"] })
+       ```
 - Create and activate virtualenv
 
 - `pip install -r requirement.txt`
 
 - `python manage.py runserver`
+
+### Known Issue
+- Environment setup for phantom-js on linux:
+    ```
+    sudo apt-get install build-essential chrpath libssl-dev libxft-dev libfreetype6-dev libfreetype6 libfontconfig1-dev libfontconfig1 -y
+    ```
 
 ## Libraries
 - [Django](https://github.com/django/django)

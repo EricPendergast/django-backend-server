@@ -118,7 +118,6 @@
                 "data_type": "number"
             }
         ],
-        "allowed_user": [],
         "created_at": "2017-06-28T14:08:10.276000",
         "updated_at": "2017-06-28T14:08:10.276000"
 

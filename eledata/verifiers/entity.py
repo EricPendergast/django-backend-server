@@ -1,7 +1,7 @@
 from eledata import util
 from eledata.util import InvalidInputError
 from verifier import Verifier
-from project import settings
+from project.settings import CONSTANTS
 
 
 class CreateEntityVerifier(Verifier):
@@ -17,9 +17,11 @@ class CreateEntityVerifier(Verifier):
         pass
 
     def stage2(self, entity_dict):
-        options = {"type": settings.CONSTANTS['entity']['type'],
-                   "source_type": settings.CONSTANTS['entity']['source_type'],
-                   "state": {1}}
+        options = {
+            "type": [x['value'] for x in CONSTANTS.ENTITY.ENTITY_TYPE],
+            "source_type": CONSTANTS.ENTITY.SOURCE_TYPE.values(),
+            "state": {1}
+        }
 
         required = {"type", "source_type", "state"}
 
@@ -50,7 +52,7 @@ class CreateEntityMappedVerifier(Verifier):
         for header in headers:
             Verifier.ver_dict(header, required, options)
 
-        if entity_source_file == None:
+        if not entity_source_file:
             raise InvalidInputError("Can't find the entity source file.")
 
     def stage3(self, serializer):
@@ -58,3 +60,19 @@ class CreateEntityMappedVerifier(Verifier):
             raise InvalidInputError("Invalid serializer: " + str(serializer.errors))
 
     stages = [stage0, stage1, stage2, stage3]
+
+
+class RemoveStage1EntityVerifier(Verifier):
+    def stage0(self, request_data):
+        if not ('entity_type' in request_data):
+            raise InvalidInputError("No entity header.")
+
+    def stage1(self, request_data):
+        if not (request_data['entity_type'] in [x['value'] for x in CONSTANTS.ENTITY.ENTITY_TYPE]):
+            raise InvalidInputError("No valid entity header.")
+
+    def stage2(self, entity):
+        if not entity or not entity.state == 1:
+            raise InvalidInputError("No valid entity")
+
+    stages = [stage0, stage1, stage2]

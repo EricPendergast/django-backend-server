@@ -8,3 +8,5 @@ tags
 temp/*
 .~*
 allowed_hosts.txt
+
+!temp/.gitkeep

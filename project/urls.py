@@ -15,19 +15,26 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 from django.contrib import admin, auth
+
 admin.autodiscover()
 
 from eledata.views.create_entity import *
 from eledata.views.analysis_questions import *
+from eledata.views.event import *
+from eledata.views.stats import *
 from eledata.views.users import GroupAdminActions, UserLogin, UserActions
+from eledata.views.job import JobViewSet
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
 router.register(r'entity', EntityViewSet, r'entity')
 router.register(r'analysis_questions', AnalysisQuestionsViewSet, r'analysis_questions')
+router.register(r'event', EventViewSet, r'event')
 router.register(r'users', GroupAdminActions, r'users')
 router.register(r'users', UserLogin, r'users2')
 router.register(r'users', UserActions, r'users2')
+router.register(r'stats', StatsViewSet, r'stats')
+router.register(r'job', JobViewSet, r'job')
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
